@@ -1,0 +1,34 @@
+R_DEF: Internal format may change without notice
+local
+color colorAccent
+color colorPrimary
+color colorPrimaryDark
+id drawer_layout
+id empty_view
+id fab_add_tab
+id input_km
+id input_name
+id input_year
+id main_tabs
+id nav_auto
+id nav_ent
+id nav_garage
+id nav_health
+id nav_home
+id nav_it
+id nav_view
+id tab_name
+id tab_subtitle
+id tabs_recycler
+id task_subtitle
+id task_title
+id tasks_recycler
+id toolbar
+layout activity_main
+layout activity_section
+layout dialog_add_tab
+layout item_section
+layout item_tab
+layout item_task
+menu nav_menu
+style Theme.TaskMGR
