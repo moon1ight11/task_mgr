@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TaskMGR" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Primary (используется для кнопок диалогов, фокуса) -->
+        <item name="colorPrimary">@color/neon_green</item>
+        <item name="colorOnPrimary">@color/text_on_accent</item>
+        <item name="colorPrimaryContainer">@color/neon_green</item>
+        <item name="colorOnPrimaryContainer">@color/text_on_accent</item>
+
+        <!-- Secondary (фиолетовый) -->
+        <item name="colorSecondary">@color/electric_purple</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">@color/electric_purple</item>
+        <item name="colorOnSecondaryContainer">#FFFFFF</item>
+
+        <!-- Tertiary -->
+        <item name="colorTertiary">@color/amber</item>
+        <item name="colorOnTertiary">@color/text_on_accent</item>
+
+        <!-- Error -->
+        <item name="colorError">@color/raspberry</item>
+        <item name="colorOnError">#FFFFFF</item>
+
+        <!-- Поверхности -->
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+
+        <!-- Системные бары -->
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- Текст -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorTertiary">@color/text_tertiary</item>
+
+        <!-- Компоненты -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.TaskMGR.Dialog</item>
+        <item name="floatingActionButtonStyle">@style/Widget.TaskMGR.Fab</item>
+    </style>
+
+    <style name="ThemeOverlay.TaskMGR.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/surface_raised</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorPrimary">@color/neon_green</item>
+        <item name="colorOnPrimary">@color/text_on_accent</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.TaskMGR.Dialog</item>
+    </style>
+
+    <style name="ShapeAppearance.TaskMGR.Dialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">22dp</item>
+    </style>
+</resources>

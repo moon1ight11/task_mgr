@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <!-- ============ Neon Garden ============ -->
+    <!-- Фоны -->
+    <color name="bg">#0A0F1A</color>
+    <color name="surface">#111A2B</color>
+    <color name="surface_raised">#16223A</color>
+    <color name="surface_variant">#1E2A3F</color>
+
+    <!-- Акценты -->
+    <color name="neon_green">#00FFB2</color>     <!-- primary -->
+    <color name="neon_green_dim">#00C28A</color> <!-- pressed -->
+    <color name="electric_purple">#A855F7</color>
+    <color name="amber">#FBBF24</color>
+    <color name="raspberry">#FF3B6B</color>
+
+    <!-- Текст -->
+    <color name="text_primary">#E2E8F0</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_tertiary">#64748B</color>
+    <color name="text_on_accent">#0A0F1A</color>
+
+    <!-- Границы -->
+    <color name="divider">#1E2A3F</color>
+    <color name="divider_strong">#2A3A55</color>
+
+    <!-- Срочность -->
+    <color name="urgency_overdue">@color/raspberry</color>
+    <color name="urgency_soon">@color/amber</color>
+    <color name="urgency_normal">@color/neon_green</color>
+    <color name="urgency_none">@color/text_tertiary</color>
+
+    <!-- Старые имена (для обратной совместимости) -->
+    <color name="colorPrimary">@color/bg</color>
+    <color name="colorPrimaryDark">#05080F</color>
+    <color name="colorAccent">@color/neon_green</color>
 </resources>

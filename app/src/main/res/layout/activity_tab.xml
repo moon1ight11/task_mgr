@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        style="@style/Widget.TaskMGR.Toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:popupTheme="@style/ThemeOverlay.Material3.Dark" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_tabs"
+        style="@style/Widget.TaskMGR.TabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabMode="fixed" />
+
+    <FrameLayout
+        android:id="@+id/content_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        style="@style/Widget.TaskMGR.Fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="Добавить" />
+</LinearLayout>

@@ -1,1 +1,60 @@
+# Сгенерированные файлы сборки (APK, AAB, DEX)
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+
+# Java классы
+*.class
+
+# Сгенерированные папки
+bin/
+gen/
+out/
+
+# Gradle
+.gradle/
+build/
 local.properties
+
+# Proguard (если используется Eclipse)
+proguard/
+
+# Логи
+*.log
+
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.navigation/
+captures/
+
+# Файлы подписи (keystore) — ОБЯЗАТЕЛЬНО игнорировать
+*.jks
+*.keystore
+key.properties
+
+# Нативные сборки (NDK)
+.externalNativeBuild
+.cxx/
+
+# Google Services (если не хотите коммитить ключи Firebase)
+# google-services.json
+
+# Профилирование
+*.hprof
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+tz.md

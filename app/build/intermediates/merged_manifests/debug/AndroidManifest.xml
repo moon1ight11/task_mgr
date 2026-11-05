@@ -19,7 +19,9 @@
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
         android:extractNativeLibs="false"
-        android:label="TaskMGR"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:testOnly="true"
         android:theme="@style/Theme.TaskMGR" >
         <activity
@@ -33,6 +35,7 @@
         </activity>
         <activity android:name="com.example.taskmgr.SectionActivity" />
         <activity android:name="com.example.taskmgr.TabActivity" />
+        <activity android:name="com.example.taskmgr.StatsActivity" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

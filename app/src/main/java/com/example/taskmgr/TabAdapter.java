@@ -19,13 +19,23 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
         void onClick(Tab tab);
     }
 
+    public interface OnTabLongClick {
+        void onLongClick(Tab tab);
+    }
+
     private final List<Tab> items = new ArrayList<>();
     private final OnTabClick clickListener;
+    private final OnTabLongClick longClickListener;
     private final boolean showSubtitle;
 
     public TabAdapter(boolean showSubtitle, OnTabClick clickListener) {
+        this(showSubtitle, clickListener, null);
+    }
+
+    public TabAdapter(boolean showSubtitle, OnTabClick clickListener, OnTabLongClick longClickListener) {
         this.showSubtitle = showSubtitle;
         this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
     }
 
     public void setItems(List<Tab> newItems) {
@@ -62,6 +72,10 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
 
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onClick(t);
+        });
+        holder.itemView.setOnLongClickListener(v -> {
+            if (longClickListener != null) longClickListener.onLongClick(t);
+            return true;
         });
     }
 

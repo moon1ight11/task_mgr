@@ -1,16 +1,17 @@
 package com.example.taskmgr;
 
-import android.os.Bundle;
-import android.view.MenuItem;
-import android.widget.Toast;
-
 import android.content.Intent;
-import com.example.taskmgr.dao.SectionDao;
-import com.example.taskmgr.model.Section;
-import java.util.List;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
@@ -18,30 +19,46 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.taskmgr.dao.AppSettingsDao;
 import com.example.taskmgr.dao.SectionDao;
 import com.example.taskmgr.dao.TabDao;
 import com.example.taskmgr.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
+import com.example.taskmgr.utill.AppLock;
+import com.example.taskmgr.utill.DbExecutor;
+import com.example.taskmgr.utill.PasswordHasher;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int SOON_KM = 500;
+    private static final String PRIVATE_SECTION_NAME = "Private";
 
     private DrawerLayout drawerLayout;
     private NavigationView navView;
     private TabLayout mainTabs;
     private RecyclerView tasksRecycler;
-    private android.widget.TextView emptyView;
+    private TextView emptyView;
     private TaskAdapter taskAdapter;
 
     private TaskDao taskDao;
+    private TabDao tabDao;
+    private SectionDao sectionDao;
+    private AppSettingsDao settingsDao;
 
-    // текущая выбранная вкладка главной: 0 = Дедлайн, 1 = Важные
     private int currentMainTab = 0;
+    private boolean loading = false;
+    private long privateSectionId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,15 +66,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         taskDao = new TaskDao(this);
+        tabDao = new TabDao(this);
+        sectionDao = new SectionDao(this);
+        settingsDao = new AppSettingsDao(this);
 
-        // Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("TaskMGR");
-        }
+        if (getSupportActionBar() != null) getSupportActionBar().setTitle("TaskMGR");
 
-        // Drawer
         drawerLayout = findViewById(R.id.drawer_layout);
         navView = findViewById(R.id.nav_view);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -65,10 +81,8 @@ public class MainActivity extends AppCompatActivity {
                 android.R.string.ok, android.R.string.cancel);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
         navView.setNavigationItemSelectedListener(this::onNavItemSelected);
 
-        // Tabs
         mainTabs = findViewById(R.id.main_tabs);
         mainTabs.addTab(mainTabs.newTab().setText("Дедлайн"));
         mainTabs.addTab(mainTabs.newTab().setText("Важные"));
@@ -81,57 +95,153 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        // Recycler
         tasksRecycler = findViewById(R.id.tasks_recycler);
         emptyView = findViewById(R.id.empty_view);
         tasksRecycler.setLayoutManager(new LinearLayoutManager(this));
-        taskAdapter = new TaskAdapter(task -> {
-            Toast.makeText(this, "Задача: " + task.title, Toast.LENGTH_SHORT).show();
-        });
+        taskAdapter = new TaskAdapter(task ->
+                Toast.makeText(this, "Задача: " + task.title, Toast.LENGTH_SHORT).show());
         tasksRecycler.setAdapter(taskAdapter);
 
-        // Первичное заполнение разделов (если база пуста)
-        seedSectionsIfEmpty();
-
-        // Загружаем задачи
-        loadTasks();
+        // Всё в фон: seed → при необходимости создать пароль → первая загрузка
+        DbExecutor.run(() -> {
+            try {
+                seedSectionsIfEmptyBlocking();
+            } catch (Exception e) {
+                android.util.Log.e("TaskMGR", "seed FAILED", e);
+            }
+            return null;
+        }, ignored -> {
+            ensurePrivatePasswordThenLoad();
+        });
     }
 
-    private void seedSectionsIfEmpty() {
-        SectionDao sectionDao = new SectionDao(this);
-        if (!sectionDao.getAll().isEmpty()) return;
+    /**
+     * Если пароль приватного раздела ещё не задан — показываем диалог создания (без отмены).
+     * Иначе — сразу грузим задачи.
+     */
+    private void ensurePrivatePasswordThenLoad() {
+        boolean hasPwd;
+        try {
+            hasPwd = settingsDao.hasPrivatePassword();
+        } catch (Exception e) {
+            hasPwd = false;
+        }
+        if (hasPwd) {
+            loadTasks();
+            return;
+        }
+        showCreatePasswordDialog(() -> {
+            AppLock.setPrivateUnlocked(true);
+            loadTasks();
+        });
+    }
 
-        long home = sectionDao.insert(new Section("Дом", "home", 1));
-        long garage = sectionDao.insert(new Section("Гараж", "garage", 2));
-        long auto = sectionDao.insert(new Section("Авто", "car", 3));
-        long it = sectionDao.insert(new Section("IT", "it", 4));
-        long health = sectionDao.insert(new Section("Здоровье", "health", 5));
-        long ent = sectionDao.insert(new Section("Развлечения", "ent", 6));
+    /** Только для вызова из фонового потока. */
+    private void seedSectionsIfEmptyBlocking() {
+        List<Section> existing = sectionDao.getAll();
 
-        TabDao tabDao = new TabDao(this);
-        tabDao.insert(new Tab(home, "Тим"));
-        tabDao.insert(new Tab(home, "ЮВ"));
-        tabDao.insert(new Tab(auto, "Королла"));
-        tabDao.insert(new Tab(it, "Работа"));
-        tabDao.insert(new Tab(ent, "Книги"));
+        // Ищем приватный раздел
+        Section priv = null;
+        for (Section s : existing) {
+            if (s.isPrivate) { priv = s; break; }
+        }
+        if (priv != null) {
+            privateSectionId = priv.id;
+        }
+
+        if (existing.isEmpty()) {
+            long home = sectionDao.insert(new Section("Дом", "home", 1));
+            long garage = sectionDao.insert(new Section("Гараж", "garage", 2));
+            long auto = sectionDao.insert(new Section("Авто", "car", 3));
+            long it = sectionDao.insert(new Section("IT", "it", 4));
+            long health = sectionDao.insert(new Section("Здоровье", "health", 5));
+            long ent = sectionDao.insert(new Section("Развлечения", "ent", 6));
+            privateSectionId = sectionDao.insert(
+                    new Section(PRIVATE_SECTION_NAME, null, 7, true));
+
+            TabDao tdao = new TabDao(this);
+            tdao.insert(new Tab(home, "Тим"));
+            tdao.insert(new Tab(home, "ЮВ"));
+            tdao.insert(new Tab(auto, "Королла"));
+            tdao.insert(new Tab(it, "Работа"));
+            tdao.insert(new Tab(ent, "Книги"));
+            return;
+        }
+
+        // Разделы уже есть, но приватного нет — создаём
+        if (priv == null) {
+            privateSectionId = sectionDao.insert(
+                    new Section(PRIVATE_SECTION_NAME, null, 7, true));
+        }
     }
 
     private void loadTasks() {
-        List<Task> tasks;
-        if (currentMainTab == 0) {
-            tasks = taskDao.getActiveSortedByDue();
-        } else {
-            tasks = taskDao.getActiveImportant();
-        }
-        taskAdapter.setItems(tasks);
-        boolean empty = tasks.isEmpty();
-        emptyView.setVisibility(empty ? android.view.View.VISIBLE : android.view.View.GONE);
-        tasksRecycler.setVisibility(empty ? android.view.View.GONE : android.view.View.VISIBLE);
+        if (loading) return;
+        loading = true;
+        final int tabSnapshot = currentMainTab;
+        final boolean includePrivate = AppLock.isPrivateUnlocked();
+        DbExecutor.run(() -> {
+            List<Tab> allTabs = tabDao.getAll();
+            List<Section> allSections = sectionDao.getAll();
+            Map<Long, Tab> tabMap = new HashMap<>();
+            for (Tab t : allTabs) tabMap.put(t.id, t);
+
+            Set<Long> excluded = new HashSet<>();
+            if (!includePrivate) {
+                for (Tab t : tabDao.getByPrivateSections()) excluded.add(t.id);
+            }
+
+            List<Task> tasks;
+            if (tabSnapshot == 0) {
+                List<Task> raw = taskDao.getDeadlineSoon(excluded);
+                tasks = new ArrayList<>(raw.size());
+                for (Task t : raw) {
+                    if ("by_km".equals(t.dueType)) {
+                        Tab tab = tabMap.get(t.tabId);
+                        if (tab == null || tab.currentKm == null) {
+                            tasks.add(t);
+                        } else if (t.dueKm != null && t.dueKm - tab.currentKm <= SOON_KM) {
+                            tasks.add(t);
+                        }
+                    } else {
+                        tasks.add(t);
+                    }
+                }
+            } else {
+                tasks = taskDao.getImportant(excluded);
+            }
+            return new Object[]{tasks, allTabs, allSections};
+        }, result -> {
+            loading = false;
+            if (result == null) return;
+            Object[] arr = (Object[]) result;
+            @SuppressWarnings("unchecked")
+            List<Task> tasks = (List<Task>) arr[0];
+            @SuppressWarnings("unchecked")
+            List<Tab> allTabs = (List<Tab>) arr[1];
+            @SuppressWarnings("unchecked")
+            List<Section> allSections = (List<Section>) arr[2];
+            taskAdapter.setItems(tasks, allTabs, allSections);
+            boolean empty = tasks.isEmpty();
+            emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
+            tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
+        });
     }
 
     private boolean onNavItemSelected(@NonNull MenuItem item) {
         drawerLayout.closeDrawer(GravityCompat.START);
         int id = item.getItemId();
+
+        if (id == R.id.nav_stats) {
+            startActivity(new Intent(this, StatsActivity.class));
+            return true;
+        }
+
+        if (id == R.id.nav_private) {
+            handlePrivateNavClick();
+            return true;
+        }
+
         String sectionName = null;
         if (id == R.id.nav_home) sectionName = "Дом";
         else if (id == R.id.nav_garage) sectionName = "Гараж";
@@ -141,20 +251,147 @@ public class MainActivity extends AppCompatActivity {
         else if (id == R.id.nav_ent) sectionName = "Развлечения";
 
         if (sectionName != null) {
-            SectionDao sectionDao = new SectionDao(this);
-            List<Section> sections = sectionDao.getAll();
-            for (Section s : sections) {
-                if (s.name.equals(sectionName)) {
-                    Intent i = new Intent(this, SectionActivity.class);
-                    i.putExtra(SectionActivity.EXTRA_SECTION_ID, s.id);
-                    i.putExtra(SectionActivity.EXTRA_SECTION_NAME, s.name);
-                    startActivity(i);
-                    return true;
+            final String name = sectionName;
+            DbExecutor.run(() -> {
+                for (Section s : sectionDao.getAll()) {
+                    if (s.name.equals(name)) return s;
                 }
-            }
-            Toast.makeText(this, "Раздел не найден: " + sectionName, Toast.LENGTH_SHORT).show();
+                return null;
+            }, found -> {
+                if (found == null) {
+                    Toast.makeText(this, "Раздел не найден: " + name, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                openSection(found);
+            });
         }
         return true;
+    }
+
+    private void handlePrivateNavClick() {
+        // Пароля нет → создать
+        if (!settingsDao.hasPrivatePassword()) {
+            showCreatePasswordDialog(() -> {
+                AppLock.setPrivateUnlocked(true);
+                findPrivateSectionAndOpen();
+            });
+            return;
+        }
+        if (AppLock.isPrivateUnlocked()) {
+            findPrivateSectionAndOpen();
+            return;
+        }
+        showEnterPasswordDialog(() -> {
+            AppLock.setPrivateUnlocked(true);
+            findPrivateSectionAndOpen();
+            loadTasks(); // скрытое могло стать видимым
+        });
+    }
+
+    private void findPrivateSectionAndOpen() {
+        DbExecutor.run(() -> {
+            for (Section s : sectionDao.getAll()) {
+                if (s.isPrivate) return s;
+            }
+            return null;
+        }, found -> {
+            if (found == null) {
+                Toast.makeText(this, "Приватный раздел не найден", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            privateSectionId = found.id;
+            openSection(found);
+        });
+    }
+
+    private void openSection(Section s) {
+        Intent i = new Intent(this, SectionActivity.class);
+        i.putExtra(SectionActivity.EXTRA_SECTION_ID, s.id);
+        i.putExtra(SectionActivity.EXTRA_SECTION_NAME, s.name);
+        startActivity(i);
+    }
+
+    // ============ Диалоги пароля ============
+
+    private interface OnSuccess { void run(); }
+
+    private void showCreatePasswordDialog(OnSuccess onSuccess) {
+        View view = getLayoutInflater().inflate(R.layout.dialog_set_password, null);
+        EditText inputPwd = view.findViewById(R.id.input_password);
+        EditText inputConfirm = view.findViewById(R.id.input_password_confirm);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Пароль для приватного раздела")
+                .setMessage("Придумайте пароль (минимум 4 символа). Восстановить его будет нельзя.")
+                .setView(view)
+                .setCancelable(false)
+                .setPositiveButton("OK", null)
+                .create();
+
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String pwd = inputPwd.getText().toString();
+                String confirm = inputConfirm.getText().toString();
+                if (pwd.length() < 4) {
+                    Toast.makeText(this, "Минимум 4 символа", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (!pwd.equals(confirm)) {
+                    Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                final String pwdFinal = pwd;
+                DbExecutor.runVoid(() -> {
+                    String salt = PasswordHasher.newSaltBase64();
+                    int iter = PasswordHasher.DEFAULT_ITERATIONS;
+                    String hash = PasswordHasher.hashBase64(pwdFinal, salt, iter);
+                    settingsDao.put(AppSettingsDao.KEY_PRIVATE_PWD_SALT, salt);
+                    settingsDao.put(AppSettingsDao.KEY_PRIVATE_PWD_ITER, String.valueOf(iter));
+                    settingsDao.put(AppSettingsDao.KEY_PRIVATE_PWD_HASH, hash);
+                }, () -> {
+                    dialog.dismiss();
+                    onSuccess.run();
+                });
+            });
+        });
+
+        dialog.show();
+    }
+
+    private void showEnterPasswordDialog(OnSuccess onSuccess) {
+        View view = getLayoutInflater().inflate(R.layout.dialog_enter_password, null);
+        EditText inputPwd = view.findViewById(R.id.input_password);
+
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Введите пароль")
+                .setView(view)
+                .setPositiveButton("OK", null)
+                .setNegativeButton("Отмена", null)
+                .create();
+
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                String pwd = inputPwd.getText().toString();
+                if (TextUtils.isEmpty(pwd)) return;
+                DbExecutor.run(() -> {
+                    String salt = settingsDao.get(AppSettingsDao.KEY_PRIVATE_PWD_SALT);
+                    String hash = settingsDao.get(AppSettingsDao.KEY_PRIVATE_PWD_HASH);
+                    String iterStr = settingsDao.get(AppSettingsDao.KEY_PRIVATE_PWD_ITER);
+                    int iter = PasswordHasher.DEFAULT_ITERATIONS;
+                    try { if (iterStr != null) iter = Integer.parseInt(iterStr); } catch (Exception ignored) {}
+                    return PasswordHasher.verify(pwd, salt, iter, hash);
+                }, ok -> {
+                    if (ok != null && ok) {
+                        dialog.dismiss();
+                        onSuccess.run();
+                    } else {
+                        Toast.makeText(this, "Неверный пароль", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
+        });
+
+        dialog.show();
     }
 
     @Override
