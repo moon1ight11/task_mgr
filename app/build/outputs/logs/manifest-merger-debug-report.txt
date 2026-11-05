@@ -1,24 +1,28 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-18:12
-INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-18:12
-INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-18:12
-INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-18:12
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-25:12
+INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-25:12
+INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-25:12
+INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:1-25:12
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\fedor\.gradle\caches\transforms-3\74a2558674f6dcad48a387d806131537\transformed\material-1.11.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\fedor\.gradle\caches\transforms-3\4bcbdb61f70c63be020394c3ae9403e9\transformed\constraintlayout-2.1.4\AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\fedor\.gradle\caches\transforms-3\f0f9709bc5b3447f46c85b9d7e2644c4\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\fedor\.gradle\caches\transforms-3\3c3e8d87979f80077854f6234c4ddaef\transformed\appcompat-1.6.1\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.viewpager2:viewpager2:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\2b989bb5e052b375bf7b8716f1e5ae75\transformed\viewpager2-1.0.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.viewpager2:viewpager2:1.1.0-beta02] C:\Users\fedor\.gradle\caches\transforms-3\fd7ec6f2e354095163613c19dc1d7d3e\transformed\viewpager2-1.1.0-beta02\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.recyclerview:recyclerview:1.3.2] C:\Users\fedor\.gradle\caches\transforms-3\e70b557cd04274fd79b842f90a2f5179\transformed\recyclerview-1.3.2\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\53424ceccf7fcbf0d093a5bef11c65da\transformed\drawerlayout-1.2.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.fragment:fragment:1.3.6] C:\Users\fedor\.gradle\caches\transforms-3\0baea330af915d89892842272d50dcc9\transformed\fragment-1.3.6\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.activity:activity:1.8.0] C:\Users\fedor\.gradle\caches\transforms-3\1e5bcf030d094d70d0207cb80ae2e18c\transformed\activity-1.8.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\a30bbc082d6fec3a3e5b9ab5ec3d346a\transformed\emoji2-views-helper-1.2.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\4cbcf27c467347a1a697d011e0391f2d\transformed\emoji2-1.2.0\AndroidManifest.xml:17:1-35:12
-MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] C:\Users\fedor\.gradle\caches\transforms-3\cb35a340b443f82a0f62f2633bdcaa48\transformed\drawerlayout-1.1.1\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\d57c48c92414932ca637b72caf5e45d3\transformed\coordinatorlayout-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\b0e5e8c08e334202524b13588f4c592f\transformed\dynamicanimation-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.transition:transition:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\700d9f4868d5349574f1902fee118be3\transformed\transition-1.2.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\03208cd92e2b7a5c18baec46861dc4d3\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\29c5d20808de33b4b4e2f4b0cbf5b6ee\transformed\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\cdbd517e6844d1bceee198e3bf1b371e\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\14f78a55e4f2d821743a1f25c372cbbd\transformed\customview-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\84bc3918985e6daf2c72a2b13ca12a91\transformed\customview-poolingcontainer-1.0.0\AndroidManifest.xml:17:1-23:12
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\28a7db93659cca97ee2180d398d31546\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\267cb961ba4c563932bab14865cd0363\transformed\loader-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\fedor\.gradle\caches\transforms-3\39e6174abcdccbd0e128a101e3d128db\transformed\savedstate-1.2.1\AndroidManifest.xml:17:1-22:12
@@ -29,9 +33,6 @@ MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] C:\Users\fedor\.gradl
 MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] C:\Users\fedor\.gradle\caches\transforms-3\088d9060f181f5d18906e7a08122969d\transformed\lifecycle-runtime-2.6.1\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] C:\Users\fedor\.gradle\caches\transforms-3\8a9aed70d6f5afab52dfa6d369634c55\transformed\lifecycle-viewmodel-savedstate-2.6.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.core:core-ktx:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\9a99c5d0815065a923c62fb47cfbb69e\transformed\core-ktx-1.9.0\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\cdbd517e6844d1bceee198e3bf1b371e\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\0e2949b26d271d065fd3d076c2aaa573\transformed\recyclerview-1.1.0\AndroidManifest.xml:17:1-24:12
-MERGED from [androidx.customview:customview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\14f78a55e4f2d821743a1f25c372cbbd\transformed\customview-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.core:core:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\f0f4ee7c3b88100b2d2cd4b05ab423cd\transformed\core-1.9.0\AndroidManifest.xml:17:1-30:12
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\909dfe99be248bb21ba7932ab8b17550\transformed\cursoradapter-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\9eb27526ac9bb145371b7a50a7e1377c\transformed\cardview-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -46,6 +47,7 @@ MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\User
 MERGED from [androidx.print:print:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\43ba6f97e942fb3c087233699f5ea349\transformed\print-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\fedor\.gradle\caches\transforms-3\fa60a9c4bd2fe3f38aa6496f8c168ba5\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:17:1-22:12
 	package
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:3:5-34
 		INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml
 	android:versionName
 		INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml
@@ -54,8 +56,8 @@ MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\fedor\.
 	xmlns:android
 		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:2:11-69
 application
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:3:5-17:19
-INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:3:5-17:19
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:5:5-24:19
+INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:5:5-24:19
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\fedor\.gradle\caches\transforms-3\74a2558674f6dcad48a387d806131537\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.11.0] C:\Users\fedor\.gradle\caches\transforms-3\74a2558674f6dcad48a387d806131537\transformed\material-1.11.0\AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] C:\Users\fedor\.gradle\caches\transforms-3\4bcbdb61f70c63be020394c3ae9403e9\transformed\constraintlayout-2.1.4\AndroidManifest.xml:9:5-20
@@ -77,35 +79,43 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\fedor\.gradle\cach
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\f0f4ee7c3b88100b2d2cd4b05ab423cd\transformed\core-1.9.0\AndroidManifest.xml:28:18-86
 	android:label
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:5:9-32
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:9:9-41
+	android:roundIcon
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:8:9-54
+	android:icon
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:7:9-43
 	android:allowBackup
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:4:9-35
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:6:9-35
 	android:theme
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:6:9-45
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:10:9-45
 activity#com.example.taskmgr.MainActivity
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:7:9-14:20
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:12:9-19:20
 	android:exported
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:9:13-36
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:14:13-36
 	android:name
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:8:13-41
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:13:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:10:13-13:29
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:15:13-18:29
 action#android.intent.action.MAIN
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:11:17-69
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:16:17-69
 	android:name
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:11:25-66
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:16:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:12:17-77
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:17:17-77
 	android:name
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:12:27-74
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:17:27-74
 activity#com.example.taskmgr.SectionActivity
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:15:9-53
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:21:9-53
 	android:name
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:15:19-50
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:21:19-50
 activity#com.example.taskmgr.TabActivity
-ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:16:9-49
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:22:9-49
 	android:name
-		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:16:19-46
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:22:19-46
+activity#com.example.taskmgr.StatsActivity
+ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:23:9-51
+	android:name
+		ADDED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml:23:19-48
 uses-sdk
 INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\GoWorkspace\projects\TaskMGR\app\src\main\AndroidManifest.xml
@@ -118,8 +128,12 @@ MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\fedor\.gradl
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] C:\Users\fedor\.gradle\caches\transforms-3\f0f9709bc5b3447f46c85b9d7e2644c4\transformed\appcompat-resources-1.6.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\fedor\.gradle\caches\transforms-3\3c3e8d87979f80077854f6234c4ddaef\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.appcompat:appcompat:1.6.1] C:\Users\fedor\.gradle\caches\transforms-3\3c3e8d87979f80077854f6234c4ddaef\transformed\appcompat-1.6.1\AndroidManifest.xml:20:5-44
-MERGED from [androidx.viewpager2:viewpager2:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\2b989bb5e052b375bf7b8716f1e5ae75\transformed\viewpager2-1.0.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.viewpager2:viewpager2:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\2b989bb5e052b375bf7b8716f1e5ae75\transformed\viewpager2-1.0.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager2:viewpager2:1.1.0-beta02] C:\Users\fedor\.gradle\caches\transforms-3\fd7ec6f2e354095163613c19dc1d7d3e\transformed\viewpager2-1.1.0-beta02\AndroidManifest.xml:5:5-44
+MERGED from [androidx.viewpager2:viewpager2:1.1.0-beta02] C:\Users\fedor\.gradle\caches\transforms-3\fd7ec6f2e354095163613c19dc1d7d3e\transformed\viewpager2-1.1.0-beta02\AndroidManifest.xml:5:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.2] C:\Users\fedor\.gradle\caches\transforms-3\e70b557cd04274fd79b842f90a2f5179\transformed\recyclerview-1.3.2\AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.2] C:\Users\fedor\.gradle\caches\transforms-3\e70b557cd04274fd79b842f90a2f5179\transformed\recyclerview-1.3.2\AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\53424ceccf7fcbf0d093a5bef11c65da\transformed\drawerlayout-1.2.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\53424ceccf7fcbf0d093a5bef11c65da\transformed\drawerlayout-1.2.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.fragment:fragment:1.3.6] C:\Users\fedor\.gradle\caches\transforms-3\0baea330af915d89892842272d50dcc9\transformed\fragment-1.3.6\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.fragment:fragment:1.3.6] C:\Users\fedor\.gradle\caches\transforms-3\0baea330af915d89892842272d50dcc9\transformed\fragment-1.3.6\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.activity:activity:1.8.0] C:\Users\fedor\.gradle\caches\transforms-3\1e5bcf030d094d70d0207cb80ae2e18c\transformed\activity-1.8.0\AndroidManifest.xml:20:5-44
@@ -128,8 +142,6 @@ MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\fedor\.gradle\c
 MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\a30bbc082d6fec3a3e5b9ab5ec3d346a\transformed\emoji2-views-helper-1.2.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\4cbcf27c467347a1a697d011e0391f2d\transformed\emoji2-1.2.0\AndroidManifest.xml:21:5-44
 MERGED from [androidx.emoji2:emoji2:1.2.0] C:\Users\fedor\.gradle\caches\transforms-3\4cbcf27c467347a1a697d011e0391f2d\transformed\emoji2-1.2.0\AndroidManifest.xml:21:5-44
-MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] C:\Users\fedor\.gradle\caches\transforms-3\cb35a340b443f82a0f62f2633bdcaa48\transformed\drawerlayout-1.1.1\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] C:\Users\fedor\.gradle\caches\transforms-3\cb35a340b443f82a0f62f2633bdcaa48\transformed\drawerlayout-1.1.1\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\d57c48c92414932ca637b72caf5e45d3\transformed\coordinatorlayout-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\d57c48c92414932ca637b72caf5e45d3\transformed\coordinatorlayout-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\b0e5e8c08e334202524b13588f4c592f\transformed\dynamicanimation-1.0.0\AndroidManifest.xml:20:5-44
@@ -140,6 +152,12 @@ MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\fed
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\03208cd92e2b7a5c18baec46861dc4d3\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\29c5d20808de33b4b4e2f4b0cbf5b6ee\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\29c5d20808de33b4b4e2f4b0cbf5b6ee\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\cdbd517e6844d1bceee198e3bf1b371e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\cdbd517e6844d1bceee198e3bf1b371e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\14f78a55e4f2d821743a1f25c372cbbd\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\14f78a55e4f2d821743a1f25c372cbbd\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\84bc3918985e6daf2c72a2b13ca12a91\transformed\customview-poolingcontainer-1.0.0\AndroidManifest.xml:20:5-21:38
+MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\84bc3918985e6daf2c72a2b13ca12a91\transformed\customview-poolingcontainer-1.0.0\AndroidManifest.xml:20:5-21:38
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\28a7db93659cca97ee2180d398d31546\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\28a7db93659cca97ee2180d398d31546\transformed\legacy-support-core-utils-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.loader:loader:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\267cb961ba4c563932bab14865cd0363\transformed\loader-1.0.0\AndroidManifest.xml:20:5-44
@@ -160,12 +178,6 @@ MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] C:\Users\f
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] C:\Users\fedor\.gradle\caches\transforms-3\8a9aed70d6f5afab52dfa6d369634c55\transformed\lifecycle-viewmodel-savedstate-2.6.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.core:core-ktx:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\9a99c5d0815065a923c62fb47cfbb69e\transformed\core-ktx-1.9.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-ktx:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\9a99c5d0815065a923c62fb47cfbb69e\transformed\core-ktx-1.9.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\cdbd517e6844d1bceee198e3bf1b371e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\cdbd517e6844d1bceee198e3bf1b371e\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\0e2949b26d271d065fd3d076c2aaa573\transformed\recyclerview-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.recyclerview:recyclerview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\0e2949b26d271d065fd3d076c2aaa573\transformed\recyclerview-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.customview:customview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\14f78a55e4f2d821743a1f25c372cbbd\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.customview:customview:1.1.0] C:\Users\fedor\.gradle\caches\transforms-3\14f78a55e4f2d821743a1f25c372cbbd\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.core:core:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\f0f4ee7c3b88100b2d2cd4b05ab423cd\transformed\core-1.9.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.core:core:1.9.0] C:\Users\fedor\.gradle\caches\transforms-3\f0f4ee7c3b88100b2d2cd4b05ab423cd\transformed\core-1.9.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] C:\Users\fedor\.gradle\caches\transforms-3\909dfe99be248bb21ba7932ab8b17550\transformed\cursoradapter-1.0.0\AndroidManifest.xml:20:5-44

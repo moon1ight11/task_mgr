@@ -31,39 +31,41 @@ public class HistoryDao {
     public List<HistoryEntry> getByTask(long taskId) {
         List<HistoryEntry> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.query("history", null, "task_id = ?",
-                new String[]{String.valueOf(taskId)},
-                null, null, "completed_at DESC");
-        while (c.moveToNext()) {
-            HistoryEntry h = new HistoryEntry();
-            h.id = c.getLong(c.getColumnIndexOrThrow("id"));
-            h.taskId = c.getLong(c.getColumnIndexOrThrow("task_id"));
-            h.completedAt = c.getLong(c.getColumnIndexOrThrow("completed_at"));
-            int kmIdx = c.getColumnIndexOrThrow("km_at_completion");
-            h.kmAtCompletion = c.isNull(kmIdx) ? null : c.getInt(kmIdx);
-            h.note = c.getString(c.getColumnIndexOrThrow("note"));
-            result.add(h);
+        Cursor c = null;
+        try {
+            c = db.query("history", null, "task_id = ?",
+                    new String[]{String.valueOf(taskId)},
+                    null, null, "completed_at DESC");
+            while (c.moveToNext()) {
+                result.add(fromCursor(c));
+            }
+        } finally {
+            if (c != null) c.close();
         }
-        c.close();
         return result;
     }
 
     public HistoryEntry getLastByTask(long taskId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.query("history", null, "task_id = ?",
-                new String[]{String.valueOf(taskId)},
-                null, null, "completed_at DESC", "1");
-        HistoryEntry h = null;
-        if (c.moveToFirst()) {
-            h = new HistoryEntry();
-            h.id = c.getLong(c.getColumnIndexOrThrow("id"));
-            h.taskId = c.getLong(c.getColumnIndexOrThrow("task_id"));
-            h.completedAt = c.getLong(c.getColumnIndexOrThrow("completed_at"));
-            int kmIdx = c.getColumnIndexOrThrow("km_at_completion");
-            h.kmAtCompletion = c.isNull(kmIdx) ? null : c.getInt(kmIdx);
-            h.note = c.getString(c.getColumnIndexOrThrow("note"));
+        Cursor c = null;
+        try {
+            c = db.query("history", null, "task_id = ?",
+                    new String[]{String.valueOf(taskId)},
+                    null, null, "completed_at DESC", "1");
+            return c.moveToFirst() ? fromCursor(c) : null;
+        } finally {
+            if (c != null) c.close();
         }
-        c.close();
+    }
+
+    private HistoryEntry fromCursor(Cursor c) {
+        HistoryEntry h = new HistoryEntry();
+        h.id = c.getLong(c.getColumnIndexOrThrow("id"));
+        h.taskId = c.getLong(c.getColumnIndexOrThrow("task_id"));
+        h.completedAt = c.getLong(c.getColumnIndexOrThrow("completed_at"));
+        int kmIdx = c.getColumnIndexOrThrow("km_at_completion");
+        h.kmAtCompletion = c.isNull(kmIdx) ? null : c.getInt(kmIdx);
+        h.note = c.getString(c.getColumnIndexOrThrow("note"));
         return h;
     }
 }

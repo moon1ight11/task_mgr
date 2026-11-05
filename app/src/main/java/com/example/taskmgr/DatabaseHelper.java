@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -16,19 +16,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
-        db.setForeignKeyConstraintsEnabled(true); // включаем каскадные удаления
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // 1. Разделы
         db.execSQL("CREATE TABLE sections (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL, " +
                 "icon TEXT, " +
+                "is_private INTEGER DEFAULT 0, " +
                 "sort_order INTEGER DEFAULT 0)");
 
-        // 2. Вкладки
         db.execSQL("CREATE TABLE tabs (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "section_id INTEGER NOT NULL, " +
@@ -38,7 +37,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "sort_order INTEGER DEFAULT 0, " +
                 "FOREIGN KEY(section_id) REFERENCES sections(id) ON DELETE CASCADE)");
 
-        // 3. Задачи
         db.execSQL("CREATE TABLE tasks (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "tab_id INTEGER NOT NULL, " +
@@ -57,7 +55,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "repeat_interval_months INTEGER, " +
                 "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
 
-        // 4. История
         db.execSQL("CREATE TABLE history (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "task_id INTEGER NOT NULL, " +
@@ -66,7 +63,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "note TEXT, " +
                 "FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE)");
 
-        // 5. Покупки
         db.execSQL("CREATE TABLE shopping_items (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "tab_id INTEGER NOT NULL, " +
@@ -77,7 +73,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "created_at INTEGER NOT NULL, " +
                 "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
 
-        // 6. Справочник
         db.execSQL("CREATE TABLE reference_entries (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "tab_id INTEGER NOT NULL, " +
@@ -85,17 +80,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "value TEXT NOT NULL, " +
                 "category TEXT, " +
                 "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
+
+        db.execSQL("CREATE TABLE app_settings (" +
+                "key TEXT PRIMARY KEY, " +
+                "value TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // На этапе разработки просто пересоздаём базу
-        db.execSQL("DROP TABLE IF EXISTS reference_entries");
-        db.execSQL("DROP TABLE IF EXISTS shopping_items");
-        db.execSQL("DROP TABLE IF EXISTS history");
-        db.execSQL("DROP TABLE IF EXISTS tasks");
-        db.execSQL("DROP TABLE IF EXISTS tabs");
-        db.execSQL("DROP TABLE IF EXISTS sections");
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE sections ADD COLUMN is_private INTEGER DEFAULT 0");
+            db.execSQL("CREATE TABLE IF NOT EXISTS app_settings (" +
+                    "key TEXT PRIMARY KEY, value TEXT)");
+        }
     }
 }

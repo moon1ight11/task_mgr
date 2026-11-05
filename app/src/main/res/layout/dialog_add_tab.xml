@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Название"
-        android:inputType="text" />
+        android:inputType="textCapWords" />
 
     <EditText
         android:id="@+id/input_year"

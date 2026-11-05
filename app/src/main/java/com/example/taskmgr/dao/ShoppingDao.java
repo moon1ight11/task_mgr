@@ -24,6 +24,7 @@ public class ShoppingDao {
         cv.put("tab_id", s.tabId);
         cv.put("title", s.title);
         if (s.price != null) cv.put("price", s.price);
+        else cv.putNull("price");
         cv.put("is_bought", s.isBought ? 1 : 0);
         cv.put("is_selected", s.isSelected ? 1 : 0);
         cv.put("created_at", s.createdAt);
@@ -33,22 +34,26 @@ public class ShoppingDao {
     public List<ShoppingItem> getByTab(long tabId) {
         List<ShoppingItem> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.query("shopping_items", null, "tab_id = ?",
-                new String[]{String.valueOf(tabId)},
-                null, null, "created_at DESC");
-        while (c.moveToNext()) {
-            ShoppingItem s = new ShoppingItem();
-            s.id = c.getLong(c.getColumnIndexOrThrow("id"));
-            s.tabId = c.getLong(c.getColumnIndexOrThrow("tab_id"));
-            s.title = c.getString(c.getColumnIndexOrThrow("title"));
-            int priceIdx = c.getColumnIndexOrThrow("price");
-            s.price = c.isNull(priceIdx) ? null : c.getDouble(priceIdx);
-            s.isBought = c.getInt(c.getColumnIndexOrThrow("is_bought")) == 1;
-            s.isSelected = c.getInt(c.getColumnIndexOrThrow("is_selected")) == 1;
-            s.createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"));
-            result.add(s);
+        Cursor c = null;
+        try {
+            c = db.query("shopping_items", null, "tab_id = ?",
+                    new String[]{String.valueOf(tabId)},
+                    null, null, "created_at DESC");
+            while (c.moveToNext()) {
+                ShoppingItem s = new ShoppingItem();
+                s.id = c.getLong(c.getColumnIndexOrThrow("id"));
+                s.tabId = c.getLong(c.getColumnIndexOrThrow("tab_id"));
+                s.title = c.getString(c.getColumnIndexOrThrow("title"));
+                int priceIdx = c.getColumnIndexOrThrow("price");
+                s.price = c.isNull(priceIdx) ? null : c.getDouble(priceIdx);
+                s.isBought = c.getInt(c.getColumnIndexOrThrow("is_bought")) == 1;
+                s.isSelected = c.getInt(c.getColumnIndexOrThrow("is_selected")) == 1;
+                s.createdAt = c.getLong(c.getColumnIndexOrThrow("created_at"));
+                result.add(s);
+            }
+        } finally {
+            if (c != null) c.close();
         }
-        c.close();
         return result;
     }
 
@@ -66,24 +71,32 @@ public class ShoppingDao {
         db.update("shopping_items", cv, "id = ?", new String[]{String.valueOf(id)});
     }
 
-    /** Сумма выбранных. Если ничего не выбрано — общая сумма всех. */
+    /** Сумма всех некупленных позиций вкладки. */
     public double getTotalPrice(long tabId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String sql = "SELECT " +
-                "SUM(CASE WHEN is_selected = 1 THEN price ELSE 0 END) AS selected_sum, " +
-                "SUM(price) AS total_sum, " +
-                "SUM(is_selected) AS selected_count " +
-                "FROM shopping_items WHERE tab_id = ? AND is_bought = 0";
-        Cursor c = db.rawQuery(sql, new String[]{String.valueOf(tabId)});
-        double result = 0;
-        if (c.moveToFirst()) {
-            double selectedSum = c.isNull(0) ? 0 : c.getDouble(0);
-            double totalSum = c.isNull(1) ? 0 : c.getDouble(1);
-            int selectedCount = c.getInt(2);
-            result = selectedCount > 0 ? selectedSum : totalSum;
+        Cursor c = null;
+        try {
+            String sql = "SELECT SUM(price) FROM shopping_items " +
+                    "WHERE tab_id = ? AND is_bought = 0";
+            c = db.rawQuery(sql, new String[]{String.valueOf(tabId)});
+            if (c.moveToFirst()) {
+                return c.isNull(0) ? 0 : c.getDouble(0);
+            }
+            return 0;
+        } finally {
+            if (c != null) c.close();
         }
-        c.close();
-        return result;
+    }
+
+    public void update(ShoppingItem s) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("title", s.title);
+        if (s.price != null) cv.put("price", s.price);
+        else cv.putNull("price");
+        cv.put("is_bought", s.isBought ? 1 : 0);
+        cv.put("is_selected", s.isSelected ? 1 : 0);
+        db.update("shopping_items", cv, "id = ?", new String[]{String.valueOf(s.id)});
     }
 
     public void delete(long id) {

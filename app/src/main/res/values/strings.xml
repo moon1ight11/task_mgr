@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.TaskMGR" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
+    <string name="app_name">TaskMGR</string>
+    <string name="empty_tasks">Пока пусто</string>
+    <string name="empty_tabs">Нет вкладок. Нажмите +</string>
+    <string name="empty_shopping">Список покупок пуст</string>
+    <string name="empty_reference">Справочник пуст</string>
 </resources>
