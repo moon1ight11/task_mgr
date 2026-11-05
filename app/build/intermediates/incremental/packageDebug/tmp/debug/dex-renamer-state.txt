@@ -1,4 +1,4 @@
-#Thu Nov 05 01:21:52 NOVT 2026
+#Fri Nov 06 02:59:28 NOVT 2026
 base.0=C\:\\GoWorkspace\\projects\\TaskMGR\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\GoWorkspace\\projects\\TaskMGR\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.2=C\:\\GoWorkspace\\projects\\TaskMGR\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\14\\classes.dex

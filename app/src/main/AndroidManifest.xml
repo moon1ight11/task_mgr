@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.taskmgr">
+
     <application
         android:allowBackup="true"
-        android:label="TaskMGR"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
         android:theme="@style/Theme.TaskMGR">
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -12,7 +17,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".SectionActivity" />
         <activity android:name=".TabActivity" />
+        <activity android:name=".StatsActivity" />
     </application>
 </manifest>
