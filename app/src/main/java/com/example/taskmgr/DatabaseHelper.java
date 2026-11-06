@@ -83,7 +83,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
 
         db.execSQL("CREATE TABLE app_settings (" +
-                "key TEXT PRIMARY KEY, " +
+                "`key` TEXT PRIMARY KEY, " +
                 "value TEXT)");
     }
 
@@ -92,7 +92,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE sections ADD COLUMN is_private INTEGER DEFAULT 0");
             db.execSQL("CREATE TABLE IF NOT EXISTS app_settings (" +
-                    "key TEXT PRIMARY KEY, value TEXT)");
+                    "`key` TEXT PRIMARY KEY, value TEXT)");
         }
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE shopping_items ADD COLUMN category TEXT");
