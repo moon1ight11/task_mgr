@@ -1,64 +1,38 @@
-# Сгенерированные файлы сборки (APK, AAB, DEX)
-*.apk
-*.aar
-*.ap_
-*.aab
-*.dex
-
-# Java классы
-*.class
-
+# ============ Gradle ============
 .gradle/
 build/
-app/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
 
-# Сгенерированные папки
-bin/
-gen/
-out/
-
-# Gradle
-.gradle/
-build/
+# ============ Local config ============
 local.properties
 
-# Proguard (если используется Eclipse)
-proguard/
-
-# Логи
-*.log
-
-# Android Studio / IntelliJ IDEA
-*.iml
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/dictionaries
-.idea/libraries
-.idea/caches
-.idea/modules.xml
-.navigation/
+# ============ Android ============
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
 captures/
+.externalNativeBuild/
+.cxx/
+output.json
 
-# Файлы подписи (keystore) — ОБЯЗАТЕЛЬНО игнорировать
+# ============ IDE ============
+# IntelliJ / Android Studio — личные настройки не тащим
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ============ Keystore / secrets ============
 *.jks
 *.keystore
-key.properties
+*.p12
+*.pfx
 
-# Нативные сборки (NDK)
-.externalNativeBuild
-.cxx/
-
-# Google Services (если не хотите коммитить ключи Firebase)
-# google-services.json
-
-# Профилирование
-*.hprof
-
-# macOS
+# ============ OS ============
 .DS_Store
-
-# Windows
 Thumbs.db
-tz.md
+*.log
