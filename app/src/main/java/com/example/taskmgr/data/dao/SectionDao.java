@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SectionDao {
+    public static final String AUTO_SECTION_NAME = "Авто";
     private final DatabaseHelper dbHelper;
 
     public SectionDao(Context context) {

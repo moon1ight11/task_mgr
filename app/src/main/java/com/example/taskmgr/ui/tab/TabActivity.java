@@ -82,7 +82,7 @@ public class TabActivity extends AppCompatActivity {
     private MaterialButton btnActive, btnHistory, btnSortCreated, btnSortDeadline;
     private boolean showingHistory = false;
     private boolean sortByDeadline = false;
-    private boolean loadingTasks = false;
+    private int loadGeneration = 0;
 
     private RecyclerView shoppingRecycler;
     private TextView shoppingEmpty, totalPrice;
@@ -111,7 +111,10 @@ public class TabActivity extends AppCompatActivity {
         extraTaskId = getIntent().getLongExtra(EXTRA_TASK_ID, -1);
 
         Tab t = tabDao.getById(tabId);
-        if (t == null) { finish(); return; }
+        if (t == null) {
+            finish();
+            return;
+        }
         SectionDao sDao = new SectionDao(this);
         Section s = sDao.getById(t.sectionId);
         if (s != null && s.isPrivate && !AppLock.isPrivateUnlocked()) {
@@ -152,9 +155,18 @@ public class TabActivity extends AppCompatActivity {
         tabTabs.addTab(tabTabs.newTab().setText("Покупки"));
         tabTabs.addTab(tabTabs.newTab().setText("Справочник"));
         tabTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override public void onTabSelected(TabLayout.Tab tab) { showTab(tab.getPosition()); }
-            @Override public void onTabUnselected(TabLayout.Tab tab) {}
-            @Override public void onTabReselected(TabLayout.Tab tab) {}
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                showTab(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
         });
 
         showTab(0);
@@ -258,10 +270,10 @@ public class TabActivity extends AppCompatActivity {
     }
 
     private void loadTasks() {
-        if (loadingTasks) return;
-        loadingTasks = true;
+        final int myGeneration = ++loadGeneration;
         final boolean history = showingHistory;
         final boolean sortDeadline = sortByDeadline;
+        final long pendingTaskId = extraTaskId;
         DbExecutor.run(() -> {
             if (history) {
                 List<Task> allTasks = taskDao.getAllByTab(tabId);
@@ -281,7 +293,7 @@ public class TabActivity extends AppCompatActivity {
                 return new Object[]{activeTasks, currentTab};
             }
         }, result -> {
-            loadingTasks = false;
+            if (myGeneration != loadGeneration) return;
             if (result == null) return;
             Object[] arr = (Object[]) result;
             if (history) {
@@ -294,7 +306,6 @@ public class TabActivity extends AppCompatActivity {
                 boolean empty = entries.isEmpty();
                 tasksEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
                 tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
-                if (extraTaskId > 0) extraTaskId = -1;
             } else {
                 @SuppressWarnings("unchecked")
                 List<Task> tasks = (List<Task>) arr[0];
@@ -306,9 +317,9 @@ public class TabActivity extends AppCompatActivity {
                 tasksEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
                 tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
 
-                if (extraTaskId > 0) {
-                    final long id = extraTaskId;
+                if (pendingTaskId > 0) {
                     extraTaskId = -1;
+                    final long id = pendingTaskId;
                     final int pos = taskAdapter.positionOfTask(id);
                     if (pos >= 0) {
                         new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -396,38 +407,52 @@ public class TabActivity extends AppCompatActivity {
         }
 
         spinnerDueType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
                 String type = dueTypes[pos];
                 inputDueDate.setVisibility("exact_date".equals(type) ? View.VISIBLE : View.GONE);
                 inputDueFrom.setVisibility("range".equals(type) ? View.VISIBLE : View.GONE);
                 inputDueTo.setVisibility("range".equals(type) ? View.VISIBLE : View.GONE);
                 inputDueKm.setVisibility("by_km".equals(type) ? View.VISIBLE : View.GONE);
             }
-            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
         });
 
         if (isAuto) {
             spinnerRepeatRule.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-                @Override public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
+                @Override
+                public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
                     String rule = repeatRules[pos];
                     inputRepeatKm.setVisibility(
                             ("by_km".equals(rule) || "by_km_or_months".equals(rule)) ? View.VISIBLE : View.GONE);
                     inputRepeatMonths.setVisibility(
                             ("by_months".equals(rule) || "by_km_or_months".equals(rule)) ? View.VISIBLE : View.GONE);
                 }
-                @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+
+                @Override
+                public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                }
             });
         }
 
         inputTitle.setText(task.title);
         if (task.description != null) inputDescription.setText(task.description);
         for (int i = 0; i < priorities.length; i++) {
-            if (priorities[i].equals(task.priority)) { spinnerPriority.setSelection(i); break; }
+            if (priorities[i].equals(task.priority)) {
+                spinnerPriority.setSelection(i);
+                break;
+            }
         }
 
         int dueIdx = 0;
         for (int i = 0; i < dueTypes.length; i++) {
-            if (dueTypes[i].equals(task.dueType)) { dueIdx = i; break; }
+            if (dueTypes[i].equals(task.dueType)) {
+                dueIdx = i;
+                break;
+            }
         }
         spinnerDueType.setSelection(dueIdx);
         if ("exact_date".equals(task.dueType) && task.dueDate != null) {
@@ -442,7 +467,10 @@ public class TabActivity extends AppCompatActivity {
         if (isAuto && task.repeatRule != null) {
             int repIdx = 0;
             for (int i = 0; i < repeatRules.length; i++) {
-                if (repeatRules[i].equals(task.repeatRule)) { repIdx = i; break; }
+                if (repeatRules[i].equals(task.repeatRule)) {
+                    repIdx = i;
+                    break;
+                }
             }
             spinnerRepeatRule.setSelection(repIdx);
             if ((repIdx == 1 || repIdx == 3) && task.repeatIntervalKm != null)
@@ -467,7 +495,10 @@ public class TabActivity extends AppCompatActivity {
 
                     int duePos = spinnerDueType.getSelectedItemPosition();
                     task.dueType = dueTypes[duePos];
-                    task.dueDate = null; task.dueFrom = null; task.dueTo = null; task.dueKm = null;
+                    task.dueDate = null;
+                    task.dueFrom = null;
+                    task.dueTo = null;
+                    task.dueKm = null;
                     if ("exact_date".equals(task.dueType)) {
                         task.dueDate = parseDate(inputDueDate.getText().toString());
                     } else if ("range".equals(task.dueType)) {
@@ -746,7 +777,8 @@ public class TabActivity extends AppCompatActivity {
                 .setTitle(item.title)
                 .setItems(new String[]{"Редактировать", "Удалить"}, (d, which) -> {
                     if (which == 0) showEditReferenceDialog(item);
-                    else DbExecutor.runVoid(() -> referenceDao.delete(item.id), this::loadReference);
+                    else
+                        DbExecutor.runVoid(() -> referenceDao.delete(item.id), this::loadReference);
                 })
                 .show();
     }
@@ -771,7 +803,8 @@ public class TabActivity extends AppCompatActivity {
                         Toast.makeText(this, "Название и значение обязательны", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    item.title = title; item.value = value;
+                    item.title = title;
+                    item.value = value;
                     item.category = category.isEmpty() ? null : category;
                     DbExecutor.runVoid(() -> referenceDao.update(item), this::loadReference);
                 })
@@ -878,26 +911,34 @@ public class TabActivity extends AppCompatActivity {
         }
 
         spinnerDueType.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
                 String type = dueTypes[pos];
                 inputDueDate.setVisibility("exact_date".equals(type) ? View.VISIBLE : View.GONE);
                 inputDueFrom.setVisibility("range".equals(type) ? View.VISIBLE : View.GONE);
                 inputDueTo.setVisibility("range".equals(type) ? View.VISIBLE : View.GONE);
                 inputDueKm.setVisibility("by_km".equals(type) ? View.VISIBLE : View.GONE);
             }
-            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
         });
 
         if (isAuto) {
             spinnerRepeatRule.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-                @Override public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
+                @Override
+                public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
                     String rule = repeatRules[pos];
                     inputRepeatKm.setVisibility(
                             ("by_km".equals(rule) || "by_km_or_months".equals(rule)) ? View.VISIBLE : View.GONE);
                     inputRepeatMonths.setVisibility(
                             ("by_months".equals(rule) || "by_km_or_months".equals(rule)) ? View.VISIBLE : View.GONE);
                 }
-                @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+
+                @Override
+                public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                }
             });
         }
 
@@ -955,12 +996,18 @@ public class TabActivity extends AppCompatActivity {
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault());
             sdf.setLenient(false);
             return sdf.parse(s.trim()).getTime();
-        } catch (java.text.ParseException e) { return null; }
+        } catch (java.text.ParseException e) {
+            return null;
+        }
     }
 
     private Integer parseIntOrNull(String s) {
         if (s == null || s.trim().isEmpty()) return null;
-        try { return Integer.parseInt(s.trim()); } catch (NumberFormatException e) { return null; }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private void showAddShoppingDialog() {
@@ -985,7 +1032,10 @@ public class TabActivity extends AppCompatActivity {
                     Double price = null;
                     String priceStr = inputPrice.getText().toString().trim();
                     if (!priceStr.isEmpty()) {
-                        try { price = Double.parseDouble(priceStr); } catch (NumberFormatException ignored) {}
+                        try {
+                            price = Double.parseDouble(priceStr);
+                        } catch (NumberFormatException ignored) {
+                        }
                     }
                     String category = inputCategory.getText().toString().trim();
                     final String cat = category.isEmpty() ? null : category;

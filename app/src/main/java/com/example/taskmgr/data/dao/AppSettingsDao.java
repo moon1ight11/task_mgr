@@ -40,8 +40,25 @@ public class AppSettingsDao {
     }
 
     public boolean hasPrivatePassword() {
-        String h = get(KEY_PRIVATE_PWD_HASH);
-        String s = get(KEY_PRIVATE_PWD_SALT);
-        return h != null && !h.isEmpty() && s != null && !s.isEmpty();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = null;
+        try {
+            c = db.query("app_settings", new String[]{"key", "value"},
+                    "key IN (?, ?)",
+                    new String[]{KEY_PRIVATE_PWD_HASH, KEY_PRIVATE_PWD_SALT},
+                    null, null, null);
+            boolean hasHash = false;
+            boolean hasSalt = false;
+            while (c.moveToNext()) {
+                String key = c.getString(0);
+                String value = c.getString(1);
+                if (value == null || value.isEmpty()) continue;
+                if (KEY_PRIVATE_PWD_HASH.equals(key)) hasHash = true;
+                else if (KEY_PRIVATE_PWD_SALT.equals(key)) hasSalt = true;
+            }
+            return hasHash && hasSalt;
+        } finally {
+            if (c != null) c.close();
+        }
     }
 }

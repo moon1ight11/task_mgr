@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private AppSettingsDao settingsDao;
 
     private int currentMainTab = 0;
-    private boolean loading = false;
+    private int loadGeneration = 0;
     private long privateSectionId = -1;
 
     @Override
@@ -107,13 +107,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isAutoTask(Task task) {
-        Tab tab = null;
         try {
-            tab = tabDao.getById(task.tabId);
-        } catch (Exception ignored) {}
-        if (tab == null) return false;
-        Section s = sectionDao.getById(tab.sectionId);
-        return s != null && "Авто".equals(s.name);
+            return tabDao.isAutoTab(task.tabId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private void openTabForTask(Task task) {
@@ -126,8 +124,12 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Вкладка задачи не найдена", Toast.LENGTH_SHORT).show();
             return;
         }
-        Section s = sectionDao.getById(tab.sectionId);
-        boolean isAuto = s != null && "Авто".equals(s.name);
+        boolean isAuto;
+        try {
+            isAuto = tabDao.isAutoTab(tab.id);
+        } catch (Exception e) {
+            isAuto = false;
+        }
 
         Intent i = new Intent(this, TabActivity.class);
         i.putExtra(TabActivity.EXTRA_TAB_ID, tab.id);
@@ -196,8 +198,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadTasks() {
-        if (loading) return;
-        loading = true;
+        final int myGeneration = ++loadGeneration;
         final int tabSnapshot = currentMainTab;
         final boolean includePrivate = AppLock.isPrivateUnlocked();
         DbExecutor.run(() -> {
@@ -232,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
             }
             return new Object[]{tasks, allTabs, allSections};
         }, result -> {
-            loading = false;
+            if (myGeneration != loadGeneration) return;
             if (result == null) return;
             Object[] arr = (Object[]) result;
             @SuppressWarnings("unchecked")

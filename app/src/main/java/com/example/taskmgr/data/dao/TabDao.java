@@ -94,6 +94,22 @@ public class TabDao {
         }
     }
 
+    /** true, если вкладка принадлежит разделу «Авто». */
+    public boolean isAutoTab(long tabId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = null;
+        try {
+            c = db.rawQuery(
+                    "SELECT s.name FROM tabs t " +
+                            "JOIN sections s ON s.id = t.section_id " +
+                            "WHERE t.id = ?",
+                    new String[]{String.valueOf(tabId)});
+            return c.moveToFirst() && SectionDao.AUTO_SECTION_NAME.equals(c.getString(0));
+        } finally {
+            if (c != null) c.close();
+        }
+    }
+
     public void update(Tab t) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
