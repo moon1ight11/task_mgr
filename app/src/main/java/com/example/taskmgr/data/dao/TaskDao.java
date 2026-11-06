@@ -21,11 +21,14 @@ public class TaskDao {
     private final DatabaseHelper dbHelper;
 
     public TaskDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public long insert(Task t) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        return insert(dbHelper.getWritableDatabase(), t);
+    }
+
+    public long insert(SQLiteDatabase db, Task t) {
         ContentValues cv = new ContentValues();
         cv.put("tab_id", t.tabId);
         cv.put("title", t.title);
@@ -137,7 +140,10 @@ public class TaskDao {
     }
 
     public void updateStatus(long id, String status) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        updateStatus(dbHelper.getWritableDatabase(), id, status);
+    }
+
+    public void updateStatus(SQLiteDatabase db, long id, String status) {
         ContentValues cv = new ContentValues();
         cv.put("status", status);
         db.update("tasks", cv, "id = ?", new String[]{String.valueOf(id)});

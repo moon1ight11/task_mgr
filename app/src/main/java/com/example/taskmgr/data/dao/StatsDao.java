@@ -17,7 +17,7 @@ public class StatsDao {
     private final DatabaseHelper dbHelper;
 
     public StatsDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     /** Условие «задача не из приватного раздела». */

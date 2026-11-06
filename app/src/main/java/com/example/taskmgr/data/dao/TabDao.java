@@ -15,7 +15,7 @@ public class TabDao {
     private final DatabaseHelper dbHelper;
 
     public TabDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public long insert(Tab t) {
@@ -83,7 +83,10 @@ public class TabDao {
     }
 
     public Tab getById(long id) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        return getById(dbHelper.getReadableDatabase(), id);
+    }
+
+    public Tab getById(SQLiteDatabase db, long id) {
         Cursor c = null;
         try {
             c = db.query("tabs", null, "id = ?",
@@ -111,7 +114,10 @@ public class TabDao {
     }
 
     public void update(Tab t) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        update(dbHelper.getWritableDatabase(), t);
+    }
+
+    public void update(SQLiteDatabase db, Tab t) {
         ContentValues cv = new ContentValues();
         cv.put("name", t.name);
         if (t.currentKm != null) cv.put("current_km", t.currentKm);

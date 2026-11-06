@@ -1,7 +1,9 @@
 package com.example.taskmgr.service;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 
+import com.example.taskmgr.data.DatabaseHelper;
 import com.example.taskmgr.data.dao.HistoryDao;
 import com.example.taskmgr.data.dao.TabDao;
 import com.example.taskmgr.data.dao.TaskDao;
@@ -11,62 +13,58 @@ import com.example.taskmgr.model.Task;
 
 public class TaskService {
 
+    private final DatabaseHelper dbHelper;
     private final TaskDao taskDao;
     private final HistoryDao historyDao;
     private final TabDao tabDao;
 
     public TaskService(Context context) {
+        this.dbHelper = DatabaseHelper.getInstance(context);
         this.taskDao = new TaskDao(context);
         this.historyDao = new HistoryDao(context);
         this.tabDao = new TabDao(context);
     }
 
     /**
-     * Выполняет задачу: пишет историю, помечает задачу done,
-     * обновляет пробег вкладки (если передан),
-     * и если есть repeat_rule — создаёт следующую задачу.
-     *
-     * @param task           задача
-     * @param kmAtCompletion пробег на момент выполнения (может быть null)
-     * @param note           заметка (может быть null)
+     * Выполняет задачу атомарно: история, статус, пробег и следующая задача
+     * пишутся в одной транзакции. Если что-то падает — откат целиком.
      */
     public void completeTask(Task task, Integer kmAtCompletion, String note) {
         long now = System.currentTimeMillis();
+        dbHelper.runInTransaction(db -> {
+            // 1. История
+            HistoryEntry h = new HistoryEntry();
+            h.taskId = task.id;
+            h.completedAt = now;
+            h.kmAtCompletion = kmAtCompletion;
+            h.note = note;
+            historyDao.insert(db, h);
 
-        // 1. История
-        HistoryEntry h = new HistoryEntry();
-        h.taskId = task.id;
-        h.completedAt = now;
-        h.kmAtCompletion = kmAtCompletion;
-        h.note = note;
-        historyDao.insert(h);
+            // 2. Помечаем задачу выполненной
+            taskDao.updateStatus(db, task.id, "done");
 
-        // 2. Помечаем задачу выполненной
-        taskDao.updateStatus(task.id, "done");
+            // 3. Обновляем пробег вкладки, если передан
+            if (kmAtCompletion != null) {
+                updateTabKmIfNeeded(db, task.tabId, kmAtCompletion);
+            }
 
-        // 3. Обновляем пробег вкладки (машины) — ВСЕГДА, если он передан.
-        //    Одометр не уменьшается: пишем только если новое значение больше
-        //    текущего (или если текущего нет).
-        if (kmAtCompletion != null) {
-            updateTabKmIfNeeded(task.tabId, kmAtCompletion);
-        }
-
-        // 4. Автопорождение следующей
-        if (task.repeatRule != null && !task.repeatRule.equals("none")) {
-            createNextTask(task, now, kmAtCompletion);
-        }
+            // 4. Автопорождение следующей
+            if (task.repeatRule != null && !task.repeatRule.equals("none")) {
+                createNextTask(db, task, now, kmAtCompletion);
+            }
+        });
     }
 
-    private void updateTabKmIfNeeded(long tabId, int km) {
-        Tab tab = tabDao.getById(tabId);
+    private void updateTabKmIfNeeded(SQLiteDatabase db, long tabId, int km) {
+        Tab tab = tabDao.getById(db, tabId);
         if (tab == null) return;
         if (tab.currentKm == null || km > tab.currentKm) {
             tab.currentKm = km;
-            tabDao.update(tab);
+            tabDao.update(db, tab);
         }
     }
 
-    private void createNextTask(Task done, long completedAt, Integer kmAtCompletion) {
+    private void createNextTask(SQLiteDatabase db, Task done, long completedAt, Integer kmAtCompletion) {
         Task next = new Task(done.tabId, done.title, done.priority);
         next.description = done.description;
         next.repeatRule = done.repeatRule;
@@ -76,18 +74,15 @@ public class TaskService {
 
         switch (done.repeatRule) {
             case "by_km":
-                // следующая — по пробегу
                 if (kmAtCompletion != null && done.repeatIntervalKm != null) {
                     next.dueType = "by_km";
                     next.dueKm = kmAtCompletion + done.repeatIntervalKm;
                 } else {
-                    // не хватает данных — создаём без срока
                     next.dueType = "none";
                 }
                 break;
 
             case "by_months":
-                // следующая — по дате
                 if (done.repeatIntervalMonths != null) {
                     next.dueType = "exact_date";
                     next.dueDate = addMonths(completedAt, done.repeatIntervalMonths);
@@ -105,7 +100,7 @@ public class TaskService {
                 if (nextKm != null) {
                     next.dueType = "by_km";
                     next.dueKm = nextKm;
-                    next.dueDate = nextDate; // сохраняем и дату, пригодится для срочности
+                    next.dueDate = nextDate;
                 } else if (nextDate != null) {
                     next.dueType = "exact_date";
                     next.dueDate = nextDate;
@@ -119,7 +114,7 @@ public class TaskService {
                 next.dueType = "none";
         }
 
-        taskDao.insert(next);
+        taskDao.insert(db, next);
     }
 
     private long addMonths(long millis, int months) {

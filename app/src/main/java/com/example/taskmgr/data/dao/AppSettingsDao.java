@@ -16,7 +16,7 @@ public class AppSettingsDao {
     private final DatabaseHelper dbHelper;
 
     public AppSettingsDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public String get(String key) {

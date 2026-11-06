@@ -16,7 +16,7 @@ public class SectionDao {
     private final DatabaseHelper dbHelper;
 
     public SectionDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public long insert(Section s) {

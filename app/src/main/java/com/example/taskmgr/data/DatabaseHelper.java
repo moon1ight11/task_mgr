@@ -8,8 +8,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
     private static final int DATABASE_VERSION = 3;
+    private static volatile DatabaseHelper instance;
 
-    public DatabaseHelper(Context context) {
+    public void runInTransaction(java.util.function.Consumer<SQLiteDatabase> work) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            work.accept(db);
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public static DatabaseHelper getInstance(Context context) {
+        DatabaseHelper local = instance;
+        if (local == null) {
+            synchronized (DatabaseHelper.class) {
+                local = instance;
+                if (local == null) {
+                    local = new DatabaseHelper(context.getApplicationContext());
+                    instance = local;
+                }
+            }
+        }
+        return local;
+    }
+
+    private DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 

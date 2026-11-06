@@ -15,11 +15,14 @@ public class HistoryDao {
     private final DatabaseHelper dbHelper;
 
     public HistoryDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public long insert(HistoryEntry h) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        return insert(dbHelper.getWritableDatabase(), h);
+    }
+
+    public long insert(SQLiteDatabase db, HistoryEntry h) {
         ContentValues cv = new ContentValues();
         cv.put("task_id", h.taskId);
         cv.put("completed_at", h.completedAt);

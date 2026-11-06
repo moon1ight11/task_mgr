@@ -15,7 +15,7 @@ public class ShoppingDao {
     private final DatabaseHelper dbHelper;
 
     public ShoppingDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public long insert(ShoppingItem s) {

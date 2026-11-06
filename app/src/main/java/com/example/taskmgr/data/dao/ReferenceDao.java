@@ -15,7 +15,7 @@ public class ReferenceDao {
     private final DatabaseHelper dbHelper;
 
     public ReferenceDao(Context context) {
-        this.dbHelper = new DatabaseHelper(context);
+        this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
     public long insert(ReferenceEntry r) {
