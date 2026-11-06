@@ -126,8 +126,6 @@ public class ShoppingDao {
         db.delete("shopping_items", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    // ============ helpers ============
-
     private List<ShoppingItem> queryByCategory(long tabId, String category) {
         List<ShoppingItem> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();

@@ -7,10 +7,8 @@ import java.util.Comparator;
 import java.util.Map;
 
 /**
- * Сортировка «сначала то, что наступит раньше».
- * Порядок групп: OVERDUE → SOON → NORMAL → NONE.
- * Внутри группы — по «расстоянию» до дедлайна (даты — мс, км — км*1e6).
- * Задачи без срока (NONE) — в самом конце.
+ * Сортировка: OVERDUE → SOON → NORMAL → NONE, внутри — по расстоянию до дедлайна;
+ * Без срока — в конце;
  */
 public class TaskUrgencyComparator implements Comparator<Task> {
 
@@ -37,7 +35,7 @@ public class TaskUrgencyComparator implements Comparator<Task> {
         long db = distance(b, tb);
         if (da != db) return Long.compare(da, db);
 
-        // фолбэк — новые выше
+        // fallback — новые выше
         return Long.compare(b.createdAt, a.createdAt);
     }
 

@@ -80,8 +80,6 @@ public class ReferenceDao {
         db.delete("reference_entries", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    // ============ helpers ============
-
     private List<ReferenceEntry> queryByCategory(long tabId, String category) {
         List<ReferenceEntry> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();

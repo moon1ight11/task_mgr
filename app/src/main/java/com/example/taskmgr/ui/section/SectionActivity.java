@@ -122,8 +122,6 @@ public class SectionActivity extends AppCompatActivity {
         });
     }
 
-    // ============ Диалог действий по вкладке ============
-
     private void showTabActionsDialog(Tab tab) {
         new AlertDialog.Builder(this)
                 .setTitle(tab.name)
@@ -182,8 +180,6 @@ public class SectionActivity extends AppCompatActivity {
                 .show();
     }
 
-    // ============ Диалог добавления вкладки ============
-
     private void showAddTabDialog() {
         View view = getLayoutInflater().inflate(R.layout.dialog_add_tab, null);
         EditText inputName = view.findViewById(R.id.input_name);
@@ -214,8 +210,6 @@ public class SectionActivity extends AppCompatActivity {
                 .setNegativeButton("Отмена", null)
                 .show();
     }
-
-    // ============ Хелпер ============
 
     private Integer parseIntOrNull(String s) {
         if (s == null || s.trim().isEmpty()) return null;

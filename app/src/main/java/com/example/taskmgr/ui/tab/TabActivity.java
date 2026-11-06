@@ -172,8 +172,6 @@ public class TabActivity extends AppCompatActivity {
         showTab(0);
     }
 
-    // ============ Date picker helper ============
-
     private void pickDate(EditText target) {
         target.setOnClickListener(v -> {
             Calendar cal = Calendar.getInstance();
@@ -192,8 +190,6 @@ public class TabActivity extends AppCompatActivity {
         Long v = parseDate(s);
         return v != null ? v : 0L;
     }
-
-    // ============ Задачи ============
 
     private void setupTasksView() {
         tasksRecycler = viewTasks.findViewById(R.id.tasks_recycler);
@@ -534,8 +530,6 @@ public class TabActivity extends AppCompatActivity {
         return sdf.format(new java.util.Date(millis));
     }
 
-    // ============ Покупки ============
-
     private void setupShoppingView() {
         shoppingRecycler = viewShopping.findViewById(R.id.shopping_recycler);
         shoppingEmpty = viewShopping.findViewById(R.id.shopping_empty);
@@ -647,8 +641,6 @@ public class TabActivity extends AppCompatActivity {
         DbExecutor.run(() -> shoppingDao.getTotalPrice(tabId, categoryFilter),
                 total -> totalPrice.setText(String.format("Итого: %.2f", total)));
     }
-
-    // ============ Справочник ============
 
     private void setupReferenceView() {
         referenceRecycler = viewReference.findViewById(R.id.reference_recycler);
@@ -838,8 +830,6 @@ public class TabActivity extends AppCompatActivity {
         });
     }
 
-    // ============ Переключение вкладок и FAB ============
-
     private void showTab(int position) {
         viewTasks.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
         viewShopping.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
@@ -856,8 +846,6 @@ public class TabActivity extends AppCompatActivity {
             loadReference();
         }
     }
-
-    // ============ Диалоги добавления ============
 
     private void showAddTaskDialog() {
         View view = getLayoutInflater().inflate(R.layout.dialog_add_task, null);

@@ -26,8 +26,6 @@ public class UrgencyCalculator {
                 return Urgency.NORMAL;
 
             case "by_km": {
-                // Комбинированная ветка: если есть dueDate — учитываем и его,
-                // чтобы «что наступит раньше» работало.
                 Urgency byKm = byKm(t.dueKm, tab);
                 Urgency byDate = t.dueDate != null
                         ? byDate(t.dueDate, now, soonThreshold)

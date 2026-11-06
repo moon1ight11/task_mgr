@@ -27,13 +27,12 @@ public class StatsDao {
                     "  JOIN sections s ON s.id = tb.section_id " +
                     "  WHERE s.is_private = 1)";
 
-    // ============ Сводка ============
 
     public static class Summary {
-        public int total;      // всего задач
-        public int active;     // активных
-        public int done;       // выполненных
-        public int overdue;    // просрочено сейчас (по датам)
+        public int total;
+        public int active;
+        public int done;
+        public int overdue;
         public int percentDone() {
             int denom = done + active;
             if (denom == 0) return 0;
@@ -70,10 +69,8 @@ public class StatsDao {
         return s;
     }
 
-    // ============ По приоритетам (активные) ============
-
     public static class PriorityRow {
-        public String priority; // important / normal / whatever
+        public String priority;
         public int active;
     }
 
@@ -109,8 +106,6 @@ public class StatsDao {
         }
         return result;
     }
-
-    // ============ По разделам ============
 
     public static class SectionRow {
         public long id;
@@ -155,8 +150,6 @@ public class StatsDao {
         return result;
     }
 
-    // ============ Выполнено за период ============
-
     public static class PeriodStats {
         public int completions;
         public int days;
@@ -186,8 +179,6 @@ public class StatsDao {
         }
         return p;
     }
-
-    // ============ Покупки ============
 
     public static class ShoppingStats {
         public int total;

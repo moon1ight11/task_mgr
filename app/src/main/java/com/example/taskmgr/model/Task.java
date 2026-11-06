@@ -6,14 +6,14 @@ public class Task {
     public String title;
     public String description;
     public long createdAt;
-    public String priority;   // important / normal / whatever
-    public String status;     // active / done / deleted
-    public String dueType;    // exact_date / range / by_km / after_last / none
+    public String priority;
+    public String status;
+    public String dueType;
     public Long dueDate;
     public Long dueFrom;
     public Long dueTo;
     public Integer dueKm;
-    public String repeatRule; // none / by_km / by_months / by_km_or_months
+    public String repeatRule;
     public Integer repeatIntervalKm;
     public Integer repeatIntervalMonths;
 

@@ -173,8 +173,6 @@ public class TaskDao {
         db.delete("tasks", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    // ============ helpers ============
-
     private void appendNotIn(StringBuilder where, List<String> args,
                              String column, Collection<Long> excluded) {
         if (excluded == null || excluded.isEmpty()) return;

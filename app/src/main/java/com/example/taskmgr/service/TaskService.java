@@ -32,7 +32,6 @@ public class TaskService {
     public void completeTask(Task task, Integer kmAtCompletion, String note) {
         long now = System.currentTimeMillis();
         dbHelper.runInTransaction(db -> {
-            // 1. История
             HistoryEntry h = new HistoryEntry();
             h.taskId = task.id;
             h.completedAt = now;
@@ -40,15 +39,12 @@ public class TaskService {
             h.note = note;
             historyDao.insert(db, h);
 
-            // 2. Помечаем задачу выполненной
             taskDao.updateStatus(db, task.id, "done");
 
-            // 3. Обновляем пробег вкладки, если передан
             if (kmAtCompletion != null) {
                 updateTabKmIfNeeded(db, task.tabId, kmAtCompletion);
             }
 
-            // 4. Автопорождение следующей
             if (task.repeatRule != null && !task.repeatRule.equals("none")) {
                 createNextTask(db, task, now, kmAtCompletion);
             }
@@ -58,6 +54,7 @@ public class TaskService {
     private void updateTabKmIfNeeded(SQLiteDatabase db, long tabId, int km) {
         Tab tab = tabDao.getById(db, tabId);
         if (tab == null) return;
+        // Одометр не уменьшается: пишем только если новое значение больше текущего.
         if (tab.currentKm == null || km > tab.currentKm) {
             tab.currentKm = km;
             tabDao.update(db, tab);

@@ -155,7 +155,6 @@ public class StatsActivity extends AppCompatActivity {
 
     private void bindPriorities(List<StatsDao.PriorityRow> rows) {
         priorityContainer.removeAllViews();
-        // Сортируем: important, normal, whatever
         String[] order = {"important", "normal", "whatever"};
         int max = 1;
         for (StatsDao.PriorityRow r : rows) if (r.active > max) max = r.active;
