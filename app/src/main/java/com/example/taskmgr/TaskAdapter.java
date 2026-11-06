@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
-import com.example.taskmgr.service.TaskUrgencyComparator;
 import com.example.taskmgr.service.UrgencyCalculator;
 
 import java.util.ArrayList;

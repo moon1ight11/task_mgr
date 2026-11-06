@@ -174,21 +174,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (existing.isEmpty()) {
-            long home = sectionDao.insert(new Section("Дом", "home", 1));
-            long garage = sectionDao.insert(new Section("Гараж", "garage", 2));
-            long auto = sectionDao.insert(new Section("Авто", "car", 3));
-            long it = sectionDao.insert(new Section("IT", "it", 4));
-            long health = sectionDao.insert(new Section("Здоровье", "health", 5));
-            long ent = sectionDao.insert(new Section("Развлечения", "ent", 6));
+            sectionDao.insert(new Section("Дом", "home", 1));
+            sectionDao.insert(new Section("Гараж", "garage", 2));
+            sectionDao.insert(new Section("Авто", "car", 3));
+            sectionDao.insert(new Section("IT", "it", 4));
+            sectionDao.insert(new Section("Здоровье", "health", 5));
+            sectionDao.insert(new Section("Развлечения", "ent", 6));
             privateSectionId = sectionDao.insert(
                     new Section(PRIVATE_SECTION_NAME, null, 7, true));
-
-            TabDao tdao = new TabDao(this);
-            tdao.insert(new Tab(home, "Тим"));
-            tdao.insert(new Tab(home, "ЮВ"));
-            tdao.insert(new Tab(auto, "Королла"));
-            tdao.insert(new Tab(it, "Работа"));
-            tdao.insert(new Tab(ent, "Книги"));
             return;
         }
 

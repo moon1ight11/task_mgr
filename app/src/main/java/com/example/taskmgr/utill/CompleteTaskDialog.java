@@ -9,7 +9,6 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.taskmgr.R;
 import com.example.taskmgr.dao.TabDao;
-import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
 import com.example.taskmgr.service.TaskService;
 

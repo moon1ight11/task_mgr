@@ -1,7 +1,8 @@
-package com.example.taskmgr.service;
+package com.example.taskmgr;
 
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
+import com.example.taskmgr.service.UrgencyCalculator;
 
 import java.util.Comparator;
 import java.util.Map;

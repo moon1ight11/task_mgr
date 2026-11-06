@@ -15,7 +15,6 @@ import com.example.taskmgr.utill.DbExecutor;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class StatsActivity extends AppCompatActivity {

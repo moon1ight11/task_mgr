@@ -1,7 +1,6 @@
 package com.example.taskmgr;
 
 import android.app.DatePickerDialog;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,8 +33,6 @@ import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.ShoppingItem;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
-import com.example.taskmgr.service.TaskService;
-import com.example.taskmgr.service.TaskUrgencyComparator;
 import com.example.taskmgr.utill.AppLock;
 import com.example.taskmgr.utill.CompleteTaskDialog;
 import com.example.taskmgr.utill.DbExecutor;
