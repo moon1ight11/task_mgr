@@ -17,6 +17,7 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
 import java.util.List;
+import java.util.Locale;
 
 public class StatsActivity extends AppCompatActivity {
 
@@ -212,12 +213,12 @@ public class StatsActivity extends AppCompatActivity {
         cardPeriod.setVisibility(View.VISIBLE);
         periodTitle.setText("Выполнено за " + periodDays + " дн.");
         periodCompletions.setText(String.valueOf(p.completions));
-        periodAvg.setText(String.format("В среднем: %.1f/день", p.perDay()));
+        periodAvg.setText(String.format(Locale.getDefault(),"В среднем: %.1f/день", p.perDay()));
     }
 
     private void bindShopping(StatsDao.ShoppingStats s) {
         shoppingLine.setText("Всего: " + s.total + " • Куплено: " + s.bought
                 + " • Не куплено: " + s.notBought);
-        shoppingSum.setText(String.format("Сумма некупленного: %.2f", s.notBoughtSum));
+        shoppingSum.setText(String.format(Locale.getDefault(),"Сумма некупленного: %.2f", s.notBoughtSum));
     }
 }

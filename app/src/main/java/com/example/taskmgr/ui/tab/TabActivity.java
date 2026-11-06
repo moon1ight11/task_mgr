@@ -49,6 +49,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class TabActivity extends AppCompatActivity {
@@ -632,14 +633,14 @@ public class TabActivity extends AppCompatActivity {
             boolean empty = items.isEmpty();
             shoppingEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
             shoppingRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
-            totalPrice.setText(String.format("Итого: %.2f", total));
+            totalPrice.setText(String.format(Locale.getDefault(),"Итого: %.2f", total));
         });
     }
 
     private void updateTotalPrice() {
         final String categoryFilter = selectedShoppingCategory;
         DbExecutor.run(() -> shoppingDao.getTotalPrice(tabId, categoryFilter),
-                total -> totalPrice.setText(String.format("Итого: %.2f", total)));
+                total -> totalPrice.setText(String.format(Locale.getDefault(),"Итого: %.2f", total)));
     }
 
     private void setupReferenceView() {

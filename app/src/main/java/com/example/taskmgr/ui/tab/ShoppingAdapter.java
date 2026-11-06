@@ -15,6 +15,7 @@ import com.example.taskmgr.model.ShoppingItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
 
@@ -61,7 +62,7 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
         applyStrike(h.title, s.isBought);
 
         if (s.price != null) {
-            h.price.setText(String.format("%.2f", s.price));
+            h.price.setText(String.format(Locale.getDefault(),"%.2f", s.price));
             h.price.setVisibility(View.VISIBLE);
         } else {
             h.price.setVisibility(View.GONE);
