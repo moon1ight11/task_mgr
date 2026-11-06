@@ -41,20 +41,6 @@
         <item name="android:layout_marginBottom">4dp</item>
     </style>
 
-    <style name="TaskMGRPlateText">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:gravity">center</item>
-        <item name="android:paddingStart">6dp</item>
-        <item name="android:paddingEnd">6dp</item>
-        <item name="android:paddingBottom">10dp</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:maxLines">1</item>
-        <item name="android:ellipsize">end</item>
-    </style>
-
     <style name="TaskMGRToggleGroup" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:background">@color/surface_raised</item>
         <item name="strokeColor">@color/divider_strong</item>
@@ -97,6 +83,45 @@
         <item name="rippleColor">@color/neon_green_dim</item>
     </style>
 
+    <!-- Swiss Typography: Заголовки (крупнее, жирнее) -->
+    <style name="TaskMGRText.Title" parent="">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <!-- Swiss Typography: Основной текст (чистый, читаемый) -->
+    <style name="TaskMGRText.Body" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <!-- Swiss Typography: Лейблы (мелкие, разреженные заглавные) -->
+    <style name="TaskMGRText.Label" parent="">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- Применяем к твоим существующим стилям (пример, если они есть) -->
+    <style name="TaskMGRPlateText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
     <style name="TaskMGRSegLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -105,5 +130,17 @@
         <item name="android:letterSpacing">0.08</item>
         <item name="android:textColor">@color/text_tertiary</item>
         <item name="android:layout_marginStart">4dp</item>
+    </style>
+
+    <style name="TaskMGRSpinner" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">@drawable/dialog_bg</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:spinnerItemStyle">@style/TaskMGRSpinnerItem</item>
+        <item name="android:spinnerDropDownItemStyle">@style/TaskMGRSpinnerItem</item>
+    </style>
+
+    <style name="TaskMGRSpinnerItem" parent="Widget.AppCompat.TextView.SpinnerItem">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">15sp</item>
     </style>
 </resources>

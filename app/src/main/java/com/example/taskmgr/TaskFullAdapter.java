@@ -1,12 +1,17 @@
 package com.example.taskmgr;
 
+import android.content.Context;
 import android.graphics.Color;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.model.Tab;
@@ -31,9 +36,7 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
     private Tab currentTab;
     private long highlightedTaskId = -1;
 
-    public void setCurrentTab(Tab tab) {
-        this.currentTab = tab;
-    }
+    public void setCurrentTab(Tab tab) { this.currentTab = tab; }
 
     public TaskFullAdapter(OnTaskClick clickListener, OnTaskLongClick longClickListener) {
         this.clickListener = clickListener;
@@ -47,9 +50,7 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
     }
 
     public int positionOfTask(long taskId) {
-        for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).id == taskId) return i;
-        }
+        for (int i = 0; i < items.size(); i++) if (items.get(i).id == taskId) return i;
         return -1;
     }
 
@@ -75,6 +76,7 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
+        Context ctx = h.itemView.getContext();
         Task t = items.get(position);
         h.title.setText(t.title);
         if (t.description != null && !t.description.isEmpty()) {
@@ -83,25 +85,14 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
         } else {
             h.description.setVisibility(View.GONE);
         }
-        h.meta.setText(buildMeta(t));
-
+        h.meta.setText(buildMetaSpan(ctx, t, currentTab));
         h.created.setText("Создано: " + fmtDateTime(t.createdAt));
 
         if (t.id == highlightedTaskId) {
-            h.itemView.setBackgroundColor(0x4400FFB2);
+            h.inner.setBackgroundColor(0x4400FFB2);
         } else {
-            h.itemView.setBackgroundColor(Color.TRANSPARENT);
+            h.inner.setBackgroundColor(Color.TRANSPARENT);
         }
-
-        UrgencyCalculator.Urgency urgency = UrgencyCalculator.calculate(t, currentTab);
-        int color;
-        switch (urgency) {
-            case OVERDUE: color = 0xFFD32F2F; break;
-            case SOON:    color = 0xFFFF9800; break;
-            case NORMAL:  color = 0xFF4CAF50; break;
-            default:      color = 0xFF9E9E9E; break;
-        }
-        h.meta.setTextColor(color);
 
         h.itemView.setOnClickListener(v -> { if (clickListener != null) clickListener.onClick(t); });
         h.itemView.setOnLongClickListener(v -> {
@@ -109,28 +100,62 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
             return true;
         });
 
-        // срочность полосы для карточки в TabActivity
-        UrgencyCalculator.Urgency u2 = UrgencyCalculator.calculate(t, currentTab);
-        int stripeColor;
-        switch (u2) {
-            case OVERDUE: stripeColor = 0xFFFF3B6B; break;
-            case SOON:    stripeColor = 0xFFFBBF24; break;
-            case NORMAL:  stripeColor = 0xFF00FFB2; break;
-            default:      stripeColor = 0xFF64748B; break;
+        if (h.stripe != null) {
+            h.stripe.setBackgroundColor(urgencyColor(ctx, UrgencyCalculator.calculate(t, currentTab)));
         }
-        if (h.stripe != null) h.stripe.setBackgroundColor(stripeColor);
     }
 
-    private String buildMeta(Task t) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Приоритет: ").append(priorityLabel(t.priority));
-        if (t.dueType != null && !t.dueType.equals("none")) {
-            sb.append(" • ").append(dueLabel(t));
+    private int urgencyColor(Context ctx, UrgencyCalculator.Urgency u) {
+        switch (u) {
+            case OVERDUE: return ContextCompat.getColor(ctx, R.color.semantic_danger);
+            case SOON:    return ContextCompat.getColor(ctx, R.color.semantic_warning);
+            case NORMAL:  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default:      return ContextCompat.getColor(ctx, R.color.semantic_neutral_weak);
         }
-        if (t.repeatRule != null && !t.repeatRule.equals("none")) {
-            sb.append(" • повтор");
+    }
+
+    private int priorityColor(Context ctx, String p) {
+        if (p == null) return ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
+        switch (p) {
+            case "important": return ContextCompat.getColor(ctx, R.color.semantic_info);
+            case "whatever":  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default:          return ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
         }
-        return sb.toString();
+    }
+
+    private CharSequence buildMetaSpan(Context ctx, Task t, Tab tab) {
+        String pLabel = priorityLabel(t.priority);
+        String dueText = (t.dueType != null && !t.dueType.equals("none")) ? dueLabel(t) : null;
+        boolean hasRepeat = (t.repeatRule != null && !t.repeatRule.equals("none"));
+
+        String prefixP = "Приоритет: ";
+        String prefixD = " • ";
+        String suffixRepeat = " • повтор";
+
+        StringBuilder full = new StringBuilder();
+        full.append(prefixP).append(pLabel);
+        int pStart = prefixP.length();
+        int pEnd = pStart + pLabel.length();
+        int dStart = -1, dEnd = -1;
+        if (dueText != null) {
+            full.append(prefixD).append(dueText);
+            dStart = full.length() - dueText.length();
+            dEnd = full.length();
+        }
+        if (hasRepeat) full.append(suffixRepeat);
+
+        SpannableString sp = new SpannableString(full.toString());
+        int neutral = ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
+
+        sp.setSpan(new ForegroundColorSpan(neutral), 0, full.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        sp.setSpan(new ForegroundColorSpan(priorityColor(ctx, t.priority)),
+                pStart, pEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (dStart >= 0) {
+            sp.setSpan(new ForegroundColorSpan(urgencyColor(ctx, UrgencyCalculator.calculate(t, tab))),
+                    dStart, dEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        return sp;
     }
 
     private String priorityLabel(String p) {
@@ -176,7 +201,7 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
 
     static class VH extends RecyclerView.ViewHolder {
         TextView title, description, meta, created;
-        View stripe, contentRoot;
+        View stripe, contentRoot, inner;
         VH(@NonNull View v) {
             super(v);
             title = v.findViewById(R.id.task_title);
@@ -185,6 +210,7 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
             created = v.findViewById(R.id.task_created);
             stripe = v.findViewById(R.id.urgency_stripe);
             contentRoot = v.findViewById(R.id.task_content_root);
+            inner = v.findViewById(R.id.task_inner);
         }
     }
 }

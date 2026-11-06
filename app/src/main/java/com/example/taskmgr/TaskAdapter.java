@@ -1,8 +1,12 @@
 package com.example.taskmgr;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Outline;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.model.Section;
@@ -44,13 +49,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
 
     public void setItems(List<Task> newItems, List<Tab> allTabs, List<Section> allSections) {
         tabsById.clear();
-        if (allTabs != null) {
-            for (Tab t : allTabs) tabsById.put(t.id, t);
-        }
+        if (allTabs != null) for (Tab t : allTabs) tabsById.put(t.id, t);
         sectionNamesById.clear();
-        if (allSections != null) {
-            for (Section s : allSections) sectionNamesById.put(s.id, s.name);
-        }
+        if (allSections != null) for (Section s : allSections) sectionNamesById.put(s.id, s.name);
         items.clear();
         if (newItems != null) items.addAll(newItems);
         items.sort(new TaskUrgencyComparator(tabsById));
@@ -58,9 +59,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
     }
 
     public int positionOfTask(long taskId) {
-        for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).id == taskId) return i;
-        }
+        for (int i = 0; i < items.size(); i++) if (items.get(i).id == taskId) return i;
         return -1;
     }
 
@@ -98,6 +97,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
+        Context ctx = holder.itemView.getContext();
         Task t = items.get(position);
         Tab tab = tabsById.get(t.tabId);
 
@@ -111,52 +111,87 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
             holder.origin.setVisibility(View.GONE);
         }
 
-        holder.subtitle.setText(buildSubtitle(t));
+        holder.subtitle.setText(buildSubtitleSpan(ctx, t, tab));
 
         if (t.id == highlightedTaskId) {
-            holder.itemView.setBackgroundColor(0x4400FFB2);
+            holder.inner.setBackgroundColor(0x4400FFB2);
         } else {
-            holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+            holder.inner.setBackgroundColor(Color.TRANSPARENT);
         }
 
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onClick(t);
         });
-
         holder.btnComplete.setOnClickListener(v -> {
             if (completeListener != null) completeListener.onComplete(t);
         });
 
-        UrgencyCalculator.Urgency urgency = UrgencyCalculator.calculate(t, tab);
-        int stripeColor;
-        switch (urgency) {
-            case OVERDUE: stripeColor = 0xFFFF3B6B; break;
-            case SOON:    stripeColor = 0xFFFBBF24; break;
-            case NORMAL:  stripeColor = 0xFF00FFB2; break;
-            default:      stripeColor = 0xFF64748B; break;
-        }
+        int stripeColor = urgencyStripeColor(ctx, UrgencyCalculator.calculate(t, tab));
         if (holder.stripe != null) holder.stripe.setBackgroundColor(stripeColor);
     }
 
-    private String buildOrigin(Task t, Tab tab) {
-        String section = (tab != null)
-                ? sectionNamesById.get(tab.sectionId)
-                : null;
-        String tabName = (tab != null) ? tab.name : null;
+    private int urgencyStripeColor(Context ctx, UrgencyCalculator.Urgency u) {
+        switch (u) {
+            case OVERDUE: return ContextCompat.getColor(ctx, R.color.semantic_danger);
+            case SOON:    return ContextCompat.getColor(ctx, R.color.semantic_warning);
+            case NORMAL:  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default:      return ContextCompat.getColor(ctx, R.color.semantic_neutral_weak);
+        }
+    }
 
+    private int urgencyTextColor(Context ctx, UrgencyCalculator.Urgency u) {
+        switch (u) {
+            case OVERDUE: return ContextCompat.getColor(ctx, R.color.semantic_danger);
+            case SOON:    return ContextCompat.getColor(ctx, R.color.semantic_warning);
+            case NORMAL:  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default:      return ContextCompat.getColor(ctx, R.color.semantic_neutral_weak);
+        }
+    }
+
+    private int priorityColor(Context ctx, String p) {
+        if (p == null) return ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
+        switch (p) {
+            case "important": return ContextCompat.getColor(ctx, R.color.semantic_info);
+            case "whatever":  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default:          return ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
+        }
+    }
+
+    private CharSequence buildSubtitleSpan(Context ctx, Task t, Tab tab) {
+        String pLabel = priorityLabel(t.priority);
+        String dueText = (t.dueType != null && !t.dueType.equals("none")) ? dueLabel(t) : null;
+
+        String prefixP = "Приоритет: ";
+        String prefixD = " • Срок: ";
+        String full = prefixP + pLabel + (dueText != null ? prefixD + dueText : "");
+
+        SpannableString sp = new SpannableString(full);
+        int neutral = ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
+
+        sp.setSpan(new ForegroundColorSpan(neutral), 0, full.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        int pStart = prefixP.length();
+        int pEnd = pStart + pLabel.length();
+        sp.setSpan(new ForegroundColorSpan(priorityColor(ctx, t.priority)),
+                pStart, pEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        if (dueText != null) {
+            int dStart = full.length() - dueText.length();
+            int dColor = urgencyTextColor(ctx, UrgencyCalculator.calculate(t, tab));
+            sp.setSpan(new ForegroundColorSpan(dColor),
+                    dStart, full.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        return sp;
+    }
+
+    private String buildOrigin(Task t, Tab tab) {
+        String section = (tab != null) ? sectionNamesById.get(tab.sectionId) : null;
+        String tabName = (tab != null) ? tab.name : null;
         if (TextUtils.isEmpty(section) && TextUtils.isEmpty(tabName)) return null;
         if (TextUtils.isEmpty(section)) return tabName;
         if (TextUtils.isEmpty(tabName)) return section;
         return section + " • " + tabName;
-    }
-
-    private String buildSubtitle(Task t) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Приоритет: ").append(priorityLabel(t.priority));
-        if (t.dueType != null && !t.dueType.equals("none")) {
-            sb.append(" • Срок: ").append(dueLabel(t));
-        }
-        return sb.toString();
     }
 
     private String priorityLabel(String p) {
@@ -201,7 +236,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
     static class VH extends RecyclerView.ViewHolder {
         TextView title, origin, subtitle;
         ImageButton btnComplete;
-        View stripe, contentRoot;
+        View stripe, contentRoot, inner;
         VH(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.task_title);
@@ -210,6 +245,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
             btnComplete = itemView.findViewById(R.id.btn_complete);
             stripe = itemView.findViewById(R.id.urgency_stripe);
             contentRoot = itemView.findViewById(R.id.task_content_root);
+            inner = itemView.findViewById(R.id.task_inner);
         }
     }
 }
