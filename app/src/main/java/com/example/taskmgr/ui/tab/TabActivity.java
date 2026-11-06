@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.tab;
 
 import android.app.DatePickerDialog;
 import android.content.res.ColorStateList;
@@ -21,21 +21,23 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.taskmgr.dao.HistoryDao;
-import com.example.taskmgr.dao.ReferenceDao;
-import com.example.taskmgr.dao.SectionDao;
-import com.example.taskmgr.dao.ShoppingDao;
-import com.example.taskmgr.dao.TabDao;
-import com.example.taskmgr.dao.TaskDao;
+import com.example.taskmgr.R;
+import com.example.taskmgr.data.dao.HistoryDao;
+import com.example.taskmgr.data.dao.ReferenceDao;
+import com.example.taskmgr.data.dao.SectionDao;
+import com.example.taskmgr.data.dao.ShoppingDao;
+import com.example.taskmgr.data.dao.TabDao;
+import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.HistoryEntry;
 import com.example.taskmgr.model.ReferenceEntry;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.ShoppingItem;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
-import com.example.taskmgr.utill.AppLock;
-import com.example.taskmgr.utill.CompleteTaskDialog;
-import com.example.taskmgr.utill.DbExecutor;
+import com.example.taskmgr.service.TaskUrgencyComparator;
+import com.example.taskmgr.util.AppLock;
+import com.example.taskmgr.ui.common.CompleteTaskDialog;
+import com.example.taskmgr.util.DbExecutor;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;

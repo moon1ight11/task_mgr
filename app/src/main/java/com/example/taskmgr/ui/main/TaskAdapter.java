@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.main;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -18,9 +18,11 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.taskmgr.R;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
+import com.example.taskmgr.service.TaskUrgencyComparator;
 import com.example.taskmgr.service.UrgencyCalculator;
 
 import java.util.ArrayList;
@@ -78,11 +80,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_task, parent, false);
         VH vh = new VH(v);
-        installRoundedClip(vh.contentRoot, parent);
+        InstallRoundedClip(vh.contentRoot, parent);
         return vh;
     }
 
-    static void installRoundedClip(View contentRoot, ViewGroup parent) {
+    public static void InstallRoundedClip(View contentRoot, ViewGroup parent) {
         if (contentRoot == null) return;
         final float radius = parent.getResources().getDimension(R.dimen.card_corner_radius);
         contentRoot.setOutlineProvider(new ViewOutlineProvider() {

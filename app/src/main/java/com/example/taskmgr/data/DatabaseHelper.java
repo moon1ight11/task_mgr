@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

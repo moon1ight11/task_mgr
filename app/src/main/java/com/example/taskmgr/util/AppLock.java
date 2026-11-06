@@ -1,4 +1,4 @@
-package com.example.taskmgr.utill;
+package com.example.taskmgr.util;
 
 /** Сессионный флаг разблокировки приватного раздела. Сбрасывается при убийстве процесса. */
 public final class AppLock {

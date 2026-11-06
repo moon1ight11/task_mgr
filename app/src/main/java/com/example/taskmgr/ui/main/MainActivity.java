@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.main;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,17 +14,21 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.taskmgr.dao.AppSettingsDao;
-import com.example.taskmgr.dao.SectionDao;
-import com.example.taskmgr.dao.TabDao;
-import com.example.taskmgr.dao.TaskDao;
+import com.example.taskmgr.R;
+import com.example.taskmgr.ui.section.SectionActivity;
+import com.example.taskmgr.ui.stats.StatsActivity;
+import com.example.taskmgr.ui.tab.TabActivity;
+import com.example.taskmgr.data.dao.AppSettingsDao;
+import com.example.taskmgr.data.dao.SectionDao;
+import com.example.taskmgr.data.dao.TabDao;
+import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
-import com.example.taskmgr.utill.AppLock;
-import com.example.taskmgr.utill.CompleteTaskDialog;
-import com.example.taskmgr.utill.DbExecutor;
-import com.example.taskmgr.utill.PasswordHasher;
+import com.example.taskmgr.util.AppLock;
+import com.example.taskmgr.ui.common.CompleteTaskDialog;
+import com.example.taskmgr.util.DbExecutor;
+import com.example.taskmgr.util.PasswordHasher;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;

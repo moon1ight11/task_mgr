@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.section;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.taskmgr.R;
 import com.example.taskmgr.model.Tab;
 
 import java.util.ArrayList;

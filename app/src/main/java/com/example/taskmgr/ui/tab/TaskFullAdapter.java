@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.tab;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -14,9 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.taskmgr.R;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
 import com.example.taskmgr.service.UrgencyCalculator;
+import com.example.taskmgr.ui.main.TaskAdapter;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -70,7 +72,7 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_task_full, parent, false);
         VH vh = new VH(v);
-        TaskAdapter.installRoundedClip(vh.contentRoot, parent);
+        TaskAdapter.InstallRoundedClip(vh.contentRoot, parent);
         return vh;
     }
 

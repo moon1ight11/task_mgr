@@ -9,7 +9,7 @@
         android:theme="@style/Theme.TaskMGR">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,8 +17,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SectionActivity" />
-        <activity android:name=".TabActivity" />
-        <activity android:name=".StatsActivity" />
+        <activity android:name=".ui.section.SectionActivity" />
+        <activity android:name=".ui.tab.TabActivity" />
+        <activity android:name=".ui.stats.StatsActivity" />
     </application>
 </manifest>

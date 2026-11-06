@@ -1,4 +1,4 @@
-package com.example.taskmgr.utill;
+package com.example.taskmgr.ui.common;
 
 import android.app.Activity;
 import android.view.View;
@@ -8,9 +8,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.example.taskmgr.R;
-import com.example.taskmgr.dao.TabDao;
+import com.example.taskmgr.data.dao.TabDao;
 import com.example.taskmgr.model.Task;
 import com.example.taskmgr.service.TaskService;
+import com.example.taskmgr.util.DbExecutor;
 
 /**
  * Универсальный диалог выполнения задачи.

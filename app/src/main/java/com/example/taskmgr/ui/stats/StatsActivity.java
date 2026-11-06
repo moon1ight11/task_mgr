@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.stats;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,8 +10,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.example.taskmgr.dao.StatsDao;
-import com.example.taskmgr.utill.DbExecutor;
+import com.example.taskmgr.R;
+import com.example.taskmgr.data.dao.StatsDao;
+import com.example.taskmgr.util.DbExecutor;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 

@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.tab;
 
 import android.graphics.Paint;
 import android.view.LayoutInflater;
@@ -10,6 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.taskmgr.R;
 import com.example.taskmgr.model.ShoppingItem;
 
 import java.util.ArrayList;

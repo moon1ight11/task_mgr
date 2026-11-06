@@ -2,9 +2,9 @@ package com.example.taskmgr.service;
 
 import android.content.Context;
 
-import com.example.taskmgr.dao.HistoryDao;
-import com.example.taskmgr.dao.TabDao;
-import com.example.taskmgr.dao.TaskDao;
+import com.example.taskmgr.data.dao.HistoryDao;
+import com.example.taskmgr.data.dao.TabDao;
+import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.HistoryEntry;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;

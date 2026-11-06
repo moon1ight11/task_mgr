@@ -1,10 +1,10 @@
-package com.example.taskmgr.dao;
+package com.example.taskmgr.data.dao;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.taskmgr.DatabaseHelper;
+import com.example.taskmgr.data.DatabaseHelper;
 
 import java.util.ArrayList;
 import java.util.List;

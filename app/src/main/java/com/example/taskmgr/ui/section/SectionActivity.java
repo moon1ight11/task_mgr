@@ -1,4 +1,4 @@
-package com.example.taskmgr;
+package com.example.taskmgr.ui.section;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,13 +14,15 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.taskmgr.dao.SectionDao;
-import com.example.taskmgr.dao.TabDao;
-import com.example.taskmgr.dao.TaskDao;
+import com.example.taskmgr.R;
+import com.example.taskmgr.ui.tab.TabActivity;
+import com.example.taskmgr.data.dao.SectionDao;
+import com.example.taskmgr.data.dao.TabDao;
+import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
-import com.example.taskmgr.utill.AppLock;
-import com.example.taskmgr.utill.DbExecutor;
+import com.example.taskmgr.util.AppLock;
+import com.example.taskmgr.util.DbExecutor;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
