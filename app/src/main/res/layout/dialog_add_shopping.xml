@@ -19,4 +19,11 @@
         android:hint="Цена (опционально)"
         android:inputType="numberDecimal" />
 
+    <EditText
+        android:id="@+id/input_shopping_category"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Категория (опционально)"
+        android:inputType="textCapWords" />
+
 </LinearLayout>

@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -71,6 +71,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "is_bought INTEGER DEFAULT 0, " +
                 "is_selected INTEGER DEFAULT 0, " +
                 "created_at INTEGER NOT NULL, " +
+                "category TEXT, " +
                 "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
 
         db.execSQL("CREATE TABLE reference_entries (" +
@@ -92,6 +93,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE sections ADD COLUMN is_private INTEGER DEFAULT 0");
             db.execSQL("CREATE TABLE IF NOT EXISTS app_settings (" +
                     "key TEXT PRIMARY KEY, value TEXT)");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE shopping_items ADD COLUMN category TEXT");
         }
     }
 }

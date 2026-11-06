@@ -1,9 +1,13 @@
 package com.example.taskmgr;
 
+import android.graphics.Color;
+import android.graphics.Outline;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -23,21 +27,21 @@ import java.util.Map;
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
 
     public interface OnTaskClick { void onClick(Task task); }
+    public interface OnTaskComplete { void onComplete(Task task); }
 
     private final List<Task> items = new ArrayList<>();
     private final Map<Long, Tab> tabsById = new HashMap<>();
     private final Map<Long, String> sectionNamesById = new HashMap<>();
     private final OnTaskClick clickListener;
+    private final OnTaskComplete completeListener;
 
-    public TaskAdapter(OnTaskClick clickListener) {
+    private long highlightedTaskId = -1;
+
+    public TaskAdapter(OnTaskClick clickListener, OnTaskComplete completeListener) {
         this.clickListener = clickListener;
+        this.completeListener = completeListener;
     }
 
-    /**
-     * @param newItems     задачи
-     * @param allTabs      все вкладки (нужны для «по пробегу» и для «Авто • Королла»)
-     * @param allSections  все разделы (нужны для имени раздела)
-     */
     public void setItems(List<Task> newItems, List<Tab> allTabs, List<Section> allSections) {
         tabsById.clear();
         if (allTabs != null) {
@@ -53,11 +57,43 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
         notifyDataSetChanged();
     }
 
+    public int positionOfTask(long taskId) {
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).id == taskId) return i;
+        }
+        return -1;
+    }
+
+    public void setHighlightedTaskId(long taskId) {
+        highlightedTaskId = taskId;
+        notifyDataSetChanged();
+    }
+
+    public void clearHighlight() {
+        if (highlightedTaskId == -1) return;
+        highlightedTaskId = -1;
+        notifyDataSetChanged();
+    }
+
     @NonNull @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_task, parent, false);
-        return new VH(v);
+        VH vh = new VH(v);
+        installRoundedClip(vh.contentRoot, parent);
+        return vh;
+    }
+
+    static void installRoundedClip(View contentRoot, ViewGroup parent) {
+        if (contentRoot == null) return;
+        final float radius = parent.getResources().getDimension(R.dimen.card_corner_radius);
+        contentRoot.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
+            }
+        });
+        contentRoot.setClipToOutline(true);
     }
 
     @Override
@@ -67,7 +103,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
 
         holder.title.setText(t.title);
 
-        // «Авто • Королла» — раздел • вкладка
         String origin = buildOrigin(t, tab);
         if (origin != null) {
             holder.origin.setText(origin);
@@ -78,8 +113,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
 
         holder.subtitle.setText(buildSubtitle(t));
 
+        if (t.id == highlightedTaskId) {
+            holder.itemView.setBackgroundColor(0x4400FFB2);
+        } else {
+            holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onClick(t);
+        });
+
+        holder.btnComplete.setOnClickListener(v -> {
+            if (completeListener != null) completeListener.onComplete(t);
         });
 
         UrgencyCalculator.Urgency urgency = UrgencyCalculator.calculate(t, tab);
@@ -93,7 +138,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
         if (holder.stripe != null) holder.stripe.setBackgroundColor(stripeColor);
     }
 
-    /** «Раздел • Вкладка» (например, «Авто • Королла»). null — если не удалось собрать. */
     private String buildOrigin(Task t, Tab tab) {
         String section = (tab != null)
                 ? sectionNamesById.get(tab.sectionId)
@@ -156,13 +200,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.VH> {
 
     static class VH extends RecyclerView.ViewHolder {
         TextView title, origin, subtitle;
-        View stripe;
+        ImageButton btnComplete;
+        View stripe, contentRoot;
         VH(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.task_title);
             origin = itemView.findViewById(R.id.task_origin);
             subtitle = itemView.findViewById(R.id.task_subtitle);
+            btnComplete = itemView.findViewById(R.id.btn_complete);
             stripe = itemView.findViewById(R.id.urgency_stripe);
+            contentRoot = itemView.findViewById(R.id.task_content_root);
         }
     }
 }

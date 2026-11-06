@@ -3,19 +3,14 @@ package com.example.taskmgr;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -27,9 +22,9 @@ import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
 import com.example.taskmgr.utill.AppLock;
+import com.example.taskmgr.utill.CompleteTaskDialog;
 import com.example.taskmgr.utill.DbExecutor;
 import com.example.taskmgr.utill.PasswordHasher;
-import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -44,8 +39,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int SOON_KM = 500;
     private static final String PRIVATE_SECTION_NAME = "Private";
 
-    private DrawerLayout drawerLayout;
-    private NavigationView navView;
     private TabLayout mainTabs;
     private RecyclerView tasksRecycler;
     private TextView emptyView;
@@ -74,14 +67,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) getSupportActionBar().setTitle("TaskMGR");
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navView = findViewById(R.id.nav_view);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, toolbar,
-                android.R.string.ok, android.R.string.cancel);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        navView.setNavigationItemSelectedListener(this::onNavItemSelected);
+        setupSectionPlates();
 
         mainTabs = findViewById(R.id.main_tabs);
         mainTabs.addTab(mainTabs.newTab().setText("Дедлайн"));
@@ -98,11 +84,12 @@ public class MainActivity extends AppCompatActivity {
         tasksRecycler = findViewById(R.id.tasks_recycler);
         emptyView = findViewById(R.id.empty_view);
         tasksRecycler.setLayoutManager(new LinearLayoutManager(this));
-        taskAdapter = new TaskAdapter(task ->
-                Toast.makeText(this, "Задача: " + task.title, Toast.LENGTH_SHORT).show());
+        taskAdapter = new TaskAdapter(
+                task -> openTabForTask(task),
+                task -> CompleteTaskDialog.show(this, task, isAutoTask(task), t -> loadTasks())
+        );
         tasksRecycler.setAdapter(taskAdapter);
 
-        // Всё в фон: seed → при необходимости создать пароль → первая загрузка
         DbExecutor.run(() -> {
             try {
                 seedSectionsIfEmptyBlocking();
@@ -115,10 +102,49 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Если пароль приватного раздела ещё не задан — показываем диалог создания (без отмены).
-     * Иначе — сразу грузим задачи.
-     */
+    private boolean isAutoTask(Task task) {
+        Tab tab = null;
+        try {
+            tab = tabDao.getById(task.tabId);
+        } catch (Exception ignored) {}
+        if (tab == null) return false;
+        Section s = sectionDao.getById(tab.sectionId);
+        return s != null && "Авто".equals(s.name);
+    }
+
+    private void openTabForTask(Task task) {
+        if (task == null) return;
+        Tab tab = null;
+        try {
+            tab = tabDao.getById(task.tabId);
+        } catch (Exception ignored) {}
+        if (tab == null) {
+            Toast.makeText(this, "Вкладка задачи не найдена", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Section s = sectionDao.getById(tab.sectionId);
+        boolean isAuto = s != null && "Авто".equals(s.name);
+
+        Intent i = new Intent(this, TabActivity.class);
+        i.putExtra(TabActivity.EXTRA_TAB_ID, tab.id);
+        i.putExtra(TabActivity.EXTRA_TAB_NAME, tab.name);
+        i.putExtra(TabActivity.EXTRA_IS_AUTO, isAuto);
+        i.putExtra(TabActivity.EXTRA_TASK_ID, task.id);
+        startActivity(i);
+    }
+
+    private void setupSectionPlates() {
+        findViewById(R.id.plate_home).setOnClickListener(v -> openSectionByName("Дом"));
+        findViewById(R.id.plate_garage).setOnClickListener(v -> openSectionByName("Гараж"));
+        findViewById(R.id.plate_auto).setOnClickListener(v -> openSectionByName("Авто"));
+        findViewById(R.id.plate_it).setOnClickListener(v -> openSectionByName("IT"));
+        findViewById(R.id.plate_health).setOnClickListener(v -> openSectionByName("Здоровье"));
+        findViewById(R.id.plate_ent).setOnClickListener(v -> openSectionByName("Развлечения"));
+        findViewById(R.id.plate_private).setOnClickListener(v -> handlePrivateNavClick());
+        findViewById(R.id.plate_stats).setOnClickListener(v ->
+                startActivity(new Intent(this, StatsActivity.class)));
+    }
+
     private void ensurePrivatePasswordThenLoad() {
         boolean hasPwd;
         try {
@@ -136,11 +162,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /** Только для вызова из фонового потока. */
     private void seedSectionsIfEmptyBlocking() {
         List<Section> existing = sectionDao.getAll();
 
-        // Ищем приватный раздел
         Section priv = null;
         for (Section s : existing) {
             if (s.isPrivate) { priv = s; break; }
@@ -168,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Разделы уже есть, но приватного нет — создаём
         if (priv == null) {
             privateSectionId = sectionDao.insert(
                     new Section(PRIVATE_SECTION_NAME, null, 7, true));
@@ -228,48 +251,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private boolean onNavItemSelected(@NonNull MenuItem item) {
-        drawerLayout.closeDrawer(GravityCompat.START);
-        int id = item.getItemId();
-
-        if (id == R.id.nav_stats) {
-            startActivity(new Intent(this, StatsActivity.class));
-            return true;
-        }
-
-        if (id == R.id.nav_private) {
-            handlePrivateNavClick();
-            return true;
-        }
-
-        String sectionName = null;
-        if (id == R.id.nav_home) sectionName = "Дом";
-        else if (id == R.id.nav_garage) sectionName = "Гараж";
-        else if (id == R.id.nav_auto) sectionName = "Авто";
-        else if (id == R.id.nav_it) sectionName = "IT";
-        else if (id == R.id.nav_health) sectionName = "Здоровье";
-        else if (id == R.id.nav_ent) sectionName = "Развлечения";
-
-        if (sectionName != null) {
-            final String name = sectionName;
-            DbExecutor.run(() -> {
-                for (Section s : sectionDao.getAll()) {
-                    if (s.name.equals(name)) return s;
-                }
-                return null;
-            }, found -> {
-                if (found == null) {
-                    Toast.makeText(this, "Раздел не найден: " + name, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                openSection(found);
-            });
-        }
-        return true;
+    private void openSectionByName(String name) {
+        DbExecutor.run(() -> {
+            for (Section s : sectionDao.getAll()) {
+                if (s.name.equals(name)) return s;
+            }
+            return null;
+        }, found -> {
+            if (found == null) {
+                Toast.makeText(this, "Раздел не найден: " + name, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            openSection(found);
+        });
     }
 
     private void handlePrivateNavClick() {
-        // Пароля нет → создать
         if (!settingsDao.hasPrivatePassword()) {
             showCreatePasswordDialog(() -> {
                 AppLock.setPrivateUnlocked(true);
@@ -284,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
         showEnterPasswordDialog(() -> {
             AppLock.setPrivateUnlocked(true);
             findPrivateSectionAndOpen();
-            loadTasks(); // скрытое могло стать видимым
+            loadTasks();
         });
     }
 
@@ -310,8 +307,6 @@ public class MainActivity extends AppCompatActivity {
         i.putExtra(SectionActivity.EXTRA_SECTION_NAME, s.name);
         startActivity(i);
     }
-
-    // ============ Диалоги пароля ============
 
     private interface OnSuccess { void run(); }
 
@@ -392,14 +387,5 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dialog.show();
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
     }
 }

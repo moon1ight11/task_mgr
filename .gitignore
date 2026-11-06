@@ -8,6 +8,10 @@
 # Java классы
 *.class
 
+.gradle/
+build/
+app/build/
+
 # Сгенерированные папки
 bin/
 gen/

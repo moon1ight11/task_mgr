@@ -11,7 +11,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.taskmgr.model.Tab;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
 
@@ -24,6 +27,7 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
     }
 
     private final List<Tab> items = new ArrayList<>();
+    private final Map<Long, Integer> activeCounts = new HashMap<>();
     private final OnTabClick clickListener;
     private final OnTabLongClick longClickListener;
     private final boolean showSubtitle;
@@ -39,8 +43,14 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
     }
 
     public void setItems(List<Tab> newItems) {
+        setItems(newItems, null);
+    }
+
+    public void setItems(List<Tab> newItems, Map<Long, Integer> counts) {
         items.clear();
-        items.addAll(newItems);
+        if (newItems != null) items.addAll(newItems);
+        activeCounts.clear();
+        if (counts != null) activeCounts.putAll(counts);
         notifyDataSetChanged();
     }
 
@@ -56,6 +66,14 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
     public void onBindViewHolder(@NonNull VH holder, int position) {
         Tab t = items.get(position);
         holder.name.setText(t.name);
+
+        Integer count = activeCounts.get(t.id);
+        if (count != null && count > 0) {
+            holder.activeCount.setText(String.valueOf(count));
+            holder.activeCount.setVisibility(View.VISIBLE);
+        } else {
+            holder.activeCount.setVisibility(View.GONE);
+        }
 
         if (showSubtitle && (t.year != null || t.currentKm != null)) {
             StringBuilder sb = new StringBuilder();
@@ -85,11 +103,12 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
     }
 
     static class VH extends RecyclerView.ViewHolder {
-        TextView name, subtitle;
+        TextView name, subtitle, activeCount;
         VH(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.tab_name);
             subtitle = itemView.findViewById(R.id.tab_subtitle);
+            activeCount = itemView.findViewById(R.id.tab_active_count);
         }
     }
 }

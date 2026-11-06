@@ -21,7 +21,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Описание (опционально)"
-            android:inputType="textCapSentences|textMultiLine" />
+            android:inputType="textCapSentences|textMultiLine"
+            android:minLines="4"
+            android:gravity="top|start"
+            android:background="@null"
+            android:padding="8dp"
+            android:layout_marginTop="8dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -45,7 +50,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <!-- Точная дата: read-only EditText, по клику DatePickerDialog -->
         <EditText
             android:id="@+id/input_due_date"
             android:layout_width="match_parent"
@@ -56,7 +60,6 @@
             android:inputType="none"
             android:visibility="gone" />
 
-        <!-- Период -->
         <EditText
             android:id="@+id/input_due_from"
             android:layout_width="match_parent"

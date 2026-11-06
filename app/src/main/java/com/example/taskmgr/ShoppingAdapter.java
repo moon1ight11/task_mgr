@@ -66,6 +66,13 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
             h.price.setVisibility(View.GONE);
         }
 
+        if (s.category != null && !s.category.isEmpty()) {
+            h.category.setText(s.category);
+            h.category.setVisibility(View.VISIBLE);
+        } else {
+            h.category.setVisibility(View.GONE);
+        }
+
         h.bought.setOnCheckedChangeListener(null);
         h.bought.setChecked(s.isBought);
         h.bought.setOnCheckedChangeListener((v, checked) -> {
@@ -87,12 +94,13 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
     @Override public int getItemCount() { return items.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
-        TextView title, price;
+        TextView title, price, category;
         CheckBox bought;
         VH(@NonNull View v) {
             super(v);
             title = v.findViewById(R.id.shopping_title);
             price = v.findViewById(R.id.shopping_price);
+            category = v.findViewById(R.id.shopping_category);
             bought = v.findViewById(R.id.check_bought);
         }
     }

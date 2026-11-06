@@ -8,6 +8,7 @@ public class ShoppingItem {
     public boolean isBought;
     public boolean isSelected;
     public long createdAt;
+    public String category;
 
     public ShoppingItem() {}
 
@@ -16,5 +17,10 @@ public class ShoppingItem {
         this.title = title;
         this.price = price;
         this.createdAt = System.currentTimeMillis();
+    }
+
+    public ShoppingItem(long tabId, String title, Double price, String category) {
+        this(tabId, title, price);
+        this.category = category;
     }
 }

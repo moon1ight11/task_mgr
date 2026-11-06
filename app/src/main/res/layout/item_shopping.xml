@@ -38,6 +38,15 @@
                 android:textSize="12sp"
                 android:textColor="@color/neon_green"
                 android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/shopping_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/text_tertiary"
+                android:layout_marginTop="2dp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <CheckBox

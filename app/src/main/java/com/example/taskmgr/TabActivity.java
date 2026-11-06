@@ -1,14 +1,16 @@
 package com.example.taskmgr;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,7 +37,9 @@ import com.example.taskmgr.model.Task;
 import com.example.taskmgr.service.TaskService;
 import com.example.taskmgr.service.TaskUrgencyComparator;
 import com.example.taskmgr.utill.AppLock;
+import com.example.taskmgr.utill.CompleteTaskDialog;
 import com.example.taskmgr.utill.DbExecutor;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -52,10 +57,12 @@ public class TabActivity extends AppCompatActivity {
     public static final String EXTRA_TAB_ID = "tab_id";
     public static final String EXTRA_TAB_NAME = "tab_name";
     public static final String EXTRA_IS_AUTO = "is_auto";
+    public static final String EXTRA_TASK_ID = "task_id";
 
     private long tabId;
     private String tabName;
     private boolean isAuto;
+    private long extraTaskId = -1;
 
     private TabDao tabDao;
     private TaskDao taskDao;
@@ -73,9 +80,7 @@ public class TabActivity extends AppCompatActivity {
     private TextView tasksEmpty;
     private TaskFullAdapter taskAdapter;
     private HistoryAdapter historyAdapter;
-    private RadioButton rbActive, rbHistory;
-    private RadioGroup taskSortGroup;
-    private RadioButton rbSortCreated, rbSortDeadline;
+    private MaterialButton btnActive, btnHistory, btnSortCreated, btnSortDeadline;
     private boolean showingHistory = false;
     private boolean sortByDeadline = false;
     private boolean loadingTasks = false;
@@ -84,13 +89,14 @@ public class TabActivity extends AppCompatActivity {
     private TextView shoppingEmpty, totalPrice;
     private ShoppingAdapter shoppingAdapter;
     private boolean loadingShopping = false;
+    private String selectedShoppingCategory = null;
+    private ChipGroup shoppingChipGroup;
 
     private RecyclerView referenceRecycler;
     private TextView referenceEmpty;
     private ReferenceAdapter referenceAdapter;
     private boolean loadingReference = false;
 
-    /** Фильтр справочника: null = «Все», иначе имя категории. */
     private String selectedReferenceCategory = null;
     private ChipGroup referenceChipGroup;
 
@@ -103,8 +109,8 @@ public class TabActivity extends AppCompatActivity {
         tabId = getIntent().getLongExtra(EXTRA_TAB_ID, -1);
         tabName = getIntent().getStringExtra(EXTRA_TAB_NAME);
         isAuto = getIntent().getBooleanExtra(EXTRA_IS_AUTO, false);
+        extraTaskId = getIntent().getLongExtra(EXTRA_TASK_ID, -1);
 
-        // Проверка приватности
         Tab t = tabDao.getById(tabId);
         if (t == null) { finish(); return; }
         SectionDao sDao = new SectionDao(this);
@@ -181,46 +187,75 @@ public class TabActivity extends AppCompatActivity {
     private void setupTasksView() {
         tasksRecycler = viewTasks.findViewById(R.id.tasks_recycler);
         tasksEmpty = viewTasks.findViewById(R.id.tasks_empty);
-        rbActive = viewTasks.findViewById(R.id.rb_active);
-        rbHistory = viewTasks.findViewById(R.id.rb_history);
-        taskSortGroup = viewTasks.findViewById(R.id.task_sort_group);
-        rbSortCreated = viewTasks.findViewById(R.id.rb_sort_created);
-        rbSortDeadline = viewTasks.findViewById(R.id.rb_sort_deadline);
+        btnActive = viewTasks.findViewById(R.id.btn_active);
+        btnHistory = viewTasks.findViewById(R.id.btn_history);
+        btnSortCreated = viewTasks.findViewById(R.id.btn_sort_created);
+        btnSortDeadline = viewTasks.findViewById(R.id.btn_sort_deadline);
 
         tasksRecycler.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new TaskFullAdapter(this::showTaskActionsDialog, this::showTaskActionsDialog);
         historyAdapter = new HistoryAdapter();
         tasksRecycler.setAdapter(taskAdapter);
 
-        rbActive.setOnCheckedChangeListener((v, checked) -> {
-            if (checked) {
-                showingHistory = false;
-                taskSortGroup.setVisibility(View.VISIBLE);
-                loadTasks();
-            }
-        });
-        rbHistory.setOnCheckedChangeListener((v, checked) -> {
-            if (checked) {
-                showingHistory = true;
-                taskSortGroup.setVisibility(View.GONE);
-                loadTasks();
-            }
-        });
+        btnActive.setOnClickListener(v -> setTaskMode(false));
+        btnHistory.setOnClickListener(v -> setTaskMode(true));
+        btnSortCreated.setOnClickListener(v -> setTaskSort(false));
+        btnSortDeadline.setOnClickListener(v -> setTaskSort(true));
 
-        rbSortCreated.setOnCheckedChangeListener((v, checked) -> {
-            if (checked) {
-                sortByDeadline = false;
-                loadTasks();
-            }
-        });
-        rbSortDeadline.setOnCheckedChangeListener((v, checked) -> {
-            if (checked) {
-                sortByDeadline = true;
-                loadTasks();
-            }
-        });
-
+        updateTaskButtons();
         loadTasks();
+    }
+
+    private void setTaskMode(boolean history) {
+        if (showingHistory == history) return;
+        showingHistory = history;
+        updateTaskButtons();
+        loadTasks();
+    }
+
+    private void setTaskSort(boolean byDeadline) {
+        if (showingHistory) return;
+        if (sortByDeadline == byDeadline) return;
+        sortByDeadline = byDeadline;
+        updateTaskButtons();
+        loadTasks();
+    }
+
+    private void updateTaskButtons() {
+        int accent = ContextCompat.getColor(this, R.color.neon_green);
+        int accentDim = ContextCompat.getColor(this, R.color.neon_green_dim);
+        int inactiveStroke = ContextCompat.getColor(this, R.color.divider_strong);
+        int inactiveText = ContextCompat.getColor(this, R.color.text_secondary);
+        int disabledText = ContextCompat.getColor(this, R.color.text_tertiary);
+
+        applySeg(btnActive, !showingHistory, accent, accentDim, inactiveStroke,
+                inactiveText, disabledText);
+        applySeg(btnHistory, showingHistory, accent, accentDim, inactiveStroke,
+                inactiveText, disabledText);
+
+        boolean sortEnabled = !showingHistory;
+        applySeg(btnSortCreated, sortEnabled && !sortByDeadline, accent, accentDim,
+                inactiveStroke, sortEnabled ? inactiveText : disabledText, disabledText);
+        applySeg(btnSortDeadline, sortEnabled && sortByDeadline, accent, accentDim,
+                inactiveStroke, sortEnabled ? inactiveText : disabledText, disabledText);
+
+        btnSortCreated.setEnabled(sortEnabled);
+        btnSortDeadline.setEnabled(sortEnabled);
+    }
+
+    private void applySeg(MaterialButton b, boolean checked,
+                          int accent, int accentDim, int inactiveStroke,
+                          int inactiveText, int disabledText) {
+        b.setChecked(checked);
+        if (checked) {
+            b.setStrokeColor(ColorStateList.valueOf(accent));
+            b.setTextColor(accent);
+            b.setBackgroundTintList(ColorStateList.valueOf(accentDim & 0x33FFFFFF));
+        } else {
+            b.setStrokeColor(ColorStateList.valueOf(inactiveStroke));
+            b.setTextColor(inactiveText);
+            b.setBackgroundTintList(ColorStateList.valueOf(0x00000000));
+        }
     }
 
     private void loadTasks() {
@@ -244,7 +279,6 @@ public class TabActivity extends AppCompatActivity {
                     tabsById.put(currentTab.id, currentTab);
                     Collections.sort(activeTasks, new TaskUrgencyComparator(tabsById));
                 }
-                // sortDeadline == false — порядок уже created_at DESC из SQL
                 return new Object[]{activeTasks, currentTab};
             }
         }, result -> {
@@ -261,6 +295,7 @@ public class TabActivity extends AppCompatActivity {
                 boolean empty = entries.isEmpty();
                 tasksEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
                 tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
+                if (extraTaskId > 0) extraTaskId = -1;
             } else {
                 @SuppressWarnings("unchecked")
                 List<Task> tasks = (List<Task>) arr[0];
@@ -271,6 +306,20 @@ public class TabActivity extends AppCompatActivity {
                 boolean empty = tasks.isEmpty();
                 tasksEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
                 tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
+
+                if (extraTaskId > 0) {
+                    final long id = extraTaskId;
+                    extraTaskId = -1;
+                    final int pos = taskAdapter.positionOfTask(id);
+                    if (pos >= 0) {
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            tasksRecycler.scrollToPosition(pos);
+                            taskAdapter.setHighlightedTaskId(id);
+                            new Handler(Looper.getMainLooper()).postDelayed(
+                                    taskAdapter::clearHighlight, 1200);
+                        }, 150);
+                    }
+                }
             }
         });
     }
@@ -280,9 +329,11 @@ public class TabActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setTitle(task.title)
                 .setItems(actions, (d, which) -> {
-                    if (which == 0) completeTask(task);
-                    else if (which == 1) showEditTaskDialog(task);
-                    else {
+                    if (which == 0) {
+                        CompleteTaskDialog.show(this, task, isAuto, t -> loadTasks());
+                    } else if (which == 1) {
+                        showEditTaskDialog(task);
+                    } else {
                         DbExecutor.runVoid(() -> taskDao.delete(task.id), this::loadTasks);
                     }
                 })
@@ -453,75 +504,13 @@ public class TabActivity extends AppCompatActivity {
         return sdf.format(new java.util.Date(millis));
     }
 
-    private void completeTask(Task task) {
-        boolean needsKm = isAuto
-                || "by_km".equals(task.dueType)
-                || "by_km".equals(task.repeatRule)
-                || "by_km_or_months".equals(task.repeatRule);
-
-        View view = getLayoutInflater().inflate(R.layout.dialog_complete_task, null);
-        EditText inputKm = view.findViewById(R.id.input_km);
-        EditText inputNote = view.findViewById(R.id.input_note);
-        inputKm.setVisibility(needsKm ? View.VISIBLE : View.GONE);
-
-        if (needsKm && isAuto) {
-            DbExecutor.run(() -> tabDao.getById(tabId), tab -> {
-                if (tab != null && tab.currentKm != null && inputKm.getText().toString().isEmpty()) {
-                    inputKm.setHint("Пробег, км (сейчас: " + tab.currentKm + ")");
-                }
-            });
-        }
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Выполнить: " + task.title)
-                .setView(view)
-                .setPositiveButton("OK", null)
-                .setNegativeButton("Отмена", null)
-                .create();
-
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                Integer km = null;
-                if (needsKm) {
-                    String s = inputKm.getText().toString().trim();
-                    if (!s.isEmpty()) {
-                        try {
-                            km = Integer.parseInt(s);
-                            if (km < 0) {
-                                Toast.makeText(this, "Пробег не может быть отрицательным",
-                                        Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                        } catch (NumberFormatException e) {
-                            Toast.makeText(this, "Некорректный пробег", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
-                }
-                String note = inputNote.getText().toString().trim();
-                final Integer kmFinal = km;
-                final String noteFinal = note.isEmpty() ? null : note;
-
-                dialog.dismiss();
-                DbExecutor.runVoid(() -> {
-                    TaskService service = new TaskService(this);
-                    service.completeTask(task, kmFinal, noteFinal);
-                }, () -> {
-                    loadTasks();
-                    Toast.makeText(this, "Выполнено: " + task.title, Toast.LENGTH_SHORT).show();
-                });
-            });
-        });
-
-        dialog.show();
-    }
-
     // ============ Покупки ============
 
     private void setupShoppingView() {
         shoppingRecycler = viewShopping.findViewById(R.id.shopping_recycler);
         shoppingEmpty = viewShopping.findViewById(R.id.shopping_empty);
         totalPrice = viewShopping.findViewById(R.id.total_price);
+        shoppingChipGroup = viewShopping.findViewById(R.id.shopping_chip_group);
 
         shoppingRecycler.setLayoutManager(new LinearLayoutManager(this));
         shoppingAdapter = new ShoppingAdapter(
@@ -532,6 +521,26 @@ public class TabActivity extends AppCompatActivity {
                 this::showShoppingActionsDialog
         );
         shoppingRecycler.setAdapter(shoppingAdapter);
+
+        shoppingChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) {
+                if (selectedShoppingCategory != null) {
+                    selectedShoppingCategory = null;
+                    loadShopping();
+                }
+                return;
+            }
+            int chipId = checkedIds.get(0);
+            Chip chip = group.findViewById(chipId);
+            String newCategory = (chip != null && chip.getTag() != null)
+                    ? chip.getTag().toString()
+                    : null;
+            if (!equalsNullable(selectedShoppingCategory, newCategory)) {
+                selectedShoppingCategory = newCategory;
+                loadShopping();
+            }
+        });
+
         loadShopping();
     }
 
@@ -549,8 +558,10 @@ public class TabActivity extends AppCompatActivity {
         View view = getLayoutInflater().inflate(R.layout.dialog_add_shopping, null);
         EditText inputTitle = view.findViewById(R.id.input_shopping_title);
         EditText inputPrice = view.findViewById(R.id.input_shopping_price);
+        EditText inputCategory = view.findViewById(R.id.input_shopping_category);
         inputTitle.setText(item.title);
         if (item.price != null) inputPrice.setText(String.valueOf(item.price));
+        if (item.category != null) inputCategory.setText(item.category);
 
         new AlertDialog.Builder(this)
                 .setTitle("Редактировать покупку")
@@ -564,6 +575,8 @@ public class TabActivity extends AppCompatActivity {
                     item.title = title;
                     String priceStr = inputPrice.getText().toString().trim();
                     item.price = priceStr.isEmpty() ? null : Double.parseDouble(priceStr);
+                    String category = inputCategory.getText().toString().trim();
+                    item.category = category.isEmpty() ? null : category;
                     DbExecutor.runVoid(() -> shoppingDao.update(item), this::loadShopping);
                 })
                 .setNegativeButton("Отмена", null)
@@ -573,16 +586,24 @@ public class TabActivity extends AppCompatActivity {
     private void loadShopping() {
         if (loadingShopping) return;
         loadingShopping = true;
-        DbExecutor.run(() -> new Object[]{
-                shoppingDao.getByTab(tabId),
-                shoppingDao.getTotalPrice(tabId)
+        final String categoryFilter = selectedShoppingCategory;
+        DbExecutor.run(() -> {
+            List<String> categories = shoppingDao.getCategories(tabId);
+            List<ShoppingItem> items = shoppingDao.getByTabAndCategory(tabId, categoryFilter);
+            Double total = shoppingDao.getTotalPrice(tabId, categoryFilter);
+            return new Object[]{categories, items, total};
         }, result -> {
             loadingShopping = false;
             if (result == null) return;
             Object[] arr = (Object[]) result;
             @SuppressWarnings("unchecked")
-            List<ShoppingItem> items = (List<ShoppingItem>) arr[0];
-            Double total = (Double) arr[1];
+            List<String> categories = (List<String>) arr[0];
+            @SuppressWarnings("unchecked")
+            List<ShoppingItem> items = (List<ShoppingItem>) arr[1];
+            Double total = (Double) arr[2];
+
+            rebuildShoppingChips(categories);
+
             shoppingAdapter.setItems(items);
             boolean empty = items.isEmpty();
             shoppingEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
@@ -592,7 +613,8 @@ public class TabActivity extends AppCompatActivity {
     }
 
     private void updateTotalPrice() {
-        DbExecutor.run(() -> shoppingDao.getTotalPrice(tabId),
+        final String categoryFilter = selectedShoppingCategory;
+        DbExecutor.run(() -> shoppingDao.getTotalPrice(tabId, categoryFilter),
                 total -> totalPrice.setText(String.format("Итого: %.2f", total)));
     }
 
@@ -631,6 +653,45 @@ public class TabActivity extends AppCompatActivity {
 
     private static boolean equalsNullable(String a, String b) {
         return a == null ? b == null : a.equals(b);
+    }
+
+    private void rebuildShoppingChips(List<String> categories) {
+        shoppingChipGroup.setOnCheckedStateChangeListener(null);
+        shoppingChipGroup.removeAllViews();
+
+        if (selectedShoppingCategory != null
+                && !categories.contains(selectedShoppingCategory)) {
+            selectedShoppingCategory = null;
+        }
+
+        Chip allChip = buildChip("Все", null);
+        allChip.setChecked(selectedShoppingCategory == null);
+        shoppingChipGroup.addView(allChip);
+
+        for (String cat : categories) {
+            Chip c = buildChip(cat, cat);
+            c.setChecked(equalsNullable(selectedShoppingCategory, cat));
+            shoppingChipGroup.addView(c);
+        }
+
+        shoppingChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) {
+                if (selectedShoppingCategory != null) {
+                    selectedShoppingCategory = null;
+                    loadShopping();
+                }
+                return;
+            }
+            int chipId = checkedIds.get(0);
+            Chip chip = group.findViewById(chipId);
+            String newCategory = (chip != null && chip.getTag() != null)
+                    ? chip.getTag().toString()
+                    : null;
+            if (!equalsNullable(selectedShoppingCategory, newCategory)) {
+                selectedShoppingCategory = newCategory;
+                loadShopping();
+            }
+        });
     }
 
     private void rebuildReferenceChips(List<String> categories) {
@@ -907,6 +968,12 @@ public class TabActivity extends AppCompatActivity {
         View view = getLayoutInflater().inflate(R.layout.dialog_add_shopping, null);
         EditText inputTitle = view.findViewById(R.id.input_shopping_title);
         EditText inputPrice = view.findViewById(R.id.input_shopping_price);
+        EditText inputCategory = view.findViewById(R.id.input_shopping_category);
+
+        if (selectedShoppingCategory != null) {
+            inputCategory.setText(selectedShoppingCategory);
+        }
+
         new AlertDialog.Builder(this)
                 .setTitle("Новая покупка")
                 .setView(view)
@@ -921,8 +988,10 @@ public class TabActivity extends AppCompatActivity {
                     if (!priceStr.isEmpty()) {
                         try { price = Double.parseDouble(priceStr); } catch (NumberFormatException ignored) {}
                     }
+                    String category = inputCategory.getText().toString().trim();
+                    final String cat = category.isEmpty() ? null : category;
                     final Double priceFinal = price;
-                    DbExecutor.runVoid(() -> shoppingDao.insert(new ShoppingItem(tabId, title, priceFinal)),
+                    DbExecutor.runVoid(() -> shoppingDao.insert(new ShoppingItem(tabId, title, priceFinal, cat)),
                             this::loadShopping);
                 })
                 .setNegativeButton("Отмена", null)

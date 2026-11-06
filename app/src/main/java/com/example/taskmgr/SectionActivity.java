@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.dao.SectionDao;
 import com.example.taskmgr.dao.TabDao;
+import com.example.taskmgr.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.utill.AppLock;
@@ -23,6 +24,7 @@ import com.example.taskmgr.utill.DbExecutor;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
+import java.util.Map;
 
 public class SectionActivity extends AppCompatActivity {
 
@@ -34,6 +36,7 @@ public class SectionActivity extends AppCompatActivity {
     private boolean isAutoSection;
 
     private TabDao tabDao;
+    private TaskDao taskDao;
     private SectionDao sectionDao;
     private TabAdapter adapter;
     private RecyclerView recycler;
@@ -70,6 +73,7 @@ public class SectionActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
 
         tabDao = new TabDao(this);
+        taskDao = new TaskDao(this);
 
         recycler = findViewById(R.id.tabs_recycler);
         emptyView = findViewById(R.id.empty_view);
@@ -96,10 +100,20 @@ public class SectionActivity extends AppCompatActivity {
     private void loadTabs() {
         if (loading) return;
         loading = true;
-        DbExecutor.run(() -> tabDao.getBySection(sectionId), tabs -> {
+        DbExecutor.run(() -> {
+            List<Tab> tabs = tabDao.getBySection(sectionId);
+            Map<Long, Integer> counts = taskDao.getActiveCountsBySection(sectionId);
+            return new Object[]{tabs, counts};
+        }, result -> {
             loading = false;
+            if (result == null) return;
+            Object[] arr = (Object[]) result;
+            @SuppressWarnings("unchecked")
+            List<Tab> tabs = (List<Tab>) arr[0];
+            @SuppressWarnings("unchecked")
+            Map<Long, Integer> counts = (Map<Long, Integer>) arr[1];
             if (tabs == null) tabs = java.util.Collections.emptyList();
-            adapter.setItems(tabs);
+            adapter.setItems(tabs, counts);
             boolean empty = tabs.isEmpty();
             emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
             recycler.setVisibility(empty ? View.GONE : View.VISIBLE);

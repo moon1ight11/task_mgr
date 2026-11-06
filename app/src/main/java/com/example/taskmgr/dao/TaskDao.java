@@ -10,7 +10,9 @@ import com.example.taskmgr.model.Task;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TaskDao {
 
@@ -53,6 +55,30 @@ public class TaskDao {
         return query("tab_id = ?",
                 new String[]{String.valueOf(tabId)},
                 "created_at DESC");
+    }
+
+    /**
+     * Количество активных задач по каждой вкладке указанного раздела.
+     * Возвращает map: tab_id → count. Вкладки без активных задач в map не попадают.
+     */
+    public Map<Long, Integer> getActiveCountsBySection(long sectionId) {
+        Map<Long, Integer> result = new HashMap<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = null;
+        try {
+            c = db.rawQuery(
+                    "SELECT tab_id, COUNT(*) FROM tasks " +
+                            "WHERE status = 'active' " +
+                            "AND tab_id IN (SELECT id FROM tabs WHERE section_id = ?) " +
+                            "GROUP BY tab_id",
+                    new String[]{String.valueOf(sectionId)});
+            while (c.moveToNext()) {
+                result.put(c.getLong(0), c.getInt(1));
+            }
+        } finally {
+            if (c != null) c.close();
+        }
+        return result;
     }
 
     /**
