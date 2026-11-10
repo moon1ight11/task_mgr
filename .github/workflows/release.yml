@@ -41,8 +41,10 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk release/taskmgr-${{ github.ref_name }}.apk
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release/taskmgr-${{ github.ref_name }}.apk
+        uses: docker://antonyurchenko/git-release:v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGELOG_FILE: CHANGELOG.md
+          ALLOW_EMPTY_CHANGELOG: "true"
+        with:
+          args: release/taskmgr-${{ github.ref_name }}.apk
