@@ -25,10 +25,6 @@ public class TaskService {
         this.tabDao = new TabDao(context);
     }
 
-    /**
-     * Выполняет задачу атомарно: история, статус, пробег и следующая задача
-     * пишутся в одной транзакции. Если что-то падает — откат целиком.
-     */
     public void completeTask(Task task, Integer kmAtCompletion, String note) {
         long now = System.currentTimeMillis();
         dbHelper.runInTransaction(db -> {
@@ -54,7 +50,6 @@ public class TaskService {
     private void updateTabKmIfNeeded(SQLiteDatabase db, long tabId, int km) {
         Tab tab = tabDao.getById(db, tabId);
         if (tab == null) return;
-        // Одометр не уменьшается: пишем только если новое значение больше текущего.
         if (tab.currentKm == null || km > tab.currentKm) {
             tab.currentKm = km;
             tabDao.update(db, tab);
@@ -90,9 +85,9 @@ public class TaskService {
 
             case "by_km_or_months": {
                 Long nextDate = done.repeatIntervalMonths != null
-                        ? addMonths(completedAt, done.repeatIntervalMonths) : null;
+                    ? addMonths(completedAt, done.repeatIntervalMonths) : null;
                 Integer nextKm = (kmAtCompletion != null && done.repeatIntervalKm != null)
-                        ? kmAtCompletion + done.repeatIntervalKm : null;
+                    ? kmAtCompletion + done.repeatIntervalKm : null;
 
                 if (nextKm != null) {
                     next.dueType = "by_km";
@@ -119,5 +114,12 @@ public class TaskService {
         cal.setTimeInMillis(millis);
         cal.add(java.util.Calendar.MONTH, months);
         return cal.getTimeInMillis();
+    }
+
+    public void revertCompletedTask(long taskId, long historyId) {
+        dbHelper.runInTransaction(db -> {
+            historyDao.deleteById(db, historyId);
+            taskDao.updateStatus(db, taskId, "active");
+        });
     }
 }

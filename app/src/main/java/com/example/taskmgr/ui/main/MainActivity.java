@@ -2,7 +2,6 @@ package com.example.taskmgr.ui.main;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -15,9 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.R;
-import com.example.taskmgr.ui.section.SectionActivity;
-import com.example.taskmgr.ui.stats.StatsActivity;
-import com.example.taskmgr.ui.tab.TabActivity;
 import com.example.taskmgr.data.dao.AppSettingsDao;
 import com.example.taskmgr.data.dao.SectionDao;
 import com.example.taskmgr.data.dao.TabDao;
@@ -25,10 +21,14 @@ import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
-import com.example.taskmgr.util.AppLock;
 import com.example.taskmgr.ui.common.CompleteTaskDialog;
+import com.example.taskmgr.ui.section.SectionActivity;
+import com.example.taskmgr.ui.stats.StatsActivity;
+import com.example.taskmgr.ui.tab.TabActivity;
+import com.example.taskmgr.util.AppLock;
 import com.example.taskmgr.util.DbExecutor;
 import com.example.taskmgr.util.PasswordHasher;
+import com.example.taskmgr.util.PinInputHelper;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int SOON_KM = 500;
     private static final String PRIVATE_SECTION_NAME = "Private";
 
-    private TabLayout mainTabs;
     private RecyclerView tasksRecycler;
     private TextView emptyView;
     private TaskAdapter taskAdapter;
@@ -55,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
 
     private int currentMainTab = 0;
     private int loadGeneration = 0;
-    private long privateSectionId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,28 +67,37 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) getSupportActionBar().setTitle("TaskMGR");
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
 
         setupSectionPlates();
 
-        mainTabs = findViewById(R.id.main_tabs);
+        TabLayout mainTabs = findViewById(R.id.main_tabs);
         mainTabs.addTab(mainTabs.newTab().setText("Дедлайн"));
         mainTabs.addTab(mainTabs.newTab().setText("Важные"));
         mainTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override public void onTabSelected(TabLayout.Tab tab) {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
                 currentMainTab = tab.getPosition();
                 loadTasks();
             }
-            @Override public void onTabUnselected(TabLayout.Tab tab) {}
-            @Override public void onTabReselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
         });
 
         tasksRecycler = findViewById(R.id.tasks_recycler);
         emptyView = findViewById(R.id.empty_view);
         tasksRecycler.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new TaskAdapter(
-                task -> openTabForTask(task),
-                task -> CompleteTaskDialog.show(this, task, isAutoTask(task), t -> loadTasks())
+            this::openTabForTask,
+            task -> CompleteTaskDialog.show(this, task, isAutoTask(task), t -> loadTasks())
         );
         tasksRecycler.setAdapter(taskAdapter);
 
@@ -101,9 +108,7 @@ public class MainActivity extends AppCompatActivity {
                 android.util.Log.e("TaskMGR", "seed FAILED", e);
             }
             return null;
-        }, ignored -> {
-            ensurePrivatePasswordThenLoad();
-        });
+        }, ignored -> loadTasks());
     }
 
     private boolean isAutoTask(Task task) {
@@ -119,7 +124,8 @@ public class MainActivity extends AppCompatActivity {
         Tab tab = null;
         try {
             tab = tabDao.getById(task.tabId);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         if (tab == null) {
             Toast.makeText(this, "Вкладка задачи не найдена", Toast.LENGTH_SHORT).show();
             return;
@@ -148,35 +154,18 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.plate_ent).setOnClickListener(v -> openSectionByName("Развлечения"));
         findViewById(R.id.plate_private).setOnClickListener(v -> handlePrivateNavClick());
         findViewById(R.id.plate_stats).setOnClickListener(v ->
-                startActivity(new Intent(this, StatsActivity.class)));
-    }
-
-    private void ensurePrivatePasswordThenLoad() {
-        boolean hasPwd;
-        try {
-            hasPwd = settingsDao.hasPrivatePassword();
-        } catch (Exception e) {
-            hasPwd = false;
-        }
-        if (hasPwd) {
-            loadTasks();
-            return;
-        }
-        showCreatePasswordDialog(() -> {
-            AppLock.setPrivateUnlocked(true);
-            loadTasks();
-        });
+            startActivity(new Intent(this, StatsActivity.class)));
     }
 
     private void seedSectionsIfEmptyBlocking() {
         List<Section> existing = sectionDao.getAll();
 
-        Section priv = null;
+        boolean hasPrivate = false;
         for (Section s : existing) {
-            if (s.isPrivate) { priv = s; break; }
-        }
-        if (priv != null) {
-            privateSectionId = priv.id;
+            if (s.isPrivate) {
+                hasPrivate = true;
+                break;
+            }
         }
 
         if (existing.isEmpty()) {
@@ -186,14 +175,12 @@ public class MainActivity extends AppCompatActivity {
             sectionDao.insert(new Section("IT", "it", 4));
             sectionDao.insert(new Section("Здоровье", "health", 5));
             sectionDao.insert(new Section("Развлечения", "ent", 6));
-            privateSectionId = sectionDao.insert(
-                    new Section(PRIVATE_SECTION_NAME, null, 7, true));
+            sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 7, true));
             return;
         }
 
-        if (priv == null) {
-            privateSectionId = sectionDao.insert(
-                    new Section(PRIVATE_SECTION_NAME, null, 7, true));
+        if (!hasPrivate) {
+            sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 7, true));
         }
     }
 
@@ -231,19 +218,12 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 tasks = taskDao.getImportant(excluded);
             }
-            return new Object[]{tasks, allTabs, allSections};
+            return new LoadResult(tasks, allTabs, allSections);
         }, result -> {
             if (myGeneration != loadGeneration) return;
             if (result == null) return;
-            Object[] arr = (Object[]) result;
-            @SuppressWarnings("unchecked")
-            List<Task> tasks = (List<Task>) arr[0];
-            @SuppressWarnings("unchecked")
-            List<Tab> allTabs = (List<Tab>) arr[1];
-            @SuppressWarnings("unchecked")
-            List<Section> allSections = (List<Section>) arr[2];
-            taskAdapter.setItems(tasks, allTabs, allSections);
-            boolean empty = tasks.isEmpty();
+            taskAdapter.setItems(result.tasks(), result.tabs(), result.sections());
+            boolean empty = result.tasks().isEmpty();
             emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
             tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
         });
@@ -294,7 +274,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Приватный раздел не найден", Toast.LENGTH_SHORT).show();
                 return;
             }
-            privateSectionId = found.id;
             openSection(found);
         });
     }
@@ -306,31 +285,44 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    private interface OnSuccess { void run(); }
-
     private void showCreatePasswordDialog(OnSuccess onSuccess) {
         View view = getLayoutInflater().inflate(R.layout.dialog_set_password, null);
-        EditText inputPwd = view.findViewById(R.id.input_password);
-        EditText inputConfirm = view.findViewById(R.id.input_password_confirm);
+
+        EditText c1 = view.findViewById(R.id.pin_create_1);
+        EditText c2 = view.findViewById(R.id.pin_create_2);
+        EditText c3 = view.findViewById(R.id.pin_create_3);
+        EditText c4 = view.findViewById(R.id.pin_create_4);
+        EditText f1 = view.findViewById(R.id.pin_confirm_1);
+        EditText f2 = view.findViewById(R.id.pin_confirm_2);
+        EditText f3 = view.findViewById(R.id.pin_confirm_3);
+        EditText f4 = view.findViewById(R.id.pin_confirm_4);
+
+        PinInputHelper createHelper = new PinInputHelper(c1, c2, c3, c4);
+        PinInputHelper confirmHelper = new PinInputHelper(f1, f2, f3, f4);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Пароль для приватного раздела")
-                .setMessage("Придумайте пароль (минимум 4 символа). Восстановить его будет нельзя.")
-                .setView(view)
-                .setCancelable(false)
-                .setPositiveButton("OK", null)
-                .create();
+            .setTitle("PIN для приватного раздела")
+            .setMessage("Придумайте PIN из 4 цифр. Восстановить его будет нельзя.")
+            .setView(view)
+            .setCancelable(false)
+            .setPositiveButton("OK", null)
+            .create();
 
-        dialog.setOnShowListener(d -> {
+        dialog.setOnShowListener(d ->
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String pwd = inputPwd.getText().toString();
-                String confirm = inputConfirm.getText().toString();
-                if (pwd.length() < 4) {
-                    Toast.makeText(this, "Минимум 4 символа", Toast.LENGTH_SHORT).show();
+                if (!createHelper.isComplete() || !confirmHelper.isComplete()) {
+                    Toast.makeText(this, "Введите все 4 цифры", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String pwd = createHelper.getValue();
+                String confirm = confirmHelper.getValue();
+                if (!pwd.matches("\\d{4}")) {
+                    Toast.makeText(this, "Только 4 цифры", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if (!pwd.equals(confirm)) {
-                    Toast.makeText(this, "Пароли не совпадают", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "PIN не совпадает", Toast.LENGTH_SHORT).show();
+                    confirmHelper.clear();
                     return;
                 }
                 final String pwdFinal = pwd;
@@ -345,45 +337,67 @@ public class MainActivity extends AppCompatActivity {
                     dialog.dismiss();
                     onSuccess.run();
                 });
-            });
-        });
+            })
+        );
 
         dialog.show();
+        createHelper.focusFirst();
     }
 
     private void showEnterPasswordDialog(OnSuccess onSuccess) {
         View view = getLayoutInflater().inflate(R.layout.dialog_enter_password, null);
-        EditText inputPwd = view.findViewById(R.id.input_password);
+
+        EditText p1 = view.findViewById(R.id.pin_1);
+        EditText p2 = view.findViewById(R.id.pin_2);
+        EditText p3 = view.findViewById(R.id.pin_3);
+        EditText p4 = view.findViewById(R.id.pin_4);
+
+        PinInputHelper helper = new PinInputHelper(p1, p2, p3, p4);
 
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Введите пароль")
-                .setView(view)
-                .setPositiveButton("OK", null)
-                .setNegativeButton("Отмена", null)
-                .create();
+            .setTitle("Введите PIN")
+            .setView(view)
+            .setPositiveButton("OK", null)
+            .setNegativeButton("Отмена", null)
+            .create();
 
-        dialog.setOnShowListener(d -> {
+        dialog.setOnShowListener(d ->
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String pwd = inputPwd.getText().toString();
-                if (TextUtils.isEmpty(pwd)) return;
+                if (!helper.isComplete()) {
+                    Toast.makeText(this, "Введите все 4 цифры", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                final String pwd = helper.getValue();
                 DbExecutor.run(() -> {
                     String salt = settingsDao.get(AppSettingsDao.KEY_PRIVATE_PWD_SALT);
                     String hash = settingsDao.get(AppSettingsDao.KEY_PRIVATE_PWD_HASH);
                     String iterStr = settingsDao.get(AppSettingsDao.KEY_PRIVATE_PWD_ITER);
                     int iter = PasswordHasher.DEFAULT_ITERATIONS;
-                    try { if (iterStr != null) iter = Integer.parseInt(iterStr); } catch (Exception ignored) {}
+                    try {
+                        if (iterStr != null) iter = Integer.parseInt(iterStr);
+                    } catch (Exception ignored) {
+                    }
                     return PasswordHasher.verify(pwd, salt, iter, hash);
                 }, ok -> {
                     if (ok != null && ok) {
                         dialog.dismiss();
                         onSuccess.run();
                     } else {
-                        Toast.makeText(this, "Неверный пароль", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Неверный PIN", Toast.LENGTH_SHORT).show();
+                        helper.clear();
                     }
                 });
-            });
-        });
+            })
+        );
 
         dialog.show();
+        helper.focusFirst();
+    }
+
+    private interface OnSuccess {
+        void run();
+    }
+
+    private record LoadResult(List<Task> tasks, List<Tab> tabs, List<Section> sections) {
     }
 }

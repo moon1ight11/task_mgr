@@ -21,13 +21,8 @@ public class AppSettingsDao {
 
     public String get(String key) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("app_settings", new String[]{"value"},
-                    "key = ?", new String[]{key}, null, null, null);
+        try (Cursor c = db.query("app_settings", new String[]{"value"}, "key = ?", new String[]{key}, null, null, null)) {
             return c.moveToFirst() ? c.getString(0) : null;
-        } finally {
-            if (c != null) c.close();
         }
     }
 
@@ -41,12 +36,7 @@ public class AppSettingsDao {
 
     public boolean hasPrivatePassword() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("app_settings", new String[]{"key", "value"},
-                    "key IN (?, ?)",
-                    new String[]{KEY_PRIVATE_PWD_HASH, KEY_PRIVATE_PWD_SALT},
-                    null, null, null);
+        try (Cursor c = db.query("app_settings", new String[]{"key", "value"}, "key IN (?, ?)", new String[]{KEY_PRIVATE_PWD_HASH, KEY_PRIVATE_PWD_SALT}, null, null, null)) {
             boolean hasHash = false;
             boolean hasSalt = false;
             while (c.moveToNext()) {
@@ -57,8 +47,6 @@ public class AppSettingsDao {
                 else if (KEY_PRIVATE_PWD_SALT.equals(key)) hasSalt = true;
             }
             return hasHash && hasSalt;
-        } finally {
-            if (c != null) c.close();
         }
     }
 }

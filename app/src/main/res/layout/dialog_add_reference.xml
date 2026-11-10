@@ -20,6 +20,15 @@
         android:inputType="textCapSentences" />
 
     <EditText
+        android:id="@+id/input_ref_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Описание (опционально)"
+        android:inputType="textCapSentences|textMultiLine"
+        android:minLines="2"
+        android:gravity="top|start" />
+
+    <EditText
         android:id="@+id/input_ref_category"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

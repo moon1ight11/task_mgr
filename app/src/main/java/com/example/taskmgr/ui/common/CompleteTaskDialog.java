@@ -13,33 +13,18 @@ import com.example.taskmgr.model.Task;
 import com.example.taskmgr.service.TaskService;
 import com.example.taskmgr.util.DbExecutor;
 
-/**
- * Универсальный диалог выполнения задачи.
- * Используется и в TabActivity (вкладка «Задачи»), и в MainActivity (главная).
- */
 public final class CompleteTaskDialog {
 
-    private CompleteTaskDialog() {}
-
-    public interface OnCompleted {
-        void onCompleted(Task task);
+    private CompleteTaskDialog() {
     }
 
-    /**
-     * Показывает диалог выполнения задачи.
-     *
-     * @param activity текущая Activity
-     * @param task     задача
-     * @param isAuto   признак авто-вкладки (для подсказки пробега)
-     * @param onDone   колбэк после успешного выполнения (может быть null)
-     */
     public static void show(Activity activity, Task task, boolean isAuto, OnCompleted onDone) {
         if (activity == null || task == null || activity.isFinishing()) return;
 
         boolean needsKm = isAuto
-                || "by_km".equals(task.dueType)
-                || "by_km".equals(task.repeatRule)
-                || "by_km_or_months".equals(task.repeatRule);
+            || "by_km".equals(task.dueType)
+            || "by_km".equals(task.repeatRule)
+            || "by_km_or_months".equals(task.repeatRule);
 
         View view = activity.getLayoutInflater().inflate(R.layout.dialog_complete_task, null);
         EditText inputKm = view.findViewById(R.id.input_km);
@@ -56,46 +41,56 @@ public final class CompleteTaskDialog {
         }
 
         AlertDialog dialog = new AlertDialog.Builder(activity)
-                .setTitle("Выполнить: " + task.title)
-                .setView(view)
-                .setPositiveButton("OK", null)
-                .setNegativeButton("Отмена", null)
-                .create();
+            .setTitle("Выполнить: " + task.title)
+            .setView(view)
+            .setPositiveButton("OK", null)
+            .setNegativeButton("Отмена", null)
+            .create();
 
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                Integer km = null;
-                if (needsKm) {
-                    String s = inputKm.getText().toString().trim();
-                    if (!s.isEmpty()) {
-                        try {
-                            km = Integer.parseInt(s);
-                            if (km < 0) {
-                                Toast.makeText(activity, "Пробег не может быть отрицательным",
-                                        Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                        } catch (NumberFormatException e) {
-                            Toast.makeText(activity, "Некорректный пробег", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
-                }
-                String note = inputNote.getText().toString().trim();
-                final Integer kmFinal = km;
-                final String noteFinal = note.isEmpty() ? null : note;
-
-                dialog.dismiss();
-                DbExecutor.runVoid(() -> {
-                    TaskService service = new TaskService(activity);
-                    service.completeTask(task, kmFinal, noteFinal);
-                }, () -> {
-                    Toast.makeText(activity, "Выполнено: " + task.title, Toast.LENGTH_SHORT).show();
-                    if (onDone != null) onDone.onCompleted(task);
-                });
-            });
-        });
+        dialog.setOnShowListener(d ->
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v ->
+                handlePositiveClick(activity, task, needsKm, inputKm, inputNote, dialog, onDone)));
 
         dialog.show();
+    }
+
+    private static void handlePositiveClick(Activity activity, Task task, boolean needsKm,
+                                            EditText inputKm, EditText inputNote,
+                                            AlertDialog dialog, OnCompleted onDone) {
+        Integer km = null;
+        if (needsKm) {
+            String s = inputKm.getText().toString().trim();
+            if (!s.isEmpty()) {
+                try {
+                    km = Integer.parseInt(s);
+                    if (km < 0) {
+                        Toast.makeText(activity, "Пробег не может быть отрицательным",
+                            Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(activity, "Некорректный пробег", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+        }
+        String note = inputNote.getText().toString().trim();
+        final Integer kmFinal = km;
+        final String noteFinal = note.isEmpty() ? null : note;
+
+        dialog.dismiss();
+        DbExecutor.runVoid(
+            () -> new TaskService(activity).completeTask(task, kmFinal, noteFinal),
+            () -> showCompleted(activity, task, onDone)
+        );
+    }
+
+    private static void showCompleted(Activity activity, Task task, OnCompleted onDone) {
+        Toast.makeText(activity, "Выполнено: " + task.title, Toast.LENGTH_SHORT).show();
+        if (onDone != null) onDone.onCompleted(task);
+    }
+
+    public interface OnCompleted {
+        void onCompleted(Task task);
     }
 }

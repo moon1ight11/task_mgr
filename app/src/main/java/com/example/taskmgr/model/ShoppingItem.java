@@ -10,7 +10,8 @@ public class ShoppingItem {
     public long createdAt;
     public String category;
 
-    public ShoppingItem() {}
+    public ShoppingItem() {
+    }
 
     public ShoppingItem(long tabId, String title, Double price) {
         this.tabId = tabId;

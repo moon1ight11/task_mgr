@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.example.taskmgr.data.DatabaseHelper;
 import com.example.taskmgr.model.Task;
+import com.example.taskmgr.util.DateUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,97 +51,70 @@ public class TaskDao {
 
     public List<Task> getByTab(long tabId) {
         return query("tab_id = ? AND status = 'active'",
-                new String[]{String.valueOf(tabId)},
-                "created_at DESC");
+            new String[]{String.valueOf(tabId)});
     }
 
     public List<Task> getAllByTab(long tabId) {
         return query("tab_id = ?",
-                new String[]{String.valueOf(tabId)},
-                "created_at DESC");
+            new String[]{String.valueOf(tabId)});
     }
 
-    /**
-     * Количество активных задач по каждой вкладке указанного раздела.
-     * Возвращает map: tab_id → count. Вкладки без активных задач в map не попадают.
-     */
     public Map<Long, Integer> getActiveCountsBySection(long sectionId) {
         Map<Long, Integer> result = new HashMap<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.rawQuery(
-                    "SELECT tab_id, COUNT(*) FROM tasks " +
-                            "WHERE status = 'active' " +
-                            "AND tab_id IN (SELECT id FROM tabs WHERE section_id = ?) " +
-                            "GROUP BY tab_id",
-                    new String[]{String.valueOf(sectionId)});
+        try (Cursor c = db.rawQuery(
+            "SELECT tab_id, COUNT(*) FROM tasks " +
+                "WHERE status = 'active' " +
+                "AND tab_id IN (SELECT id FROM tabs WHERE section_id = ?) " +
+                "GROUP BY tab_id",
+            new String[]{String.valueOf(sectionId)})) {
             while (c.moveToNext()) {
                 result.put(c.getLong(0), c.getInt(1));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
 
-    /**
-     * Вкладка «Дедлайн»: активные, приоритет не important, срок уже/в ближайшие 3 дня.
-     * @param excludedTabIds вкладки, которые надо исключить (например, приватные при блокировке).
-     *                       null или пусто — без исключения.
-     */
     public List<Task> getDeadlineSoon(Collection<Long> excludedTabIds) {
         long now = System.currentTimeMillis();
+        long startOfToday = DateUtils.startOfDay(now);
         long soon = now + SOON_WINDOW_MS;
 
-        StringBuilder where = new StringBuilder();
-        where.append("status = 'active' ")
-                .append("AND (priority IS NULL OR priority <> 'important') ")
-                .append("AND ( ")
-                .append("  (due_type = 'exact_date' AND due_date IS NOT NULL AND due_date <= ?) ")
-                .append("  OR (due_type = 'range' AND ( ")
-                .append("       (due_to IS NOT NULL AND due_to <= ?) ")
-                .append("       OR (due_from IS NOT NULL AND due_from <= ?) ")
-                .append("     )) ")
-                .append("  OR (due_type = 'by_km' AND due_km IS NOT NULL) ")
-                .append(")");
-
-        List<String> args = new ArrayList<>();
-        args.add(String.valueOf(soon));
-        args.add(String.valueOf(soon));
-        args.add(String.valueOf(soon));
-
-        appendNotIn(where, args, "tab_id", excludedTabIds);
-
-        return query(where.toString(), args.toArray(new String[0]), "created_at DESC");
+        WhereArgs wa = buildDeadlineSoonWhere(startOfToday, soon, excludedTabIds);
+        return query(wa.where(), wa.args());
     }
 
-    /**
-     * Вкладка «Важные»: активные priority = important.
-     * @param excludedTabIds см. getDeadlineSoon.
-     */
+    private WhereArgs buildDeadlineSoonWhere(long startOfToday, long soon,
+                                             Collection<Long> excludedTabIds) {
+        StringBuilder where = new StringBuilder();
+        where.append("status = 'active' ")
+            .append("AND (priority IS NULL OR priority <> 'important') ")
+            .append("AND ( ")
+            .append("  (due_type = 'exact_date' AND due_date IS NOT NULL AND due_date >= ? AND due_date <= ?) ")
+            .append("  OR (due_type = 'range' AND ( ")
+            .append("       (due_to IS NOT NULL AND due_to <= ?) ")
+            .append("       OR (due_from IS NOT NULL AND due_from <= ?) ")
+            .append("     )) ")
+            .append("  OR (due_type = 'by_km' AND due_km IS NOT NULL) ")
+            .append(")");
+
+        List<String> args = new ArrayList<>();
+        args.add(String.valueOf(startOfToday));
+        args.add(String.valueOf(soon));
+        args.add(String.valueOf(soon));
+        args.add(String.valueOf(soon));
+
+        appendNotIn(where, args, excludedTabIds);
+
+        return new WhereArgs(where.toString(), args.toArray(new String[0]));
+    }
+
     public List<Task> getImportant(Collection<Long> excludedTabIds) {
         StringBuilder where = new StringBuilder();
         where.append("status = 'active' AND priority = 'important'");
         List<String> args = new ArrayList<>();
-        appendNotIn(where, args, "tab_id", excludedTabIds);
-        return query(where.toString(), args.toArray(new String[0]), "created_at DESC");
-    }
-
-    public Task getById(long id) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("tasks", null, "id = ?",
-                    new String[]{String.valueOf(id)}, null, null, null);
-            return c.moveToFirst() ? fromCursor(c) : null;
-        } finally {
-            if (c != null) c.close();
-        }
-    }
-
-    public void updateStatus(long id, String status) {
-        updateStatus(dbHelper.getWritableDatabase(), id, status);
+        appendNotIn(where, args, excludedTabIds);
+        return query(where.toString(), args.toArray(new String[0]));
     }
 
     public void updateStatus(SQLiteDatabase db, long id, String status) {
@@ -174,9 +148,9 @@ public class TaskDao {
     }
 
     private void appendNotIn(StringBuilder where, List<String> args,
-                             String column, Collection<Long> excluded) {
+                             Collection<Long> excluded) {
         if (excluded == null || excluded.isEmpty()) return;
-        where.append(" AND ").append(column).append(" NOT IN (");
+        where.append(" AND tab_id NOT IN (");
         int i = 0;
         for (Long id : excluded) {
             if (i > 0) where.append(",");
@@ -187,17 +161,13 @@ public class TaskDao {
         where.append(")");
     }
 
-    private List<Task> query(String where, String[] args, String orderBy) {
+    private List<Task> query(String where, String[] args) {
         List<Task> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("tasks", null, where, args, null, null, orderBy);
+        try (Cursor c = db.query("tasks", null, where, args, null, null, "created_at DESC")) {
             while (c.moveToNext()) {
                 result.add(fromCursor(c));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
@@ -240,5 +210,8 @@ public class TaskDao {
     private void putNullableInt(ContentValues cv, String key, Integer value) {
         if (value != null) cv.put(key, value);
         else cv.putNull(key);
+    }
+
+    private record WhereArgs(String where, String[] args) {
     }
 }

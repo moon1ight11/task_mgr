@@ -16,27 +16,31 @@ import java.util.List;
 
 public class ReferenceAdapter extends RecyclerView.Adapter<ReferenceAdapter.VH> {
 
-    public interface OnReferenceClick {
-        void onClick(ReferenceEntry item);
-    }
-
     private final List<ReferenceEntry> items = new ArrayList<>();
     private final OnReferenceClick clickListener;
-
     public ReferenceAdapter(OnReferenceClick clickListener) {
         this.clickListener = clickListener;
     }
 
     public void setItems(List<ReferenceEntry> newItems) {
+        int oldSize = items.size();
         items.clear();
-        items.addAll(newItems);
-        notifyDataSetChanged();
+        if (newItems != null) items.addAll(newItems);
+        int newSize = items.size();
+
+        if (oldSize == newSize) {
+            if (newSize > 0) notifyItemRangeChanged(0, newSize);
+        } else {
+            if (oldSize > 0) notifyItemRangeRemoved(0, oldSize);
+            if (newSize > 0) notifyItemRangeInserted(0, newSize);
+        }
     }
 
-    @NonNull @Override
+    @NonNull
+    @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_reference, parent, false);
+            .inflate(R.layout.item_reference, parent, false);
         return new VH(v);
     }
 
@@ -45,6 +49,14 @@ public class ReferenceAdapter extends RecyclerView.Adapter<ReferenceAdapter.VH> 
         ReferenceEntry r = items.get(position);
         h.title.setText(r.title);
         h.value.setText(r.value);
+
+        if (r.description != null && !r.description.isEmpty()) {
+            h.description.setText(r.description);
+            h.description.setVisibility(View.VISIBLE);
+        } else {
+            h.description.setVisibility(View.GONE);
+        }
+
         if (r.category != null && !r.category.isEmpty()) {
             h.category.setText(r.category);
             h.category.setVisibility(View.VISIBLE);
@@ -56,15 +68,24 @@ public class ReferenceAdapter extends RecyclerView.Adapter<ReferenceAdapter.VH> 
         });
     }
 
-    @Override public int getItemCount() { return items.size(); }
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
 
-    static class VH extends RecyclerView.ViewHolder {
-        TextView title, value, category;
+    public interface OnReferenceClick {
+        void onClick(ReferenceEntry item);
+    }
+
+    public static class VH extends RecyclerView.ViewHolder {
+        TextView title, value, category, description;
+
         VH(@NonNull View v) {
             super(v);
             title = v.findViewById(R.id.ref_title);
             value = v.findViewById(R.id.ref_value);
             category = v.findViewById(R.id.ref_category);
+            description = v.findViewById(R.id.ref_description);
         }
     }
 }

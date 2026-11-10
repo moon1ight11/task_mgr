@@ -7,5 +7,6 @@ public class HistoryEntry {
     public Integer kmAtCompletion;
     public String note;
 
-    public HistoryEntry() {}
+    public HistoryEntry() {
+    }
 }

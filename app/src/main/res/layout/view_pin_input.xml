@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <EditText
+        android:id="@+id/pin_1"
+        style="@style/TaskMGRPinBox"
+        android:importantForAutofill="no"
+        android:inputType="number"
+        android:maxLength="1" />
+
+    <EditText
+        android:id="@+id/pin_2"
+        style="@style/TaskMGRPinBox"
+        android:importantForAutofill="no"
+        android:inputType="number"
+        android:maxLength="1"
+        android:layout_marginStart="12dp" />
+
+    <EditText
+        android:id="@+id/pin_3"
+        style="@style/TaskMGRPinBox"
+        android:importantForAutofill="no"
+        android:inputType="number"
+        android:maxLength="1"
+        android:layout_marginStart="12dp" />
+
+    <EditText
+        android:id="@+id/pin_4"
+        style="@style/TaskMGRPinBox"
+        android:importantForAutofill="no"
+        android:inputType="number"
+        android:maxLength="1"
+        android:layout_marginStart="12dp" />
+</LinearLayout>

@@ -7,7 +7,8 @@ public class Section {
     public boolean isPrivate = false;
     public int sortOrder;
 
-    public Section() {}
+    public Section() {
+    }
 
     public Section(String name, String icon, int sortOrder) {
         this(name, icon, sortOrder, false);

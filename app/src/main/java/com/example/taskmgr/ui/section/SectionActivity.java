@@ -15,12 +15,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.R;
-import com.example.taskmgr.ui.tab.TabActivity;
 import com.example.taskmgr.data.dao.SectionDao;
 import com.example.taskmgr.data.dao.TabDao;
 import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
+import com.example.taskmgr.ui.tab.TabActivity;
 import com.example.taskmgr.util.AppLock;
 import com.example.taskmgr.util.DbExecutor;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -34,12 +34,9 @@ public class SectionActivity extends AppCompatActivity {
     public static final String EXTRA_SECTION_NAME = "section_name";
 
     private long sectionId;
-    private String sectionName;
     private boolean isAutoSection;
 
     private TabDao tabDao;
-    private TaskDao taskDao;
-    private SectionDao sectionDao;
     private TabAdapter adapter;
     private RecyclerView recycler;
     private TextView emptyView;
@@ -51,11 +48,11 @@ public class SectionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_section);
 
         sectionId = getIntent().getLongExtra(EXTRA_SECTION_ID, -1);
-        sectionName = getIntent().getStringExtra(EXTRA_SECTION_NAME);
+        String sectionName = getIntent().getStringExtra(EXTRA_SECTION_NAME);
         isAutoSection = "Авто".equals(sectionName);
 
         // Проверка приватности: если раздел приватный и сессия не разблокирована — закрываем.
-        sectionDao = new SectionDao(this);
+        SectionDao sectionDao = new SectionDao(this);
         Section s = sectionDao.getById(sectionId);
         if (s == null) {
             finish();
@@ -75,21 +72,20 @@ public class SectionActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
 
         tabDao = new TabDao(this);
-        taskDao = new TaskDao(this);
 
         recycler = findViewById(R.id.tabs_recycler);
         emptyView = findViewById(R.id.empty_view);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter = new TabAdapter(
-                isAutoSection,
-                tab -> {
-                    Intent i = new Intent(SectionActivity.this, TabActivity.class);
-                    i.putExtra(TabActivity.EXTRA_TAB_ID, tab.id);
-                    i.putExtra(TabActivity.EXTRA_TAB_NAME, tab.name);
-                    i.putExtra(TabActivity.EXTRA_IS_AUTO, isAutoSection);
-                    startActivity(i);
-                },
-                this::showTabActionsDialog
+            isAutoSection,
+            tab -> {
+                Intent i = new Intent(SectionActivity.this, TabActivity.class);
+                i.putExtra(TabActivity.EXTRA_TAB_ID, tab.id);
+                i.putExtra(TabActivity.EXTRA_TAB_NAME, tab.name);
+                i.putExtra(TabActivity.EXTRA_IS_AUTO, isAutoSection);
+                startActivity(i);
+            },
+            this::showTabActionsDialog
         );
         recycler.setAdapter(adapter);
 
@@ -102,20 +98,17 @@ public class SectionActivity extends AppCompatActivity {
     private void loadTabs() {
         if (loading) return;
         loading = true;
+        final TaskDao taskDao = new TaskDao(this);
         DbExecutor.run(() -> {
             List<Tab> tabs = tabDao.getBySection(sectionId);
             Map<Long, Integer> counts = taskDao.getActiveCountsBySection(sectionId);
-            return new Object[]{tabs, counts};
+            return new LoadResult(tabs, counts);
         }, result -> {
             loading = false;
             if (result == null) return;
-            Object[] arr = (Object[]) result;
-            @SuppressWarnings("unchecked")
-            List<Tab> tabs = (List<Tab>) arr[0];
-            @SuppressWarnings("unchecked")
-            Map<Long, Integer> counts = (Map<Long, Integer>) arr[1];
+            List<Tab> tabs = result.tabs();
             if (tabs == null) tabs = java.util.Collections.emptyList();
-            adapter.setItems(tabs, counts);
+            adapter.setItems(tabs, result.counts());
             boolean empty = tabs.isEmpty();
             emptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
             recycler.setVisibility(empty ? View.GONE : View.VISIBLE);
@@ -124,12 +117,12 @@ public class SectionActivity extends AppCompatActivity {
 
     private void showTabActionsDialog(Tab tab) {
         new AlertDialog.Builder(this)
-                .setTitle(tab.name)
-                .setItems(new String[]{"Редактировать", "Удалить"}, (d, which) -> {
-                    if (which == 0) showEditTabDialog(tab);
-                    else confirmDeleteTab(tab);
-                })
-                .show();
+            .setTitle(tab.name)
+            .setItems(new String[]{"Редактировать", "Удалить"}, (d, which) -> {
+                if (which == 0) showEditTabDialog(tab);
+                else confirmDeleteTab(tab);
+            })
+            .show();
     }
 
     private void showEditTabDialog(Tab tab) {
@@ -148,36 +141,35 @@ public class SectionActivity extends AppCompatActivity {
         }
 
         new AlertDialog.Builder(this)
-                .setTitle("Редактировать вкладку")
-                .setView(view)
-                .setPositiveButton("Сохранить", (d, w) -> {
-                    String name = inputName.getText().toString().trim();
-                    if (TextUtils.isEmpty(name)) {
-                        Toast.makeText(this, "Введите название", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    tab.name = name;
-                    if (isAutoSection) {
-                        Integer year = parseIntOrNull(inputYear.getText().toString());
-                        Integer km = parseIntOrNull(inputKm.getText().toString());
-                        tab.year = year;
-                        tab.currentKm = km;
-                    }
-                    DbExecutor.runVoid(() -> tabDao.update(tab), this::loadTabs);
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
+            .setTitle("Редактировать вкладку")
+            .setView(view)
+            .setPositiveButton("Сохранить", (d, w) -> {
+                String name = inputName.getText().toString().trim();
+                if (TextUtils.isEmpty(name)) {
+                    Toast.makeText(this, "Введите название", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                tab.name = name;
+                if (isAutoSection) {
+                    Integer year = parseIntOrNull(inputYear.getText().toString());
+                    Integer km = parseIntOrNull(inputKm.getText().toString());
+                    tab.year = year;
+                    tab.currentKm = km;
+                }
+                DbExecutor.runVoid(() -> tabDao.update(tab), this::loadTabs);
+            })
+            .setNegativeButton("Отмена", null)
+            .show();
     }
 
     private void confirmDeleteTab(Tab tab) {
         new AlertDialog.Builder(this)
-                .setTitle("Удалить вкладку «" + tab.name + "»?")
-                .setMessage("Будут удалены все задачи, история, покупки и справочник этой вкладки. Это действие нельзя отменить.")
-                .setPositiveButton("Удалить", (d, w) -> {
-                    DbExecutor.runVoid(() -> tabDao.delete(tab.id), this::loadTabs);
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
+            .setTitle("Удалить вкладку «" + tab.name + "»?")
+            .setMessage("Будут удалены все задачи, история, покупки и справочник этой вкладки. Это действие нельзя отменить.")
+            .setPositiveButton("Удалить", (d, w) ->
+                DbExecutor.runVoid(() -> tabDao.delete(tab.id), this::loadTabs))
+            .setNegativeButton("Отмена", null)
+            .show();
     }
 
     private void showAddTabDialog() {
@@ -192,27 +184,36 @@ public class SectionActivity extends AppCompatActivity {
         }
 
         new AlertDialog.Builder(this)
-                .setTitle("Новая вкладка")
-                .setView(view)
-                .setPositiveButton("Добавить", (d, w) -> {
-                    String name = inputName.getText().toString().trim();
-                    if (TextUtils.isEmpty(name)) {
-                        Toast.makeText(this, "Введите название", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    Tab t = new Tab(sectionId, name);
-                    if (isAutoSection) {
-                        t.year = parseIntOrNull(inputYear.getText().toString());
-                        t.currentKm = parseIntOrNull(inputKm.getText().toString());
-                    }
-                    DbExecutor.runVoid(() -> tabDao.insert(t), this::loadTabs);
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
+            .setTitle("Новая вкладка")
+            .setView(view)
+            .setPositiveButton("Добавить", (d, w) -> addTab(inputName, inputYear, inputKm))
+            .setNegativeButton("Отмена", null)
+            .show();
+    }
+
+    private void addTab(EditText inputName, EditText inputYear, EditText inputKm) {
+        String name = inputName.getText().toString().trim();
+        if (TextUtils.isEmpty(name)) {
+            Toast.makeText(this, "Введите название", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Tab t = new Tab(sectionId, name);
+        if (isAutoSection) {
+            t.year = parseIntOrNull(inputYear.getText().toString());
+            t.currentKm = parseIntOrNull(inputKm.getText().toString());
+        }
+        DbExecutor.runVoid(() -> tabDao.insert(t), this::loadTabs);
     }
 
     private Integer parseIntOrNull(String s) {
         if (s == null || s.trim().isEmpty()) return null;
-        try { return Integer.parseInt(s.trim()); } catch (NumberFormatException e) { return null; }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private record LoadResult(List<Tab> tabs, Map<Long, Integer> counts) {
     }
 }

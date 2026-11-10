@@ -6,6 +6,7 @@ build/
 
 # ============ Local config ============
 local.properties
+.editorconfig
 
 # ============ Android ============
 *.apk

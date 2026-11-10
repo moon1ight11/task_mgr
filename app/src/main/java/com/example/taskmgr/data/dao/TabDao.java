@@ -28,22 +28,21 @@ public class TabDao {
         if (t.year != null) cv.put("year", t.year);
         else cv.putNull("year");
         cv.put("sort_order", t.sortOrder);
+        cv.put("show_tasks", t.showTasks ? 1 : 0);
+        cv.put("show_shopping", t.showShopping ? 1 : 0);
+        cv.put("show_reference", t.showReference ? 1 : 0);
         return db.insert("tabs", null, cv);
     }
 
     public List<Tab> getBySection(long sectionId) {
         List<Tab> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("tabs", null, "section_id = ?",
-                    new String[]{String.valueOf(sectionId)},
-                    null, null, "sort_order ASC");
+        try (Cursor c = db.query("tabs", null, "section_id = ?",
+            new String[]{String.valueOf(sectionId)},
+            null, null, "sort_order ASC")) {
             while (c.moveToNext()) {
                 result.add(fromCursor(c));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
@@ -51,33 +50,24 @@ public class TabDao {
     public List<Tab> getAll() {
         List<Tab> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("tabs", null, null, null, null, null, "sort_order ASC");
+        try (Cursor c = db.query("tabs", null, null, null, null, null, "sort_order ASC")) {
             while (c.moveToNext()) {
                 result.add(fromCursor(c));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
 
-    /** Все вкладки, принадлежащие приватным разделам. Используется для исключения на главной. */
     public List<Tab> getByPrivateSections() {
         List<Tab> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            String sql = "SELECT t.* FROM tabs t " +
-                    "JOIN sections s ON s.id = t.section_id " +
-                    "WHERE s.is_private = 1";
-            c = db.rawQuery(sql, null);
+        String sql = "SELECT t.* FROM tabs t " +
+            "JOIN sections s ON s.id = t.section_id " +
+            "WHERE s.is_private = 1";
+        try (Cursor c = db.rawQuery(sql, null)) {
             while (c.moveToNext()) {
                 result.add(fromCursor(c));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
@@ -87,29 +77,20 @@ public class TabDao {
     }
 
     public Tab getById(SQLiteDatabase db, long id) {
-        Cursor c = null;
-        try {
-            c = db.query("tabs", null, "id = ?",
-                    new String[]{String.valueOf(id)}, null, null, null);
+        try (Cursor c = db.query("tabs", null, "id = ?",
+            new String[]{String.valueOf(id)}, null, null, null)) {
             return c.moveToFirst() ? fromCursor(c) : null;
-        } finally {
-            if (c != null) c.close();
         }
     }
 
-    /** true, если вкладка принадлежит разделу «Авто». */
     public boolean isAutoTab(long tabId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.rawQuery(
-                    "SELECT s.name FROM tabs t " +
-                            "JOIN sections s ON s.id = t.section_id " +
-                            "WHERE t.id = ?",
-                    new String[]{String.valueOf(tabId)});
+        try (Cursor c = db.rawQuery(
+            "SELECT s.name FROM tabs t " +
+                "JOIN sections s ON s.id = t.section_id " +
+                "WHERE t.id = ?",
+            new String[]{String.valueOf(tabId)})) {
             return c.moveToFirst() && SectionDao.AUTO_SECTION_NAME.equals(c.getString(0));
-        } finally {
-            if (c != null) c.close();
         }
     }
 
@@ -125,6 +106,9 @@ public class TabDao {
         if (t.year != null) cv.put("year", t.year);
         else cv.putNull("year");
         cv.put("sort_order", t.sortOrder);
+        cv.put("show_tasks", t.showTasks ? 1 : 0);
+        cv.put("show_shopping", t.showShopping ? 1 : 0);
+        cv.put("show_reference", t.showReference ? 1 : 0);
         db.update("tabs", cv, "id = ?", new String[]{String.valueOf(t.id)});
     }
 
@@ -143,6 +127,15 @@ public class TabDao {
         int yearIdx = c.getColumnIndexOrThrow("year");
         t.year = c.isNull(yearIdx) ? null : c.getInt(yearIdx);
         t.sortOrder = c.getInt(c.getColumnIndexOrThrow("sort_order"));
+        t.showTasks = readBool(c, "show_tasks");
+        t.showShopping = readBool(c, "show_shopping");
+        t.showReference = readBool(c, "show_reference");
         return t;
+    }
+
+    private boolean readBool(Cursor c, String column) {
+        int idx = c.getColumnIndex(column);
+        if (idx == -1 || c.isNull(idx)) return true;
+        return c.getInt(idx) != 0;
     }
 }

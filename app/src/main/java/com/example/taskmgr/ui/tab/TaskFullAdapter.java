@@ -28,27 +28,33 @@ import java.util.Locale;
 
 public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
 
-    public interface OnTaskClick { void onClick(Task t); }
-    public interface OnTaskLongClick { void onLongClick(Task t); }
-
     private final List<Task> items = new ArrayList<>();
     private final OnTaskClick clickListener;
     private final OnTaskLongClick longClickListener;
-
     private Tab currentTab;
     private long highlightedTaskId = -1;
-
-    public void setCurrentTab(Tab tab) { this.currentTab = tab; }
 
     public TaskFullAdapter(OnTaskClick clickListener, OnTaskLongClick longClickListener) {
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
     }
 
+    public void setCurrentTab(Tab tab) {
+        this.currentTab = tab;
+    }
+
     public void setItems(List<Task> newItems) {
+        int oldSize = items.size();
         items.clear();
-        items.addAll(newItems);
-        notifyDataSetChanged();
+        if (newItems != null) items.addAll(newItems);
+        int newSize = items.size();
+
+        if (oldSize == newSize) {
+            if (newSize > 0) notifyItemRangeChanged(0, newSize);
+        } else {
+            if (oldSize > 0) notifyItemRangeRemoved(0, oldSize);
+            if (newSize > 0) notifyItemRangeInserted(0, newSize);
+        }
     }
 
     public int positionOfTask(long taskId) {
@@ -57,25 +63,32 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
     }
 
     public void setHighlightedTaskId(long taskId) {
+        long oldId = highlightedTaskId;
         highlightedTaskId = taskId;
-        notifyDataSetChanged();
+        int oldPos = positionOfTask(oldId);
+        int newPos = positionOfTask(taskId);
+        if (oldPos != -1) notifyItemChanged(oldPos);
+        if (newPos != -1 && newPos != oldPos) notifyItemChanged(newPos);
     }
 
     public void clearHighlight() {
         if (highlightedTaskId == -1) return;
+        int oldPos = positionOfTask(highlightedTaskId);
         highlightedTaskId = -1;
-        notifyDataSetChanged();
+        if (oldPos != -1) notifyItemChanged(oldPos);
     }
 
-    @NonNull @Override
+    @NonNull
+    @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_task_full, parent, false);
+            .inflate(R.layout.item_task_full, parent, false);
         VH vh = new VH(v);
         TaskAdapter.InstallRoundedClip(vh.contentRoot, parent);
         return vh;
     }
 
+    @SuppressWarnings("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
         Context ctx = h.itemView.getContext();
@@ -96,7 +109,9 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
             h.inner.setBackgroundColor(Color.TRANSPARENT);
         }
 
-        h.itemView.setOnClickListener(v -> { if (clickListener != null) clickListener.onClick(t); });
+        h.itemView.setOnClickListener(v -> {
+            if (clickListener != null) clickListener.onClick(t);
+        });
         h.itemView.setOnLongClickListener(v -> {
             if (longClickListener != null) longClickListener.onLongClick(t);
             return true;
@@ -108,21 +123,21 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
     }
 
     private int urgencyColor(Context ctx, UrgencyCalculator.Urgency u) {
-        switch (u) {
-            case OVERDUE: return ContextCompat.getColor(ctx, R.color.semantic_danger);
-            case SOON:    return ContextCompat.getColor(ctx, R.color.semantic_warning);
-            case NORMAL:  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
-            default:      return ContextCompat.getColor(ctx, R.color.semantic_neutral_weak);
-        }
+        return switch (u) {
+            case OVERDUE -> ContextCompat.getColor(ctx, R.color.semantic_danger);
+            case SOON -> ContextCompat.getColor(ctx, R.color.semantic_warning);
+            case NORMAL -> ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default -> ContextCompat.getColor(ctx, R.color.semantic_neutral_weak);
+        };
     }
 
     private int priorityColor(Context ctx, String p) {
         if (p == null) return ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
-        switch (p) {
-            case "important": return ContextCompat.getColor(ctx, R.color.semantic_info);
-            case "whatever":  return ContextCompat.getColor(ctx, R.color.semantic_neutral);
-            default:          return ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
-        }
+        return switch (p) {
+            case "important" -> ContextCompat.getColor(ctx, R.color.semantic_info);
+            case "whatever" -> ContextCompat.getColor(ctx, R.color.semantic_neutral);
+            default -> ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
+        };
     }
 
     private CharSequence buildMetaSpan(Context ctx, Task t, Tab tab) {
@@ -150,38 +165,33 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
         int neutral = ContextCompat.getColor(ctx, R.color.semantic_neutral_strong);
 
         sp.setSpan(new ForegroundColorSpan(neutral), 0, full.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         sp.setSpan(new ForegroundColorSpan(priorityColor(ctx, t.priority)),
-                pStart, pEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            pStart, pEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         if (dStart >= 0) {
             sp.setSpan(new ForegroundColorSpan(urgencyColor(ctx, UrgencyCalculator.calculate(t, tab))),
-                    dStart, dEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                dStart, dEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         return sp;
     }
 
     private String priorityLabel(String p) {
         if (p == null) return "—";
-        switch (p) {
-            case "important": return "важно";
-            case "whatever": return "потом";
-            default: return "обычно";
-        }
+        return switch (p) {
+            case "important" -> "важно";
+            case "whatever" -> "потом";
+            default -> "обычно";
+        };
     }
 
     private String dueLabel(Task t) {
-        switch (t.dueType) {
-            case "exact_date":
-                return t.dueDate != null ? "срок: " + fmt(t.dueDate) : "срок: —";
-            case "range":
-                return "период: " + formatRange(t.dueFrom, t.dueTo);
-            case "by_km":
-                return t.dueKm != null ? "на " + t.dueKm + " км" : "по км";
-            case "after_last":
-                return "после выполнения";
-            default:
-                return "";
-        }
+        return switch (t.dueType) {
+            case "exact_date" -> t.dueDate != null ? "срок: " + fmt(t.dueDate) : "срок: —";
+            case "range" -> "период: " + formatRange(t.dueFrom, t.dueTo);
+            case "by_km" -> t.dueKm != null ? "на " + t.dueKm + " км" : "по км";
+            case "after_last" -> "после выполнения";
+            default -> "";
+        };
     }
 
     private String formatRange(Long from, Long to) {
@@ -199,11 +209,23 @@ public class TaskFullAdapter extends RecyclerView.Adapter<TaskFullAdapter.VH> {
         return new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(new Date(millis));
     }
 
-    @Override public int getItemCount() { return items.size(); }
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
 
-    static class VH extends RecyclerView.ViewHolder {
+    public interface OnTaskClick {
+        void onClick(Task t);
+    }
+
+    public interface OnTaskLongClick {
+        void onLongClick(Task t);
+    }
+
+    public static class VH extends RecyclerView.ViewHolder {
         TextView title, description, meta, created;
         View stripe, contentRoot, inner;
+
         VH(@NonNull View v) {
             super(v);
             title = v.findViewById(R.id.task_title);
