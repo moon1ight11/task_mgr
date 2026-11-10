@@ -28,15 +28,15 @@ public class StatsActivity extends AppCompatActivity {
 
     private int currentPeriodDays = PERIOD_ALL;
 
-    private StatsDao statsDao;
-
-    private ChipGroup periodGroup;
     private TextView statTotal, statActive, statDone, statPercent, statOverdue;
     private ProgressBar statPercentBar;
     private LinearLayout priorityContainer;
     private LinearLayout sectionContainer;
     private View cardPeriod;
     private TextView periodTitle, periodCompletions, periodAvg;
+    private TextView statAvgTime, statAvgTimeMeta;
+    private TextView statOnTime, statOnTimeMeta;
+    private ProgressBar statOnTimeBar;
     private TextView shoppingLine, shoppingSum;
 
     private boolean loading = false;
@@ -45,8 +45,6 @@ public class StatsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
-
-        statsDao = new StatsDao(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -68,6 +66,11 @@ public class StatsActivity extends AppCompatActivity {
         periodTitle = findViewById(R.id.period_title);
         periodCompletions = findViewById(R.id.period_completions);
         periodAvg = findViewById(R.id.period_avg);
+        statAvgTime = findViewById(R.id.stat_avg_time);
+        statAvgTimeMeta = findViewById(R.id.stat_avg_time_meta);
+        statOnTime = findViewById(R.id.stat_on_time);
+        statOnTimeMeta = findViewById(R.id.stat_on_time_meta);
+        statOnTimeBar = findViewById(R.id.stat_on_time_bar);
         shoppingLine = findViewById(R.id.shopping_line);
         shoppingSum = findViewById(R.id.shopping_sum);
 
@@ -76,7 +79,7 @@ public class StatsActivity extends AppCompatActivity {
     }
 
     private void setupPeriodChips() {
-        periodGroup = findViewById(R.id.period_chip_group);
+        ChipGroup periodGroup = findViewById(R.id.period_chip_group);
 
         int[] values = {PERIOD_ALL, PERIOD_7, PERIOD_30, PERIOD_90};
         String[] labels = {"Всё время", "7 дней", "30 дней", "90 дней"};
@@ -107,43 +110,36 @@ public class StatsActivity extends AppCompatActivity {
         if (loading) return;
         loading = true;
         final int periodDays = currentPeriodDays;
+        final StatsDao statsDao = new StatsDao(this);
 
         DbExecutor.run(() -> {
             StatsDao.Summary summary = statsDao.getSummary();
             List<StatsDao.PriorityRow> priorities = statsDao.getActiveByPriority();
             List<StatsDao.SectionRow> sections = statsDao.getBySection();
             StatsDao.PeriodStats period = periodDays > 0
-                    ? statsDao.getCompletionsForPeriod(periodDays)
-                    : null;
+                ? statsDao.getCompletionsForPeriod(periodDays)
+                : null;
             StatsDao.ShoppingStats shopping = statsDao.getShoppingStats();
+            StatsDao.CompletionTimeStats timeStats = statsDao.getCompletionTimeStats(periodDays);
+            StatsDao.DeadlineStats deadlineStats = statsDao.getDeadlineStats(periodDays);
 
-            Object[] out = new Object[5];
-            out[0] = summary;
-            out[1] = priorities;
-            out[2] = sections;
-            out[3] = period;
-            out[4] = shopping;
-            return out;
+            return new LoadResult(summary, priorities, sections, period,
+                shopping, timeStats, deadlineStats);
         }, result -> {
             loading = false;
             if (result == null) return;
-            Object[] arr = (Object[]) result;
-            StatsDao.Summary summary = (StatsDao.Summary) arr[0];
-            @SuppressWarnings("unchecked")
-            List<StatsDao.PriorityRow> priorities = (List<StatsDao.PriorityRow>) arr[1];
-            @SuppressWarnings("unchecked")
-            List<StatsDao.SectionRow> sections = (List<StatsDao.SectionRow>) arr[2];
-            StatsDao.PeriodStats period = (StatsDao.PeriodStats) arr[3];
-            StatsDao.ShoppingStats shopping = (StatsDao.ShoppingStats) arr[4];
 
-            bindSummary(summary);
-            bindPriorities(priorities);
-            bindSections(sections);
-            bindPeriod(period, periodDays);
-            bindShopping(shopping);
+            bindSummary(result.summary());
+            bindPriorities(result.priorities());
+            bindSections(result.sections());
+            bindPeriod(result.period(), periodDays);
+            bindShopping(result.shopping());
+            bindCompletionTime(result.timeStats());
+            bindDeadline(result.deadlineStats());
         });
     }
 
+    @SuppressWarnings("SetTextI18n")
     private void bindSummary(StatsDao.Summary s) {
         statTotal.setText(String.valueOf(s.total));
         statActive.setText(String.valueOf(s.active));
@@ -163,7 +159,11 @@ public class StatsActivity extends AppCompatActivity {
         LayoutInflater inf = LayoutInflater.from(this);
         for (String p : order) {
             StatsDao.PriorityRow row = null;
-            for (StatsDao.PriorityRow r : rows) if (p.equals(r.priority)) { row = r; break; }
+            for (StatsDao.PriorityRow r : rows)
+                if (p.equals(r.priority)) {
+                    row = r;
+                    break;
+                }
             if (row == null) continue;
 
             View v = inf.inflate(R.layout.item_stats_priority, priorityContainer, false);
@@ -179,13 +179,14 @@ public class StatsActivity extends AppCompatActivity {
     }
 
     private String priorityLabel(String p) {
-        switch (p) {
-            case "important": return "Важно";
-            case "whatever":  return "Потом";
-            default:          return "Обычно";
-        }
+        return switch (p) {
+            case "important" -> "Важно";
+            case "whatever" -> "Потом";
+            default -> "Обычно";
+        };
     }
 
+    @SuppressWarnings("SetTextI18n")
     private void bindSections(List<StatsDao.SectionRow> rows) {
         sectionContainer.removeAllViews();
         LayoutInflater inf = LayoutInflater.from(this);
@@ -205,6 +206,57 @@ public class StatsActivity extends AppCompatActivity {
         }
     }
 
+    private void bindCompletionTime(StatsDao.CompletionTimeStats s) {
+        if (s == null || !s.hasData()) {
+            statAvgTime.setText("—");
+            statAvgTimeMeta.setText("Нет данных за период");
+            return;
+        }
+        statAvgTime.setText(formatDuration((long) s.avgMillis));
+        String meta = String.format(Locale.getDefault(),
+            "Мин: %s • Макс: %s • Всего: %d",
+            formatDuration(s.minMillis),
+            formatDuration(s.maxMillis),
+            s.count);
+        statAvgTimeMeta.setText(meta);
+    }
+
+    @SuppressWarnings("SetTextI18n")
+    private void bindDeadline(StatsDao.DeadlineStats s) {
+        if (s == null || !s.hasData()) {
+            statOnTime.setText("—");
+            statOnTimeBar.setProgress(0);
+            statOnTimeMeta.setText("Нет задач с дедлайном за период");
+            return;
+        }
+        int pct = s.percentOnTime();
+        statOnTime.setText(pct + "%");
+        statOnTimeBar.setProgress(pct);
+        statOnTimeMeta.setText(String.format(Locale.getDefault(),
+            "В срок: %d • С опозданием: %d • Всего: %d",
+            s.onTime, s.late, s.completedWithDeadline));
+    }
+
+    private String formatDuration(long millis) {
+        if (millis <= 0) return "0м";
+        long sec = millis / 1000;
+        long min = sec / 60;
+        long hour = min / 60;
+        long day = hour / 24;
+
+        if (day > 0) {
+            return day + "д " + (hour % 24) + "ч";
+        }
+        if (hour > 0) {
+            return hour + "ч " + (min % 60) + "м";
+        }
+        if (min > 0) {
+            return min + "м";
+        }
+        return sec + "с";
+    }
+
+    @SuppressWarnings("SetTextI18n")
     private void bindPeriod(StatsDao.PeriodStats p, int periodDays) {
         if (periodDays <= 0 || p == null) {
             cardPeriod.setVisibility(View.GONE);
@@ -213,12 +265,23 @@ public class StatsActivity extends AppCompatActivity {
         cardPeriod.setVisibility(View.VISIBLE);
         periodTitle.setText("Выполнено за " + periodDays + " дн.");
         periodCompletions.setText(String.valueOf(p.completions));
-        periodAvg.setText(String.format(Locale.getDefault(),"В среднем: %.1f/день", p.perDay()));
+        periodAvg.setText(String.format(Locale.getDefault(), "В среднем: %.1f/день", p.perDay()));
     }
 
+    @SuppressWarnings("SetTextI18n")
     private void bindShopping(StatsDao.ShoppingStats s) {
         shoppingLine.setText("Всего: " + s.total + " • Куплено: " + s.bought
-                + " • Не куплено: " + s.notBought);
-        shoppingSum.setText(String.format(Locale.getDefault(),"Сумма некупленного: %.2f", s.notBoughtSum));
+            + " • Не куплено: " + s.notBought);
+        shoppingSum.setText(String.format(Locale.getDefault(), "Сумма к покупке: %.2f", s.notBoughtSum));
+    }
+
+    private record LoadResult(
+        StatsDao.Summary summary,
+        List<StatsDao.PriorityRow> priorities,
+        List<StatsDao.SectionRow> sections,
+        StatsDao.PeriodStats period,
+        StatsDao.ShoppingStats shopping,
+        StatsDao.CompletionTimeStats timeStats,
+        StatsDao.DeadlineStats deadlineStats) {
     }
 }

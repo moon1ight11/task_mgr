@@ -17,7 +17,8 @@ public class Task {
     public Integer repeatIntervalKm;
     public Integer repeatIntervalMonths;
 
-    public Task() {}
+    public Task() {
+    }
 
     public Task(long tabId, String title, String priority) {
         this.tabId = tabId;

@@ -8,7 +8,12 @@ public class Tab {
     public Integer year;      // null для не-авто
     public int sortOrder;
 
-    public Tab() {}
+    public boolean showTasks = true;
+    public boolean showShopping = true;
+    public boolean showReference = true;
+
+    public Tab() {
+    }
 
     public Tab(long sectionId, String name) {
         this.sectionId = sectionId;

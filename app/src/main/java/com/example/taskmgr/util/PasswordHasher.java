@@ -15,7 +15,8 @@ public final class PasswordHasher {
     private static final int SALT_BYTES = 16;
     private static final int KEY_BITS = 256;
 
-    private PasswordHasher() {}
+    private PasswordHasher() {
+    }
 
     public static String newSaltBase64() {
         byte[] salt = new byte[SALT_BYTES];
@@ -44,8 +45,8 @@ public final class PasswordHasher {
 
     private static String algo() {
         return Build.VERSION.SDK_INT >= 26
-                ? "PBKDF2WithHmacSHA256"
-                : "PBKDF2WithHmacSHA1";
+            ? "PBKDF2WithHmacSHA256"
+            : "PBKDF2WithHmacSHA1";
     }
 
     private static boolean constantTimeEquals(String a, String b) {

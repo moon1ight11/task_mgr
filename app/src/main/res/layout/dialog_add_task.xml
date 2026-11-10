@@ -34,10 +34,40 @@
             android:text="Приоритет"
             android:layout_marginTop="8dp" />
 
-        <Spinner
-            android:id="@+id/spinner_priority"
+        <!-- Приоритет: 3 кнопки -->
+        <LinearLayout
+            android:id="@+id/group_priority"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_priority_important"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="Важно" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_priority_normal"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Обычно" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_priority_whatever"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Потом" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
@@ -45,10 +75,49 @@
             android:text="Срок"
             android:layout_marginTop="8dp" />
 
-        <Spinner
-            android:id="@+id/spinner_due_type"
+        <!-- Тип дедлайна: 4 кнопки (для не-авто третья скрыта программно) -->
+        <LinearLayout
+            android:id="@+id/group_due_type"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_due_none"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="Нет" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_due_exact"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Дата" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_due_range"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Период" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_due_km"
+                style="@style/TaskMGRSegButton"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:text="Км" />
+        </LinearLayout>
 
         <EditText
             android:id="@+id/input_due_date"

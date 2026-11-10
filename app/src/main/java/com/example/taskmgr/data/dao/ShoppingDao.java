@@ -33,29 +33,17 @@ public class ShoppingDao {
         return db.insert("shopping_items", null, cv);
     }
 
-    public List<ShoppingItem> getByTab(long tabId) {
-        return queryByCategory(tabId, null);
-    }
-
-    public List<ShoppingItem> getByTabAndCategory(long tabId, String category) {
-        return queryByCategory(tabId, category);
-    }
-
     public List<String> getCategories(long tabId) {
         List<String> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.rawQuery(
-                    "SELECT DISTINCT category FROM shopping_items " +
-                            "WHERE tab_id = ? AND category IS NOT NULL AND category <> '' " +
-                            "ORDER BY category COLLATE NOCASE ASC",
-                    new String[]{String.valueOf(tabId)});
+        try (Cursor c = db.rawQuery(
+            "SELECT DISTINCT category FROM shopping_items " +
+                "WHERE tab_id = ? AND category IS NOT NULL AND category <> '' " +
+                "ORDER BY category COLLATE NOCASE ASC",
+            new String[]{String.valueOf(tabId)})) {
             while (c.moveToNext()) {
                 result.add(c.getString(0));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
@@ -67,44 +55,24 @@ public class ShoppingDao {
         db.update("shopping_items", cv, "id = ?", new String[]{String.valueOf(id)});
     }
 
-    public void setSelected(long id, boolean selected) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("is_selected", selected ? 1 : 0);
-        db.update("shopping_items", cv, "id = ?", new String[]{String.valueOf(id)});
-    }
-
-    /** Сумма всех некупленных позиций вкладки (без учёта категории). */
-    public double getTotalPrice(long tabId) {
-        return getTotalPrice(tabId, null);
-    }
-
-    /**
-     * Сумма некупленных позиций вкладки.
-     * @param category null или пустая строка = по всем категориям
-     */
     public double getTotalPrice(long tabId, String category) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            String sql;
-            String[] args;
-            if (category == null || category.trim().isEmpty()) {
-                sql = "SELECT SUM(price) FROM shopping_items " +
-                        "WHERE tab_id = ? AND is_bought = 0";
-                args = new String[]{String.valueOf(tabId)};
-            } else {
-                sql = "SELECT SUM(price) FROM shopping_items " +
-                        "WHERE tab_id = ? AND is_bought = 0 AND category = ?";
-                args = new String[]{String.valueOf(tabId), category};
-            }
-            c = db.rawQuery(sql, args);
+        String sql;
+        String[] args;
+        if (category == null || category.trim().isEmpty()) {
+            sql = "SELECT SUM(price) FROM shopping_items " +
+                "WHERE tab_id = ? AND is_bought = 0";
+            args = new String[]{String.valueOf(tabId)};
+        } else {
+            sql = "SELECT SUM(price) FROM shopping_items " +
+                "WHERE tab_id = ? AND is_bought = 0 AND category = ?";
+            args = new String[]{String.valueOf(tabId), category};
+        }
+        try (Cursor c = db.rawQuery(sql, args)) {
             if (c.moveToFirst()) {
                 return c.isNull(0) ? 0 : c.getDouble(0);
             }
             return 0;
-        } finally {
-            if (c != null) c.close();
         }
     }
 
@@ -126,22 +94,11 @@ public class ShoppingDao {
         db.delete("shopping_items", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    private List<ShoppingItem> queryByCategory(long tabId, String category) {
+    public List<ShoppingItem> getByTabSorted(long tabId, String category,
+                                             SortMode mode, boolean ascending) {
         List<ShoppingItem> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            String where;
-            String[] args;
-            if (category == null || category.trim().isEmpty()) {
-                where = "tab_id = ?";
-                args = new String[]{String.valueOf(tabId)};
-            } else {
-                where = "tab_id = ? AND category = ?";
-                args = new String[]{String.valueOf(tabId), category};
-            }
-            c = db.query("shopping_items", null, where, args,
-                    null, null, "category ASC, created_at DESC");
+        try (Cursor c = buildSortedQuery(db, tabId, category, mode, ascending)) {
             while (c.moveToNext()) {
                 ShoppingItem s = new ShoppingItem();
                 s.id = c.getLong(c.getColumnIndexOrThrow("id"));
@@ -155,9 +112,42 @@ public class ShoppingDao {
                 s.category = c.getString(c.getColumnIndexOrThrow("category"));
                 result.add(s);
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
+    }
+
+    private Cursor buildSortedQuery(SQLiteDatabase db, long tabId, String category,
+                                    SortMode mode, boolean ascending) {
+        String where;
+        String[] args;
+        if (category == null || category.trim().isEmpty()) {
+            where = "tab_id = ?";
+            args = new String[]{String.valueOf(tabId)};
+        } else {
+            where = "tab_id = ? AND category = ?";
+            args = new String[]{String.valueOf(tabId), category};
+        }
+
+        String dir = ascending ? "ASC" : "DESC";
+        String key = switch (mode) {
+            case PRICE -> "price";
+            case TITLE -> "title";
+            default -> "created_at";
+        };
+        String orderBy;
+        if (mode == SortMode.PRICE) {
+            orderBy = "is_bought ASC, CASE WHEN price IS NULL THEN 1 ELSE 0 END ASC, price " + dir;
+        } else {
+            orderBy = "is_bought ASC, " + key + " " + dir;
+        }
+
+        return db.query("shopping_items", null, where, args,
+            null, null, orderBy);
+    }
+
+    public enum SortMode {
+        CREATED,
+        PRICE,
+        TITLE
     }
 }

@@ -18,10 +18,6 @@ public class HistoryDao {
         this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
-    public long insert(HistoryEntry h) {
-        return insert(dbHelper.getWritableDatabase(), h);
-    }
-
     public long insert(SQLiteDatabase db, HistoryEntry h) {
         ContentValues cv = new ContentValues();
         cv.put("task_id", h.taskId);
@@ -34,31 +30,16 @@ public class HistoryDao {
     public List<HistoryEntry> getByTask(long taskId) {
         List<HistoryEntry> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("history", null, "task_id = ?",
-                    new String[]{String.valueOf(taskId)},
-                    null, null, "completed_at DESC");
+        try (Cursor c = db.query("history", null, "task_id = ?", new String[]{String.valueOf(taskId)}, null, null, "completed_at DESC")) {
             while (c.moveToNext()) {
                 result.add(fromCursor(c));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
 
-    public HistoryEntry getLastByTask(long taskId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.query("history", null, "task_id = ?",
-                    new String[]{String.valueOf(taskId)},
-                    null, null, "completed_at DESC", "1");
-            return c.moveToFirst() ? fromCursor(c) : null;
-        } finally {
-            if (c != null) c.close();
-        }
+    public void deleteById(SQLiteDatabase db, long historyId) {
+        db.delete("history", "id = ?", new String[]{String.valueOf(historyId)});
     }
 
     private HistoryEntry fromCursor(Cursor c) {

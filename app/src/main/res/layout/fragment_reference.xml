@@ -24,6 +24,39 @@
             app:chipSpacingHorizontal="8dp" />
     </HorizontalScrollView>
 
+    <!-- Сортировка -->
+    <TextView
+        style="@style/TaskMGRSegLabel"
+        android:text="Сортировка"
+        android:layout_marginTop="2dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="2dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_ref_sort_title"
+            style="@style/TaskMGRSegButton.Sort"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:text="Название" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_ref_sort_category"
+            style="@style/TaskMGRSegButton.Sort"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="Категория" />
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/reference_recycler"
         android:layout_width="match_parent"

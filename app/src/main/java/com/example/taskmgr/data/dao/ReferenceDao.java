@@ -26,41 +26,18 @@ public class ReferenceDao {
         cv.put("value", r.value);
         if (r.category != null) cv.put("category", r.category);
         else cv.putNull("category");
+        if (r.description != null) cv.put("description", r.description);
+        else cv.putNull("description");
         return db.insert("reference_entries", null, cv);
     }
 
-    /** Все записи вкладки (без фильтра). */
-    public List<ReferenceEntry> getByTab(long tabId) {
-        return queryByCategory(tabId, null);
-    }
-
-    /**
-     * Записи вкладки с фильтром по категории.
-     * @param category null или пустая строка = «все категории»
-     */
-    public List<ReferenceEntry> getByTabAndCategory(long tabId, String category) {
-        return queryByCategory(tabId, category);
-    }
-
-    /**
-     * Уникальные непустые категории вкладки, отсортированы по алфавиту.
-     * Нужны для построения чипов-фильтров.
-     */
     public List<String> getCategories(long tabId) {
         List<String> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            c = db.rawQuery(
-                    "SELECT DISTINCT category FROM reference_entries " +
-                            "WHERE tab_id = ? AND category IS NOT NULL AND category <> '' " +
-                            "ORDER BY category COLLATE NOCASE ASC",
-                    new String[]{String.valueOf(tabId)});
+        try (Cursor c = db.rawQuery("SELECT DISTINCT category FROM reference_entries " + "WHERE tab_id = ? AND category IS NOT NULL AND category <> '' " + "ORDER BY category COLLATE NOCASE ASC", new String[]{String.valueOf(tabId)})) {
             while (c.moveToNext()) {
                 result.add(c.getString(0));
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
     }
@@ -72,6 +49,8 @@ public class ReferenceDao {
         cv.put("value", r.value);
         if (r.category != null) cv.put("category", r.category);
         else cv.putNull("category");
+        if (r.description != null) cv.put("description", r.description);
+        else cv.putNull("description");
         db.update("reference_entries", cv, "id = ?", new String[]{String.valueOf(r.id)});
     }
 
@@ -80,22 +59,10 @@ public class ReferenceDao {
         db.delete("reference_entries", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    private List<ReferenceEntry> queryByCategory(long tabId, String category) {
+    public List<ReferenceEntry> getByTabSorted(long tabId, String category, SortMode mode, boolean ascending) {
         List<ReferenceEntry> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = null;
-        try {
-            String where;
-            String[] args;
-            if (category == null || category.trim().isEmpty()) {
-                where = "tab_id = ?";
-                args = new String[]{String.valueOf(tabId)};
-            } else {
-                where = "tab_id = ? AND category = ?";
-                args = new String[]{String.valueOf(tabId), category};
-            }
-            c = db.query("reference_entries", null, where, args,
-                    null, null, "category ASC, title ASC");
+        try (Cursor c = buildSortedQuery(db, tabId, category, mode, ascending)) {
             while (c.moveToNext()) {
                 ReferenceEntry r = new ReferenceEntry();
                 r.id = c.getLong(c.getColumnIndexOrThrow("id"));
@@ -103,11 +70,36 @@ public class ReferenceDao {
                 r.title = c.getString(c.getColumnIndexOrThrow("title"));
                 r.value = c.getString(c.getColumnIndexOrThrow("value"));
                 r.category = c.getString(c.getColumnIndexOrThrow("category"));
+                r.description = c.getString(c.getColumnIndexOrThrow("description"));
                 result.add(r);
             }
-        } finally {
-            if (c != null) c.close();
         }
         return result;
+    }
+
+    private Cursor buildSortedQuery(SQLiteDatabase db, long tabId, String category, SortMode mode, boolean ascending) {
+        String where;
+        String[] args;
+        if (category == null || category.trim().isEmpty()) {
+            where = "tab_id = ?";
+            args = new String[]{String.valueOf(tabId)};
+        } else {
+            where = "tab_id = ? AND category = ?";
+            args = new String[]{String.valueOf(tabId), category};
+        }
+
+        String dir = ascending ? "ASC" : "DESC";
+        String orderBy;
+        if (mode == SortMode.CATEGORY) {
+            orderBy = "CASE WHEN category IS NULL OR category = '' THEN 1 ELSE 0 END ASC, " + "category " + dir + ", title ASC";
+        } else {
+            orderBy = "title " + dir + ", category ASC";
+        }
+
+        return db.query("reference_entries", null, where, args, null, null, orderBy);
+    }
+
+    public enum SortMode {
+        TITLE, CATEGORY
     }
 }

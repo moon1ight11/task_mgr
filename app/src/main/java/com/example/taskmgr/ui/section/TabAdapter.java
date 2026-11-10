@@ -18,47 +18,38 @@ import java.util.Map;
 
 public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
 
-    public interface OnTabClick {
-        void onClick(Tab tab);
-    }
-
-    public interface OnTabLongClick {
-        void onLongClick(Tab tab);
-    }
-
     private final List<Tab> items = new ArrayList<>();
     private final Map<Long, Integer> activeCounts = new HashMap<>();
     private final OnTabClick clickListener;
     private final OnTabLongClick longClickListener;
     private final boolean showSubtitle;
-
-    public TabAdapter(boolean showSubtitle, OnTabClick clickListener) {
-        this(showSubtitle, clickListener, null);
-    }
-
     public TabAdapter(boolean showSubtitle, OnTabClick clickListener, OnTabLongClick longClickListener) {
         this.showSubtitle = showSubtitle;
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
     }
 
-    public void setItems(List<Tab> newItems) {
-        setItems(newItems, null);
-    }
-
     public void setItems(List<Tab> newItems, Map<Long, Integer> counts) {
+        int oldSize = items.size();
         items.clear();
         if (newItems != null) items.addAll(newItems);
         activeCounts.clear();
         if (counts != null) activeCounts.putAll(counts);
-        notifyDataSetChanged();
+        int newSize = items.size();
+
+        if (oldSize == newSize) {
+            if (newSize > 0) notifyItemRangeChanged(0, newSize);
+        } else {
+            if (oldSize > 0) notifyItemRangeRemoved(0, oldSize);
+            if (newSize > 0) notifyItemRangeInserted(0, newSize);
+        }
     }
 
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_tab, parent, false);
+            .inflate(R.layout.item_tab, parent, false);
         return new VH(v);
     }
 
@@ -102,8 +93,17 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.VH> {
         return items.size();
     }
 
-    static class VH extends RecyclerView.ViewHolder {
+    public interface OnTabClick {
+        void onClick(Tab tab);
+    }
+
+    public interface OnTabLongClick {
+        void onLongClick(Tab tab);
+    }
+
+    public static class VH extends RecyclerView.ViewHolder {
         TextView name, subtitle, activeCount;
+
         VH(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.tab_name);

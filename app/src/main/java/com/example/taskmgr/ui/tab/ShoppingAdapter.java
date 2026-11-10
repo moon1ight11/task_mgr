@@ -19,33 +19,33 @@ import java.util.Locale;
 
 public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
 
-    public interface Listener {
-        void onBoughtChanged(ShoppingItem item, boolean bought);
-    }
-
-    public interface OnShoppingLongClick {
-        void onLongClick(ShoppingItem item);
-    }
-
     private final List<ShoppingItem> items = new ArrayList<>();
     private final Listener listener;
     private final OnShoppingLongClick longClickListener;
-
     public ShoppingAdapter(Listener listener, OnShoppingLongClick longClickListener) {
         this.listener = listener;
         this.longClickListener = longClickListener;
     }
 
     public void setItems(List<ShoppingItem> newItems) {
+        int oldSize = items.size();
         items.clear();
-        items.addAll(newItems);
-        notifyDataSetChanged();
+        if (newItems != null) items.addAll(newItems);
+        int newSize = items.size();
+
+        if (oldSize == newSize) {
+            if (newSize > 0) notifyItemRangeChanged(0, newSize);
+        } else {
+            if (oldSize > 0) notifyItemRangeRemoved(0, oldSize);
+            if (newSize > 0) notifyItemRangeInserted(0, newSize);
+        }
     }
 
-    @NonNull @Override
+    @NonNull
+    @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_shopping, parent, false);
+            .inflate(R.layout.item_shopping, parent, false);
         return new VH(v);
     }
 
@@ -62,7 +62,7 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
         applyStrike(h.title, s.isBought);
 
         if (s.price != null) {
-            h.price.setText(String.format(Locale.getDefault(),"%.2f", s.price));
+            h.price.setText(String.format(Locale.getDefault(), "%.2f", s.price));
             h.price.setVisibility(View.VISIBLE);
         } else {
             h.price.setVisibility(View.GONE);
@@ -93,11 +93,23 @@ public class ShoppingAdapter extends RecyclerView.Adapter<ShoppingAdapter.VH> {
         }
     }
 
-    @Override public int getItemCount() { return items.size(); }
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
 
-    static class VH extends RecyclerView.ViewHolder {
+    public interface Listener {
+        void onBoughtChanged(ShoppingItem item, boolean bought);
+    }
+
+    public interface OnShoppingLongClick {
+        void onLongClick(ShoppingItem item);
+    }
+
+    public static class VH extends RecyclerView.ViewHolder {
         TextView title, price, category;
         CheckBox bought;
+
         VH(@NonNull View v) {
             super(v);
             title = v.findViewById(R.id.shopping_title);

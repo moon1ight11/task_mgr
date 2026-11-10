@@ -17,6 +17,7 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
+    <!-- Строка 1: категории -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -34,6 +35,48 @@
             app:selectionRequired="false"
             app:chipSpacingHorizontal="8dp" />
     </HorizontalScrollView>
+
+    <!-- Строка 2: сортировка -->
+    <TextView
+        style="@style/TaskMGRSegLabel"
+        android:text="Сортировка"
+        android:layout_marginTop="2dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="2dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_shop_sort_created"
+            style="@style/TaskMGRSegButton.Sort"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:text="Добавлено" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_shop_sort_price"
+            style="@style/TaskMGRSegButton.Sort"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="Цена" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_shop_sort_title"
+            style="@style/TaskMGRSegButton.Sort"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:text="Название" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/shopping_recycler"

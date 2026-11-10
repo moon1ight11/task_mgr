@@ -2,43 +2,41 @@ package com.example.taskmgr.service;
 
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
+import com.example.taskmgr.util.DateUtils;
 
 public class UrgencyCalculator {
-
-    public enum Urgency { OVERDUE, SOON, NORMAL, NONE }
 
     private static final int SOON_DAYS = 3;
     private static final int SOON_KM = 500;
 
     public static Urgency calculate(Task t, Tab tab) {
         long now = System.currentTimeMillis();
+        long startOfToday = DateUtils.startOfDay(now);
         long soonThreshold = now + (long) SOON_DAYS * 24 * 60 * 60 * 1000;
 
         if (t.dueType == null || t.dueType.equals("none")) return Urgency.NONE;
 
-        switch (t.dueType) {
-            case "exact_date":
-                return byDate(t.dueDate, now, soonThreshold);
+        return switch (t.dueType) {
+            case "exact_date" -> byDate(t.dueDate, startOfToday, soonThreshold);
 
-            case "range":
-                if (t.dueTo != null && t.dueTo < now) return Urgency.OVERDUE;
-                if (t.dueFrom != null && t.dueFrom <= soonThreshold) return Urgency.SOON;
-                return Urgency.NORMAL;
-
-            case "by_km": {
-                Urgency byKm = byKm(t.dueKm, tab);
-                Urgency byDate = t.dueDate != null
-                        ? byDate(t.dueDate, now, soonThreshold)
-                        : Urgency.NONE;
-                return worse(byKm, byDate);
+            case "range" -> {
+                if (t.dueTo != null && t.dueTo < startOfToday) yield Urgency.OVERDUE;
+                if (t.dueFrom != null && t.dueFrom <= soonThreshold) yield Urgency.SOON;
+                yield Urgency.NORMAL;
             }
 
-            case "after_last":
-                return Urgency.NORMAL;
+            case "by_km" -> {
+                Urgency byKm = byKm(t.dueKm, tab);
+                Urgency byDate = t.dueDate != null
+                    ? byDate(t.dueDate, now, soonThreshold)
+                    : Urgency.NONE;
+                yield worse(byKm, byDate);
+            }
 
-            default:
-                return Urgency.NONE;
-        }
+            case "after_last" -> Urgency.NORMAL;
+
+            default -> Urgency.NONE;
+        };
     }
 
     private static Urgency byDate(Long dueDate, long now, long soonThreshold) {
@@ -56,17 +54,18 @@ public class UrgencyCalculator {
         return Urgency.NORMAL;
     }
 
-    /** Возвращает более срочную из двух оценок. */
     private static Urgency worse(Urgency a, Urgency b) {
         return rank(a) >= rank(b) ? a : b;
     }
 
     private static int rank(Urgency u) {
-        switch (u) {
-            case OVERDUE: return 3;
-            case SOON:    return 2;
-            case NORMAL:  return 1;
-            default:      return 0;
-        }
+        return switch (u) {
+            case OVERDUE -> 3;
+            case SOON -> 2;
+            case NORMAL -> 1;
+            default -> 0;
+        };
     }
+
+    public enum Urgency {OVERDUE, SOON, NORMAL, NONE}
 }
