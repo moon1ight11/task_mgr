@@ -1,253 +1,264 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="@color/bg"
+  android:orientation="vertical">
+
+  <androidx.appcompat.widget.Toolbar
+    android:id="@+id/toolbar"
+    style="@style/Widget.TaskMGR.Toolbar"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/bg">
+    android:layout_height="?attr/actionBarSize"
+    app:popupTheme="@style/ThemeOverlay.Material3.Dark">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        style="@style/Widget.TaskMGR.Toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:popupTheme="@style/ThemeOverlay.Material3.Dark">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_logo"
-                android:contentDescription="@string/app_name"
-                android:layout_marginEnd="10dp" />
-
-            <TextView
-                android:id="@+id/toolbar_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textColor="@color/text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </androidx.appcompat.widget.Toolbar>
-
-    <!-- Ряд 1 -->
     <LinearLayout
-        android:layout_width="match_parent"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:gravity="center_vertical"
+      android:orientation="horizontal">
+
+      <ImageView
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="10dp"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/ic_logo" />
+
+      <TextView
+        android:id="@+id/toolbar_title"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="8dp">
+        android:layout_weight="1"
+        android:text="@string/app_name"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
-        <LinearLayout
-            android:id="@+id/plate_home"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
+      <ImageButton
+        android:id="@+id/btn_notification_settings"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Настройки уведомлений"
+        android:scaleType="centerInside"
+        android:src="@android:drawable/ic_menu_preferences"
+        android:tint="@color/text_secondary" />
+    </LinearLayout>
+  </androidx.appcompat.widget.Toolbar>
 
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_home"
-                android:contentDescription="Дом" />
+  <!-- Ряд 1 -->
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingStart="8dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="8dp">
 
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Дом" />
-        </LinearLayout>
+    <LinearLayout
+      android:id="@+id/plate_home"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/plate_garage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Дом"
+        android:src="@drawable/ic_plate_home" />
 
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_garage"
-                android:contentDescription="Гараж" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Гараж" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/plate_auto"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
-
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_auto"
-                android:contentDescription="Авто" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Авто" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/plate_it"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
-
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_it"
-                android:contentDescription="IT" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="IT" />
-        </LinearLayout>
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Дом" />
     </LinearLayout>
 
-    <!-- Ряд 2 -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp">
+      android:id="@+id/plate_garage"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
 
-        <LinearLayout
-            android:id="@+id/plate_health"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Гараж"
+        android:src="@drawable/ic_plate_garage" />
 
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_health"
-                android:contentDescription="Здоровье" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Здоровье" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/plate_ent"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
-
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_ent"
-                android:contentDescription="Развлечения" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Развлечения" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/plate_private"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate_private"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
-
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_private"
-                android:contentDescription="Private" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Private" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/plate_stats"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="4dp"
-            android:background="@drawable/bg_plate_stats"
-            android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical">
-
-            <ImageView
-                style="@style/TaskMGRPlateIcon"
-                android:src="@drawable/ic_plate_stats"
-                android:contentDescription="Статистика" />
-
-            <TextView
-                style="@style/TaskMGRPlateText"
-                android:text="Статистика" />
-        </LinearLayout>
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Гараж" />
     </LinearLayout>
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/main_tabs"
-        style="@style/Widget.TaskMGR.TabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:tabMode="fixed" />
+    <LinearLayout
+      android:id="@+id/plate_auto"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/tasks_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="12dp"
-        android:clipToPadding="false" />
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Авто"
+        android:src="@drawable/ic_plate_auto" />
 
-    <TextView
-        android:id="@+id/empty_view"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:text="Пока пусто"
-        android:textSize="16sp"
-        android:textColor="@color/text_secondary"
-        android:visibility="gone" />
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Авто" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/plate_it"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="IT"
+        android:src="@drawable/ic_plate_it" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="IT" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Ряд 2 -->
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+      android:id="@+id/plate_health"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Здоровье"
+        android:src="@drawable/ic_plate_health" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Здоровье" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/plate_ent"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Развлечения"
+        android:src="@drawable/ic_plate_ent" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Развлечения" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/plate_private"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate_private"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Private"
+        android:src="@drawable/ic_plate_private" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Private" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:id="@+id/plate_stats"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate_stats"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Статистика"
+        android:src="@drawable/ic_plate_stats" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Статистика" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <com.google.android.material.tabs.TabLayout
+    android:id="@+id/main_tabs"
+    style="@style/Widget.TaskMGR.TabLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:tabMode="fixed" />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/tasks_recycler"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:clipToPadding="false"
+    android:padding="12dp" />
+
+  <TextView
+    android:id="@+id/empty_view"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:gravity="center"
+    android:text="Пока пусто"
+    android:textColor="@color/text_secondary"
+    android:textSize="16sp"
+    android:visibility="gone" />
 </LinearLayout>

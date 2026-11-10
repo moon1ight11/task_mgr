@@ -117,6 +117,41 @@ public class TaskDao {
         return query(where.toString(), args.toArray(new String[0]));
     }
 
+    public List<Task> getTasksForDay(long dayStart, long dayEnd) {
+        long endExclusive = dayEnd; // dayStart + 24ч
+
+        String sql =
+            "SELECT t.* FROM tasks t " +
+                "JOIN tabs tb ON tb.id = t.tab_id " +
+                "JOIN sections s ON s.id = tb.section_id " +
+                "WHERE t.status = 'active' " +
+                "  AND s.is_private = 0 " +
+                "  AND ( " +
+                "    (t.due_type = 'exact_date' AND t.due_date IS NOT NULL " +
+                "       AND t.due_date >= ? AND t.due_date < ?) " +
+                "    OR " +
+                "    (t.due_type = 'range' AND t.due_from IS NOT NULL AND t.due_to IS NOT NULL " +
+                "       AND t.due_from < ? AND t.due_to >= ?) " +
+                "  ) " +
+                "ORDER BY " +
+                "  CASE t.priority WHEN 'important' THEN 0 " +
+                "                  WHEN 'normal'    THEN 1 " +
+                "                  ELSE 2 END ASC, " +
+                "  t.created_at DESC";
+
+        List<Task> result = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try (Cursor c = db.rawQuery(sql, new String[]{
+            String.valueOf(dayStart), String.valueOf(endExclusive),
+            String.valueOf(endExclusive), String.valueOf(dayStart)
+        })) {
+            while (c.moveToNext()) {
+                result.add(fromCursor(c));
+            }
+        }
+        return result;
+    }
+
     public void updateStatus(SQLiteDatabase db, long id, String status) {
         ContentValues cv = new ContentValues();
         cv.put("status", status);

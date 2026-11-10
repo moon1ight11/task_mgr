@@ -21,7 +21,9 @@ import com.example.taskmgr.data.dao.TaskDao;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
+import com.example.taskmgr.service.NotificationScheduler;
 import com.example.taskmgr.ui.common.CompleteTaskDialog;
+import com.example.taskmgr.ui.common.NotificationSettingsDialog;
 import com.example.taskmgr.ui.section.SectionActivity;
 import com.example.taskmgr.ui.stats.StatsActivity;
 import com.example.taskmgr.ui.tab.TabActivity;
@@ -70,6 +72,12 @@ public class MainActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
+
+        findViewById(R.id.btn_notification_settings).setOnClickListener(v ->
+            NotificationSettingsDialog.show(this));
+
+        // На случай, если будильники сбились (обновление, ручная очистка и т.п.)
+        NotificationScheduler.scheduleAll(this);
 
         setupSectionPlates();
 
@@ -392,6 +400,18 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.show();
         helper.focusFirst();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NotificationSettingsDialog.REQ_POST_NOTIFICATIONS) {
+            if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Уведомления разрешены", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Без разрешения уведомления не придут", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private interface OnSuccess {
