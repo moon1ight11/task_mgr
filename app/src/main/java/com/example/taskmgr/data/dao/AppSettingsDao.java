@@ -13,6 +13,19 @@ public class AppSettingsDao {
     public static final String KEY_PRIVATE_PWD_SALT = "private_pwd_salt";
     public static final String KEY_PRIVATE_PWD_ITER = "private_pwd_iter";
 
+
+    public static final String KEY_NOTIF_EVENING_ENABLED = "notif_evening_enabled";
+    public static final String KEY_NOTIF_EVENING_HOUR = "notif_evening_hour";
+    public static final String KEY_NOTIF_EVENING_MINUTE = "notif_evening_minute";
+    public static final String KEY_NOTIF_MORNING_ENABLED = "notif_morning_enabled";
+    public static final String KEY_NOTIF_MORNING_HOUR = "notif_morning_hour";
+    public static final String KEY_NOTIF_MORNING_MINUTE = "notif_morning_minute";
+
+    public static final int DEFAULT_EVENING_HOUR = 20;
+    public static final int DEFAULT_EVENING_MINUTE = 0;
+    public static final int DEFAULT_MORNING_HOUR = 9;
+    public static final int DEFAULT_MORNING_MINUTE = 0;
+
     private final DatabaseHelper dbHelper;
 
     public AppSettingsDao(Context context) {
