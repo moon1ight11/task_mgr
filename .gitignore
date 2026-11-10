@@ -32,6 +32,7 @@ out/
 *.keystore
 *.p12
 *.pfx
+taskmgr-release.jks
 
 # ============ OS ============
 .DS_Store

@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 import com.example.taskmgr.R;
 import com.example.taskmgr.data.dao.AppSettingsDao;
 import com.example.taskmgr.service.NotificationScheduler;
+import com.example.taskmgr.service.UpdateChecker;
 
 import java.util.Locale;
 
@@ -67,6 +68,10 @@ public final class NotificationSettingsDialog {
         tvEvening.setOnClickListener(v -> pickTime(activity, ev, tvEvening));
         tvMorning.setOnClickListener(v -> pickTime(activity, mo, tvMorning));
 
+        view.findViewById(R.id.btn_check_updates).setOnClickListener(v -> {
+            checkUpdates(activity);
+        });
+
         new AlertDialog.Builder(activity).setTitle("Уведомления").setView(view).setPositiveButton("Сохранить", (d, w) -> {
             dao.put(AppSettingsDao.KEY_NOTIF_EVENING_ENABLED, swEvening.isChecked() ? "1" : "0");
             dao.put(AppSettingsDao.KEY_NOTIF_MORNING_ENABLED, swMorning.isChecked() ? "1" : "0");
@@ -87,6 +92,91 @@ public final class NotificationSettingsDialog {
             hm[1] = m;
             target.setText(formatTime(h, m));
         }, hm[0], hm[1], true).show();
+    }
+
+    private static void checkUpdates(Activity activity) {
+        if (activity == null || activity.isFinishing()) return;
+        Toast.makeText(activity, "Проверка обновлений…", Toast.LENGTH_SHORT).show();
+
+        UpdateChecker.check(com.example.taskmgr.BuildConfig.VERSION_NAME, info -> {
+            if (activity.isFinishing()) return;
+
+            if (info == null) {
+                new AlertDialog.Builder(activity)
+                    .setTitle("Обновлений нет")
+                    .setMessage("У вас уже установлена последняя версия.")
+                    .setPositiveButton("OK", null)
+                    .show();
+                return;
+            }
+
+            new AlertDialog.Builder(activity)
+                .setTitle("Доступно обновление " + info.version)
+                .setMessage(info.releaseNotes != null && !info.releaseNotes.isEmpty()
+                    ? info.releaseNotes
+                    : "Скачать новую версию?")
+                .setPositiveButton("Скачать", (d, w) -> downloadAndInstall(activity, info.apkUrl))
+                .setNegativeButton("Позже", null)
+                .show();
+        });
+    }
+
+    private static void downloadAndInstall(Activity activity, String apkUrl) {
+        Toast.makeText(activity, "Скачивание…", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            java.io.File apk = new java.io.File(activity.getCacheDir(), "update.apk");
+            java.net.HttpURLConnection conn = null;
+            try {
+                java.net.URL url = new java.net.URL(apkUrl);
+                conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(30000);
+                conn.connect();
+
+                if (conn.getResponseCode() != 200) {
+                    throw new java.io.IOException("HTTP " + conn.getResponseCode());
+                }
+
+                try (java.io.InputStream in = conn.getInputStream();
+                     java.io.FileOutputStream out = new java.io.FileOutputStream(apk)) {
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                }
+
+                activity.runOnUiThread(() -> {
+                    if (!activity.isFinishing()) installApk(activity, apk);
+                });
+            } catch (Exception e) {
+                activity.runOnUiThread(() ->
+                    Toast.makeText(activity, "Ошибка скачивания: " + e.getMessage(),
+                        Toast.LENGTH_LONG).show());
+            } finally {
+                if (conn != null) conn.disconnect();
+            }
+        }).start();
+    }
+
+    private static void installApk(Activity activity, java.io.File apk) {
+        try {
+            android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                activity,
+                activity.getPackageName() + ".fileprovider",
+                apk
+            );
+
+            android.content.Intent intent = new android.content.Intent(
+                android.content.Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, "application/vnd.android.package-archive");
+            intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            activity.startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(activity, "Не удалось запустить установку: " + e.getMessage(),
+                Toast.LENGTH_LONG).show();
+        }
     }
 
     private static void ensureNotificationPermission(Activity activity) {
