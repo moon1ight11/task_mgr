@@ -59,6 +59,7 @@ public class TabActivity extends AppCompatActivity {
     public static final String EXTRA_TAB_NAME = "tab_name";
     public static final String EXTRA_IS_AUTO = "is_auto";
     public static final String EXTRA_TASK_ID = "task_id";
+    private static final String STATE_SECTION_INDEX = "state_section_index";
     private final List<Integer> tabIndexToSection = new ArrayList<>();
     private long tabId;
     private boolean isAuto;
@@ -175,6 +176,31 @@ public class TabActivity extends AppCompatActivity {
         setupReferenceView();
 
         rebuildTabLayout();
+
+        if (savedInstanceState != null) {
+            int savedSectionIndex = savedInstanceState.getInt(STATE_SECTION_INDEX, 0);
+            int tabPos = -1;
+            for (int i = 0; i < tabIndexToSection.size(); i++) {
+                if (tabIndexToSection.get(i) == savedSectionIndex) {
+                    tabPos = i;
+                    break;
+                }
+            }
+            if (tabPos >= 0) {
+                if (tabPos != tabTabs.getSelectedTabPosition()) {
+                    TabLayout.Tab tab = tabTabs.getTabAt(tabPos);
+                    if (tab != null) tab.select();
+                } else {
+                    showTab(savedSectionIndex);
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_SECTION_INDEX, currentSectionIndex);
     }
 
     @Override
@@ -328,9 +354,7 @@ public class TabActivity extends AppCompatActivity {
         DbExecutor.run(() -> {
             if (history) {
                 List<Task> allTasks = taskDao.getAllByTab(tabId);
-                List<HistoryEntry> entries = new ArrayList<>();
-                for (Task t : allTasks) entries.addAll(historyDao.getByTask(t.id));
-                entries.sort((a, b) -> Long.compare(b.completedAt, a.completedAt));
+                List<HistoryEntry> entries = historyDao.getByTab(tabId);
                 return new TasksResult(entries, allTasks, null);
             } else {
                 List<Task> activeTasks = taskDao.getByTab(tabId);
@@ -1011,6 +1035,7 @@ public class TabActivity extends AppCompatActivity {
     }
 
     private void rebuildTabLayout() {
+        tabTabs.clearOnTabSelectedListeners();
         tabTabs.removeAllTabs();
         tabIndexToSection.clear();
 
@@ -1027,11 +1052,12 @@ public class TabActivity extends AppCompatActivity {
             tabIndexToSection.add(2);
         }
 
-        tabTabs.clearOnTabSelectedListeners();
         tabTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                showTab(tabIndexToSection.get(tab.getPosition()));
+                int pos = tab.getPosition();
+                if (pos < 0 || pos >= tabIndexToSection.size()) return;
+                showTab(tabIndexToSection.get(pos));
             }
 
             @Override

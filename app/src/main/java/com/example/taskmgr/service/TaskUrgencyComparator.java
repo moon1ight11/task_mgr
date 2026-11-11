@@ -65,6 +65,6 @@ public class TaskUrgencyComparator implements Comparator<Task> {
         long db = distance(b, tb);
         if (da != db) return Long.compare(da, db);
 
-        return Long.compare(b.createdAt, a.createdAt);
+        return Long.compare(a.createdAt, b.createdAt);
     }
 }

@@ -38,6 +38,22 @@ public class HistoryDao {
         return result;
     }
 
+    public List<HistoryEntry> getByTab(long tabId) {
+        List<HistoryEntry> result = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql = "SELECT h.id, h.task_id, h.completed_at, h.km_at_completion, h.note " +
+            "FROM history h " +
+            "JOIN tasks t ON t.id = h.task_id " +
+            "WHERE t.tab_id = ? " +
+            "ORDER BY h.completed_at DESC";
+        try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(tabId)})) {
+            while (c.moveToNext()) {
+                result.add(fromCursor(c));
+            }
+        }
+        return result;
+    }
+
     public void deleteById(SQLiteDatabase db, long historyId) {
         db.delete("history", "id = ?", new String[]{String.valueOf(historyId)});
     }

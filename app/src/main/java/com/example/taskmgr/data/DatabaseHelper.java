@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -115,6 +115,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE app_settings (" +
             "`key` TEXT PRIMARY KEY, " +
             "value TEXT)");
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_tab_status ON tasks(tab_id, status)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_status_priority ON tasks(status, priority)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_task ON history(task_id)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_completed ON history(completed_at)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab ON shopping_items(tab_id)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab_bought ON shopping_items(tab_id, is_bought)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_reference_tab ON reference_entries(tab_id)");
     }
 
     @Override
@@ -134,6 +142,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         if (oldVersion < 5) {
             db.execSQL("ALTER TABLE reference_entries ADD COLUMN description TEXT");
+        }
+        if (oldVersion < 6) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_tab_status ON tasks(tab_id, status)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_status_priority ON tasks(status, priority)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_task ON history(task_id)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_completed ON history(completed_at)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab ON shopping_items(tab_id)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab_bought ON shopping_items(tab_id, is_bought)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_reference_tab ON reference_entries(tab_id)");
         }
     }
 }

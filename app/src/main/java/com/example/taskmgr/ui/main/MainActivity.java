@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         // На случай, если будильники сбились (обновление, ручная очистка и т.п.)
         NotificationScheduler.scheduleAll(this);
+        ensureNotificationPermissionIfNeeded();
 
         setupSectionPlates();
 
@@ -163,6 +164,25 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.plate_private).setOnClickListener(v -> handlePrivateNavClick());
         findViewById(R.id.plate_stats).setOnClickListener(v ->
             startActivity(new Intent(this, StatsActivity.class)));
+    }
+
+    private void ensureNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return;
+        if (androidx.core.content.ContextCompat.checkSelfPermission(this,
+            android.Manifest.permission.POST_NOTIFICATIONS)
+            == android.content.pm.PackageManager.PERMISSION_GRANTED) return;
+
+        String ev = settingsDao.get(AppSettingsDao.KEY_NOTIF_EVENING_ENABLED);
+        String mo = settingsDao.get(AppSettingsDao.KEY_NOTIF_MORNING_ENABLED);
+        boolean eveningEnabled = "1".equals(ev) || "true".equalsIgnoreCase(ev);
+        boolean morningEnabled = "1".equals(mo) || "true".equalsIgnoreCase(mo);
+
+        if (eveningEnabled || morningEnabled) {
+            requestPermissions(
+                new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                NotificationSettingsDialog.REQ_POST_NOTIFICATIONS
+            );
+        }
     }
 
     private void seedSectionsIfEmptyBlocking() {

@@ -121,23 +121,25 @@ public class TaskDao {
         long endExclusive = dayEnd; // dayStart + 24ч
 
         String sql =
-            "SELECT t.* FROM tasks t " +
-                "JOIN tabs tb ON tb.id = t.tab_id " +
-                "JOIN sections s ON s.id = tb.section_id " +
-                "WHERE t.status = 'active' " +
-                "  AND s.is_private = 0 " +
-                "  AND ( " +
+            "SELECT " +
+                "  COUNT(*), " +
+                "  SUM(CASE WHEN " +
                 "    (t.due_type = 'exact_date' AND t.due_date IS NOT NULL " +
-                "       AND t.due_date >= ? AND t.due_date < ?) " +
-                "    OR " +
-                "    (t.due_type = 'range' AND t.due_from IS NOT NULL AND t.due_to IS NOT NULL " +
-                "       AND t.due_from < ? AND t.due_to >= ?) " +
+                "       AND h.completed_at < t.due_date + 86400000) " +
+                "    OR (t.due_type = 'range' AND t.due_to IS NOT NULL " +
+                "       AND h.completed_at < t.due_to + 86400000) " +
+                "    THEN 1 ELSE 0 END) " +
+                "FROM history h " +
+                "JOIN tasks t ON t.id = h.task_id " +
+                "WHERE h.completed_at >= ? " +
+                "  AND ( " +
+                "    (t.due_type = 'exact_date' AND t.due_date IS NOT NULL) " +
+                "    OR (t.due_type = 'range' AND t.due_to IS NOT NULL) " +
                 "  ) " +
-                "ORDER BY " +
-                "  CASE t.priority WHEN 'important' THEN 0 " +
-                "                  WHEN 'normal'    THEN 1 " +
-                "                  ELSE 2 END ASC, " +
-                "  t.created_at DESC";
+                "  AND t.tab_id NOT IN (" +
+                "    SELECT tb.id FROM tabs tb " +
+                "    JOIN sections s ON s.id = tb.section_id " +
+                "    WHERE s.is_private = 1)";
 
         List<Task> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
