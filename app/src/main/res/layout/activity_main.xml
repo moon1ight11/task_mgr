@@ -37,6 +37,16 @@
         android:textStyle="bold" />
 
       <ImageButton
+        android:id="@+id/btn_plates_settings"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Настройки плиток"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_plates_settings"
+        android:tint="@color/neon_green" />
+
+      <ImageButton
         android:id="@+id/btn_notification_settings"
         android:layout_width="44dp"
         android:layout_height="44dp"
@@ -48,287 +58,25 @@
     </LinearLayout>
   </androidx.appcompat.widget.Toolbar>
 
-  <!-- Ряд 1 -->
-  <LinearLayout
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/main_plates_recycler"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
     android:paddingStart="8dp"
     android:paddingTop="8dp"
-    android:paddingEnd="8dp">
+    android:paddingEnd="8dp"
+    android:nestedScrollingEnabled="false" />
 
-    <LinearLayout
-      android:id="@+id/plate_home"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Дом"
-        android:src="@drawable/ic_plate_home" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Дом" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_garage"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Гараж"
-        android:src="@drawable/ic_plate_garage" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Гараж" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_auto"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Авто"
-        android:src="@drawable/ic_plate_auto" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Авто" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_it"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="IT"
-        android:src="@drawable/ic_plate_it" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="IT" />
-    </LinearLayout>
-  </LinearLayout>
-
-  <!-- Ряд 2 -->
-  <LinearLayout
+  <TextView
+    android:id="@+id/main_plates_empty"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:paddingBottom="4dp">
-
-    <LinearLayout
-      android:id="@+id/plate_health"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Здоровье"
-        android:src="@drawable/ic_plate_health" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Здоровье" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_ent"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Развлечения"
-        android:src="@drawable/ic_plate_ent" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Развлечения" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_notes"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Заметки"
-        android:src="@drawable/ic_plate_notes" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Заметки" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_private"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate_private"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Private"
-        android:src="@drawable/ic_plate_private" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Private" />
-    </LinearLayout>
-  </LinearLayout>
-
-  <!-- Ряд 3 -->
-  <LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:paddingBottom="4dp">
-
-    <LinearLayout
-      android:id="@+id/plate_utilities"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="ЖКХ"
-        android:src="@drawable/ic_plate_utilities" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="ЖКХ" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_stats"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate_stats"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Статистика"
-        android:src="@drawable/ic_plate_stats" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Статистика" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_subs"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Подписки"
-        android:src="@drawable/ic_plate_subs" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Подписки" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:id="@+id/plate_finance"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_margin="4dp"
-      android:layout_weight="1"
-      android:background="@drawable/bg_plate"
-      android:clickable="true"
-      android:focusable="true"
-      android:orientation="vertical">
-
-      <ImageView
-        style="@style/TaskMGRPlateIcon"
-        android:contentDescription="Финансы"
-        android:src="@drawable/ic_plate_finance" />
-
-      <TextView
-        style="@style/TaskMGRPlateText"
-        android:text="Финансы" />
-    </LinearLayout>
-  </LinearLayout>
+    android:gravity="center"
+    android:padding="24dp"
+    android:text="Все плитки скрыты. Откройте настройки, чтобы вернуть."
+    android:textColor="@color/text_secondary"
+    android:textSize="14sp"
+    android:visibility="gone" />
 
   <com.google.android.material.tabs.TabLayout
     android:id="@+id/main_tabs"

@@ -62,6 +62,22 @@
     <item name="rippleColor">@color/neon_green_dim</item>
   </style>
 
+  <style name="TaskMGRBadge">
+    <item name="android:layout_width">wrap_content</item>
+    <item name="android:layout_height">20dp</item>
+    <item name="android:minWidth">20dp</item>
+    <item name="android:paddingStart">5dp</item>
+    <item name="android:paddingEnd">5dp</item>
+    <item name="android:gravity">center</item>
+    <item name="android:layout_gravity">top|end</item>
+    <item name="android:layout_marginTop">6dp</item>
+    <item name="android:layout_marginEnd">6dp</item>
+    <item name="android:background">@drawable/bg_badge</item>
+    <item name="android:textColor">@color/text_on_accent</item>
+    <item name="android:textSize">11sp</item>
+    <item name="android:textStyle">bold</item>
+  </style>
+
   <!-- Применяем к твоим существующим стилям (пример, если они есть) -->
   <style name="TaskMGRPlateText">
     <item name="android:layout_width">match_parent</item>

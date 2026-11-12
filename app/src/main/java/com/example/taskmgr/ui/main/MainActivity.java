@@ -10,14 +10,17 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.R;
 import com.example.taskmgr.data.dao.AppSettingsDao;
+import com.example.taskmgr.data.dao.MainPlatesDao;
 import com.example.taskmgr.data.dao.SectionDao;
 import com.example.taskmgr.data.dao.TabDao;
 import com.example.taskmgr.data.dao.TaskDao;
+import com.example.taskmgr.model.MainPlate;
 import com.example.taskmgr.model.Section;
 import com.example.taskmgr.model.Tab;
 import com.example.taskmgr.model.Task;
@@ -53,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     private TabDao tabDao;
     private SectionDao sectionDao;
     private AppSettingsDao settingsDao;
+    private MainPlatesDao mainPlatesDao;
+
+    private MainPlatesAdapter mainPlatesAdapter;
 
     private int currentMainTab = 0;
     private int loadGeneration = 0;
@@ -66,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         tabDao = new TabDao(this);
         sectionDao = new SectionDao(this);
         settingsDao = new AppSettingsDao(this);
+        mainPlatesDao = new MainPlatesDao(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -76,12 +83,20 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_notification_settings).setOnClickListener(v ->
             NotificationSettingsDialog.show(this));
 
+        findViewById(R.id.btn_plates_settings).setOnClickListener(v ->
+            startActivity(new Intent(this, MainPlatesSettingsActivity.class)));
+
         // На случай, если будильники сбились (обновление, ручная очистка и т.п.)
         NotificationScheduler.scheduleAll(this);
         ensureNotificationPermissionIfNeeded();
 
-        setupSectionPlates();
+        // --- Плитки главного экрана (RecyclerView, 4 колонки) ---
+        RecyclerView platesRecycler = findViewById(R.id.main_plates_recycler);
+        platesRecycler.setLayoutManager(new GridLayoutManager(this, 4));
+        mainPlatesAdapter = new MainPlatesAdapter(this::onPlateClick);
+        platesRecycler.setAdapter(mainPlatesAdapter);
 
+        // --- Вкладки ленты (Дедлайн / Важные) ---
         TabLayout mainTabs = findViewById(R.id.main_tabs);
         mainTabs.addTab(mainTabs.newTab().setText("Дедлайн"));
         mainTabs.addTab(mainTabs.newTab().setText("Важные"));
@@ -117,8 +132,84 @@ public class MainActivity extends AppCompatActivity {
                 android.util.Log.e("TaskMGR", "seed FAILED", e);
             }
             return null;
-        }, ignored -> loadTasks());
+        }, ignored -> {
+            loadMainPlates();
+            loadTasks();
+        });
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Обновляем плитки при возврате с экрана настроек плиток
+        if (mainPlatesDao != null) {
+            loadMainPlates();
+        }
+    }
+
+    // ============================================================
+    //  Плитки главного экрана
+    // ============================================================
+
+    private void onPlateClick(MainPlate p) {
+        if (p == null || p.kind == null) return;
+        switch (p.kind) {
+            case SECTION -> openSectionByName(p.sectionName);
+            case PRIVATE -> handlePrivateNavClick();
+            case ACTIVITY -> {
+                if (p.activityClass != null) {
+                    startActivity(new Intent(this, p.activityClass));
+                }
+            }
+        }
+    }
+
+    private void loadMainPlates() {
+        DbExecutor.run(() -> {
+            List<MainPlate> plates = mainPlatesDao.getAll();
+
+            // Счётчики активных задач по разделам — для бейджей
+            Map<Long, Integer> rawCounts = taskDao.getActiveCountsByAllSections();
+            Map<Long, String> sectionNameById = new HashMap<>();
+            for (Section s : sectionDao.getAll()) sectionNameById.put(s.id, s.name);
+
+            Map<String, Integer> badgesByKey = new HashMap<>();
+            for (Map.Entry<Long, Integer> e : rawCounts.entrySet()) {
+                String name = sectionNameById.get(e.getKey());
+                if (name == null) continue;
+                String key = sectionNameToPlateKey(name);
+                if (key != null) badgesByKey.put(key, e.getValue());
+            }
+            return new PlatesLoadResult(plates, badgesByKey);
+        }, res -> {
+            if (res == null) return;
+
+            mainPlatesAdapter.setItems(res.plates, res.badges);
+
+            View empty = findViewById(R.id.main_plates_empty);
+            RecyclerView recycler = findViewById(R.id.main_plates_recycler);
+            boolean isEmpty = mainPlatesAdapter.isEmpty();
+            empty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+            recycler.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        });
+    }
+
+    private static String sectionNameToPlateKey(String name) {
+        if (name == null) return null;
+        return switch (name) {
+            case "Дом" -> "home";
+            case "Гараж" -> "garage";
+            case "Авто" -> "auto";
+            case "IT" -> "it";
+            case "Здоровье" -> "health";
+            case "Развлечения" -> "ent";
+            default -> null;
+        };
+    }
+
+    // ============================================================
+    //  Задачи / лента
+    // ============================================================
 
     private boolean isAutoTask(Task task) {
         try {
@@ -154,25 +245,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    private void setupSectionPlates() {
-        findViewById(R.id.plate_home).setOnClickListener(v -> openSectionByName("Дом"));
-        findViewById(R.id.plate_garage).setOnClickListener(v -> openSectionByName("Гараж"));
-        findViewById(R.id.plate_auto).setOnClickListener(v -> openSectionByName("Авто"));
-        findViewById(R.id.plate_it).setOnClickListener(v -> openSectionByName("IT"));
-        findViewById(R.id.plate_health).setOnClickListener(v -> openSectionByName("Здоровье"));
-        findViewById(R.id.plate_ent).setOnClickListener(v -> openSectionByName("Развлечения"));
-        findViewById(R.id.plate_private).setOnClickListener(v -> handlePrivateNavClick());
-        findViewById(R.id.plate_stats).setOnClickListener(v ->
-            startActivity(new Intent(this, StatsActivity.class)));
-        findViewById(R.id.plate_notes).setOnClickListener(v ->
-            startActivity(new Intent(this, com.example.taskmgr.ui.notes.NotesActivity.class)));
-        findViewById(R.id.plate_subs).setOnClickListener(v ->
-            startActivity(new Intent(this, com.example.taskmgr.ui.subs.SubscriptionsActivity.class)));
-        findViewById(R.id.plate_utilities).setOnClickListener(v ->
-            startActivity(new Intent(this, com.example.taskmgr.ui.utilities.UtilitiesActivity.class)));
-        findViewById(R.id.plate_finance).setOnClickListener(v ->
-            startActivity(new Intent(this, com.example.taskmgr.ui.finance.FinanceActivity.class)));
-    }
+    // ============================================================
+    //  Разрешения / будильники
+    // ============================================================
 
     private void ensureNotificationPermissionIfNeeded() {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return;
@@ -192,6 +267,10 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     }
+
+    // ============================================================
+    //  Сидинг разделов
+    // ============================================================
 
     private void seedSectionsIfEmptyBlocking() {
         List<Section> existing = sectionDao.getAll();
@@ -219,6 +298,10 @@ public class MainActivity extends AppCompatActivity {
             sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 7, true));
         }
     }
+
+    // ============================================================
+    //  Лента задач
+    // ============================================================
 
     private void loadTasks() {
         final int myGeneration = ++loadGeneration;
@@ -265,7 +348,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // ============================================================
+    //  Навигация по разделам
+    // ============================================================
+
     private void openSectionByName(String name) {
+        if (name == null) return;
         DbExecutor.run(() -> {
             for (Section s : sectionDao.getAll()) {
                 if (s.name.equals(name)) return s;
@@ -295,6 +383,7 @@ public class MainActivity extends AppCompatActivity {
         showEnterPasswordDialog(() -> {
             AppLock.setPrivateUnlocked(true);
             findPrivateSectionAndOpen();
+            loadMainPlates();
             loadTasks();
         });
     }
@@ -320,6 +409,10 @@ public class MainActivity extends AppCompatActivity {
         i.putExtra(SectionActivity.EXTRA_SECTION_NAME, s.name);
         startActivity(i);
     }
+
+    // ============================================================
+    //  PIN
+    // ============================================================
 
     private void showCreatePasswordDialog(OnSuccess onSuccess) {
         View view = getLayoutInflater().inflate(R.layout.dialog_set_password, null);
@@ -430,6 +523,10 @@ public class MainActivity extends AppCompatActivity {
         helper.focusFirst();
     }
 
+    // ============================================================
+    //  Permissions result
+    // ============================================================
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -442,10 +539,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // ============================================================
+    //  Хелперы / records
+    // ============================================================
+
     private interface OnSuccess {
         void run();
     }
 
     private record LoadResult(List<Task> tasks, List<Tab> tabs, List<Section> sections) {
+    }
+
+    private record PlatesLoadResult(List<MainPlate> plates, Map<String, Integer> badges) {
     }
 }

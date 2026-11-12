@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:layout_margin="4dp"
+  android:clickable="true"
+  android:focusable="true"
+  android:foreground="?attr/selectableItemBackground">
+
+  <LinearLayout
+    android:id="@+id/plate_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_plate"
+    android:orientation="vertical">
+
+    <ImageView
+      android:id="@+id/plate_icon"
+      style="@style/TaskMGRPlateIcon"
+      android:contentDescription="@null" />
+
+    <TextView
+      android:id="@+id/plate_label"
+      style="@style/TaskMGRPlateText" />
+  </LinearLayout>
+
+  <TextView
+    android:id="@+id/plate_badge"
+    style="@style/TaskMGRBadge"
+    android:visibility="gone" />
+</FrameLayout>

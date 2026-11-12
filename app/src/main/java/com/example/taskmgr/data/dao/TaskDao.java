@@ -49,6 +49,21 @@ public class TaskDao {
         return db.insert("tasks", null, cv);
     }
 
+    public Map<Long, Integer> getActiveCountsByAllSections() {
+        Map<Long, Integer> result = new HashMap<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String sql =
+            "SELECT tb.section_id, COUNT(*) " +
+                "FROM tasks t " +
+                "JOIN tabs tb ON tb.id = t.tab_id " +
+                "WHERE t.status = 'active' " +
+                "GROUP BY tb.section_id";
+        try (Cursor c = db.rawQuery(sql, null)) {
+            while (c.moveToNext()) result.put(c.getLong(0), c.getInt(1));
+        }
+        return result;
+    }
+
     public List<Task> getByTab(long tabId) {
         return query("tab_id = ? AND status = 'active'",
             new String[]{String.valueOf(tabId)});

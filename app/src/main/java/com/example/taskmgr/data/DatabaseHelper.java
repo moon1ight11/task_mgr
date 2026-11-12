@@ -3,11 +3,12 @@ package com.example.taskmgr.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.content.ContentValues;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 12;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -219,6 +220,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE app_settings (" +
             "`key` TEXT PRIMARY KEY, " +
             "value TEXT)");
+
+        db.execSQL("CREATE TABLE main_plates (" +
+            "plate_key TEXT PRIMARY KEY, " +
+            "is_visible INTEGER DEFAULT 1, " +
+            "sort_order INTEGER DEFAULT 0)");
+        seedMainPlates(db);
     }
 
 
@@ -352,6 +359,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 11) {
             db.execSQL("ALTER TABLE finance_expenses ADD COLUMN source_refs TEXT");
         }
+        if (oldVersion < 12) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS main_plates (" +
+                "plate_key TEXT PRIMARY KEY, " +
+                "is_visible INTEGER DEFAULT 1, " +
+                "sort_order INTEGER DEFAULT 0)");
+            seedMainPlates(db);
+        }
     }
+
+    private static void seedMainPlates(SQLiteDatabase db) {
+        String[] keys = {
+            "home", "garage", "auto", "it", "health", "ent",
+            "notes", "private", "utilities", "stats", "subs", "finance"
+        };
+        for (int i = 0; i < keys.length; i++) {
+            ContentValues cv = new ContentValues();
+            cv.put("plate_key", keys[i]);
+            cv.put("is_visible", 1);
+            cv.put("sort_order", i);
+            db.insertWithOnConflict("main_plates", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+        }
+    }
+
 
 }
