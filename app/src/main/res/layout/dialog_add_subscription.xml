@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="16dp">
+
+  <EditText
+    android:id="@+id/input_sub_name"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Название (Яндекс Плюс, Окко…)"
+    android:inputType="textCapSentences" />
+
+  <EditText
+    android:id="@+id/input_sub_amount"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Сумма, ₽"
+    android:inputType="numberDecimal" />
+
+  <EditText
+    android:id="@+id/input_sub_day"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="День списания (1–31)"
+    android:inputType="number" />
+
+  <EditText
+    android:id="@+id/input_sub_description"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Описание (опционально)"
+    android:inputType="textCapSentences|textMultiLine"
+    android:minLines="2"
+    android:gravity="top|start" />
+
+  <com.google.android.material.materialswitch.MaterialSwitch
+    android:id="@+id/switch_sub_active"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:text="Активна" />
+</LinearLayout>

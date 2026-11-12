@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.TimePickerDialog;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.view.View;
 import android.widget.TextView;
@@ -16,7 +17,9 @@ import com.example.taskmgr.R;
 import com.example.taskmgr.data.dao.AppSettingsDao;
 import com.example.taskmgr.service.NotificationScheduler;
 import com.example.taskmgr.service.UpdateChecker;
+import com.google.android.material.button.MaterialButton;
 
+import java.util.List;
 import java.util.Locale;
 
 public final class NotificationSettingsDialog {
@@ -31,14 +34,27 @@ public final class NotificationSettingsDialog {
 
         AppSettingsDao dao = new AppSettingsDao(activity);
 
-        View view = activity.getLayoutInflater().inflate(R.layout.dialog_notification_settings, null);
+        View view = activity.getLayoutInflater()
+            .inflate(R.layout.dialog_notification_settings, null);
+
         View rowEvening = view.findViewById(R.id.row_evening);
         View rowMorning = view.findViewById(R.id.row_morning);
-        com.google.android.material.materialswitch.MaterialSwitch swEvening = view.findViewById(R.id.switch_evening);
-        com.google.android.material.materialswitch.MaterialSwitch swMorning = view.findViewById(R.id.switch_morning);
+        com.google.android.material.materialswitch.MaterialSwitch swEvening =
+            view.findViewById(R.id.switch_evening);
+        com.google.android.material.materialswitch.MaterialSwitch swMorning =
+            view.findViewById(R.id.switch_morning);
         TextView tvEvening = view.findViewById(R.id.time_evening);
         TextView tvMorning = view.findViewById(R.id.time_morning);
 
+        // Подписки
+        com.google.android.material.materialswitch.MaterialSwitch swSubs =
+            view.findViewById(R.id.switch_subs);
+        View rowSubsDays = view.findViewById(R.id.row_subs_days);
+        MaterialButton btnSubs1 = view.findViewById(R.id.btn_subs_1);
+        MaterialButton btnSubs3 = view.findViewById(R.id.btn_subs_3);
+        MaterialButton btnSubs7 = view.findViewById(R.id.btn_subs_7);
+
+        // --- читаем настройки ---
         boolean evEnabled = readBool(dao, AppSettingsDao.KEY_NOTIF_EVENING_ENABLED);
         boolean moEnabled = readBool(dao, AppSettingsDao.KEY_NOTIF_MORNING_ENABLED);
         int evH = readInt(dao, AppSettingsDao.KEY_NOTIF_EVENING_HOUR, AppSettingsDao.DEFAULT_EVENING_HOUR);
@@ -46,16 +62,39 @@ public final class NotificationSettingsDialog {
         int moH = readInt(dao, AppSettingsDao.KEY_NOTIF_MORNING_HOUR, AppSettingsDao.DEFAULT_MORNING_HOUR);
         int moM = readInt(dao, AppSettingsDao.KEY_NOTIF_MORNING_MINUTE, AppSettingsDao.DEFAULT_MORNING_MINUTE);
 
-        int[] ev = {evH, evM};
-        int[] mo = {moH, moM};
+        boolean subsEnabled = readBool(dao, AppSettingsDao.KEY_NOTIF_SUBS_ENABLED);
+        int subsDays = readInt(dao, AppSettingsDao.KEY_NOTIF_SUBS_DAYS, AppSettingsDao.DEFAULT_SUBS_DAYS);
 
+        final int[] ev = {evH, evM};
+        final int[] mo = {moH, moM};
+        final int[] subsDaysState = {subsDays};
+
+        // --- заполняем UI ---
         swEvening.setChecked(evEnabled);
         swMorning.setChecked(moEnabled);
+        swSubs.setChecked(subsEnabled);
         tvEvening.setText(formatTime(ev[0], ev[1]));
         tvMorning.setText(formatTime(mo[0], mo[1]));
+
         rowEvening.setAlpha(evEnabled ? 1f : 0.5f);
         rowMorning.setAlpha(moEnabled ? 1f : 0.5f);
+        rowSubsDays.setAlpha(subsEnabled ? 1f : 0.5f);
 
+        // --- кнопки 1/3/7 ---
+        List<MaterialButton> dayButtons = List.of(btnSubs1, btnSubs3, btnSubs7);
+        int[] dayValues = {1, 3, 7};
+
+        Runnable refreshDays = () -> {
+            for (int i = 0; i < dayButtons.size(); i++) {
+                applySegButton(activity, dayButtons.get(i), dayValues[i] == subsDaysState[0]);
+            }
+        };
+        btnSubs1.setOnClickListener(v -> { subsDaysState[0] = 1; refreshDays.run(); });
+        btnSubs3.setOnClickListener(v -> { subsDaysState[0] = 3; refreshDays.run(); });
+        btnSubs7.setOnClickListener(v -> { subsDaysState[0] = 7; refreshDays.run(); });
+        refreshDays.run();
+
+        // --- слушатели ---
         swEvening.setOnCheckedChangeListener((b, checked) -> {
             rowEvening.setAlpha(checked ? 1f : 0.5f);
             if (checked) ensureNotificationPermission(activity);
@@ -64,13 +103,16 @@ public final class NotificationSettingsDialog {
             rowMorning.setAlpha(checked ? 1f : 0.5f);
             if (checked) ensureNotificationPermission(activity);
         });
+        swSubs.setOnCheckedChangeListener((b, checked) -> {
+            rowSubsDays.setAlpha(checked ? 1f : 0.5f);
+            if (checked) ensureNotificationPermission(activity);
+        });
 
         tvEvening.setOnClickListener(v -> pickTime(activity, ev, tvEvening));
         tvMorning.setOnClickListener(v -> pickTime(activity, mo, tvMorning));
 
-        view.findViewById(R.id.btn_check_updates).setOnClickListener(v -> {
-            checkUpdates(activity);
-        });
+        view.findViewById(R.id.btn_check_updates).setOnClickListener(v ->
+            checkUpdates(activity));
 
         new AlertDialog.Builder(activity).setTitle("Уведомления").setView(view).setPositiveButton("Сохранить", (d, w) -> {
             dao.put(AppSettingsDao.KEY_NOTIF_EVENING_ENABLED, swEvening.isChecked() ? "1" : "0");
@@ -79,11 +121,31 @@ public final class NotificationSettingsDialog {
             dao.put(AppSettingsDao.KEY_NOTIF_EVENING_MINUTE, String.valueOf(ev[1]));
             dao.put(AppSettingsDao.KEY_NOTIF_MORNING_HOUR, String.valueOf(mo[0]));
             dao.put(AppSettingsDao.KEY_NOTIF_MORNING_MINUTE, String.valueOf(mo[1]));
+            dao.put(AppSettingsDao.KEY_NOTIF_SUBS_ENABLED, swSubs.isChecked() ? "1" : "0");
+            dao.put(AppSettingsDao.KEY_NOTIF_SUBS_DAYS, String.valueOf(subsDaysState[0]));
 
             NotificationScheduler.scheduleEvening(activity);
             NotificationScheduler.scheduleMorning(activity);
             Toast.makeText(activity, "Сохранено", Toast.LENGTH_SHORT).show();
         }).setNegativeButton("Отмена", null).show();
+    }
+
+    private static void applySegButton(Activity activity, MaterialButton b, boolean checked) {
+        int accent = ContextCompat.getColor(activity, R.color.neon_green);
+        int accentDim = ContextCompat.getColor(activity, R.color.neon_green_dim);
+        int inactiveStroke = ContextCompat.getColor(activity, R.color.divider_strong);
+        int inactiveText = ContextCompat.getColor(activity, R.color.text_secondary);
+
+        b.setChecked(checked);
+        if (checked) {
+            b.setStrokeColor(ColorStateList.valueOf(accent));
+            b.setTextColor(accent);
+            b.setBackgroundTintList(ColorStateList.valueOf(accentDim & 0x33FFFFFF));
+        } else {
+            b.setStrokeColor(ColorStateList.valueOf(inactiveStroke));
+            b.setTextColor(inactiveText);
+            b.setBackgroundTintList(ColorStateList.valueOf(0x00000000));
+        }
     }
 
     private static void pickTime(Activity activity, int[] hm, TextView target) {

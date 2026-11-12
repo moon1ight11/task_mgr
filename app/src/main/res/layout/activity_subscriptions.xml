@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:background="@color/bg">
+
+  <androidx.appcompat.widget.Toolbar
+    android:id="@+id/toolbar"
+    style="@style/Widget.TaskMGR.Toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    app:popupTheme="@style/ThemeOverlay.Material3.Dark" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <com.google.android.material.card.MaterialCardView
+      style="@style/Widget.TaskMGR.Card"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Сводка"
+          android:textSize="12sp"
+          android:textColor="@color/text_secondary" />
+
+        <TextView
+          android:id="@+id/subs_month_total"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="4dp"
+          android:text="В этом месяце: 0 ₽"
+          android:textSize="20sp"
+          android:textStyle="bold"
+          android:textColor="@color/neon_green" />
+
+        <TextView
+          android:id="@+id/subs_next"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="2dp"
+          android:text="Следующее списание: —"
+          android:textSize="13sp"
+          android:textColor="@color/text_secondary" />
+      </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+  </LinearLayout>
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/subs_recycler"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="88dp"
+    android:clipToPadding="false" />
+
+  <TextView
+    android:id="@+id/subs_empty"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:gravity="center"
+    android:text="Подписок пока нет"
+    android:textSize="16sp"
+    android:textColor="@color/text_secondary"
+    android:visibility="gone" />
+
+  <com.google.android.material.floatingactionbutton.FloatingActionButton
+    android:id="@+id/fab_add_sub"
+    style="@style/Widget.TaskMGR.Fab"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|end"
+    android:layout_margin="20dp"
+    android:src="@android:drawable/ic_input_add"
+    android:contentDescription="Новая подписка" />
+</LinearLayout>

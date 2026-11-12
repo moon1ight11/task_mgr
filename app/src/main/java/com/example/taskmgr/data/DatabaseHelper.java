@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 8;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -126,6 +126,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "updated_at INTEGER NOT NULL)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_notes_created ON quick_notes(created_at DESC)");
 
+        db.execSQL("CREATE TABLE subscriptions (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT NOT NULL, " +
+            "amount REAL NOT NULL, " +
+            "charge_day INTEGER NOT NULL, " +
+            "next_charge_at INTEGER NOT NULL, " +
+            "description TEXT, " +
+            "is_active INTEGER DEFAULT 1, " +
+            "created_at INTEGER NOT NULL)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_subs_next ON subscriptions(is_active, next_charge_at)");
+
         db.execSQL("CREATE TABLE app_settings (" +
             "`key` TEXT PRIMARY KEY, " +
             "value TEXT)");
@@ -165,6 +176,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "created_at INTEGER NOT NULL, " +
                 "updated_at INTEGER NOT NULL)");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_notes_created ON quick_notes(created_at DESC)");
+        }
+        if (oldVersion < 8) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS subscriptions (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT NOT NULL, " +
+                "amount REAL NOT NULL, " +
+                "charge_day INTEGER NOT NULL, " +
+                "next_charge_at INTEGER NOT NULL, " +
+                "description TEXT, " +
+                "is_active INTEGER DEFAULT 1, " +
+                "created_at INTEGER NOT NULL)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_subs_next ON subscriptions(is_active, next_charge_at)");
         }
     }
 }

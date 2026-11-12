@@ -236,7 +236,7 @@
     </LinearLayout>
   </LinearLayout>
 
-  <!-- Ряд 3: Статистика -->
+  <!-- Ряд 3 -->
   <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -266,11 +266,27 @@
         android:text="Статистика" />
     </LinearLayout>
 
-    <!-- Заглушки-пустышки чтобы Статистика осталась 1/4 ширины, как раньше -->
-    <View
+    <LinearLayout
+      android:id="@+id/plate_subs"
       android:layout_width="0dp"
-      android:layout_height="1dp"
-      android:layout_weight="1" />
+      android:layout_height="wrap_content"
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Подписки"
+        android:src="@drawable/ic_plate_subs" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Подписки" />
+    </LinearLayout>
+
     <View
       android:layout_width="0dp"
       android:layout_height="1dp"
