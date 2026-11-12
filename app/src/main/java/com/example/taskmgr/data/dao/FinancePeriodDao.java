@@ -36,11 +36,23 @@ public class FinancePeriodDao {
     public void update(FinancePeriod p) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
+        cv.put("end_at", p.endAt);
         cv.put("name", p.name);
         cv.put("total_income", p.totalIncome);
         if (p.note != null) cv.put("note", p.note);
         else cv.putNull("note");
         db.update("finance_periods", cv, "id = ?", new String[]{String.valueOf(p.id)});
+    }
+
+    public List<FinancePeriod> getSince(long sinceMillis) {
+        List<FinancePeriod> result = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try (Cursor c = db.query("finance_periods", null,
+            "start_at >= ?", new String[]{String.valueOf(sinceMillis)},
+            null, null, "start_at ASC")) {
+            while (c.moveToNext()) result.add(fromCursor(c));
+        }
+        return result;
     }
 
     public void delete(long id) {

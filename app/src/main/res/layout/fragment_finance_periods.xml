@@ -105,6 +105,47 @@
             android:textColor="@color/neon_green"
             android:text="Остаток: 0 ₽" />
 
+          <!-- ==== Блок оценки ==== -->
+
+          <TextView
+            android:id="@+id/tv_fin_score_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:text="Оценка: —" />
+
+          <ProgressBar
+            android:id="@+id/pb_fin_score"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/neon_green"
+            android:progressBackgroundTint="@color/surface_variant" />
+
+          <TextView
+            android:id="@+id/tv_fin_score_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:text="—" />
+
+          <TextView
+            android:id="@+id/tv_fin_score_trend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/text_tertiary"
+            android:visibility="gone" />
+
+          <!-- ==== Кнопки действий ==== -->
+
           <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_fin_add_expense"
             style="@style/Widget.Material3.Button.OutlinedButton"
@@ -120,6 +161,22 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Добавить из шаблона" />
+
+          <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_fin_add_subs"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:text="Добавить списания подписок" />
+
+          <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_fin_add_shopping"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="0dp"
+            android:text="Импортировать покупки" />
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 

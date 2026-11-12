@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 10;
+    private static final int DATABASE_VERSION = 11;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -170,6 +170,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "UNIQUE(period_id, meter_id), " +
             "FOREIGN KEY(period_id) REFERENCES utility_periods(id) ON DELETE CASCADE, " +
             "FOREIGN KEY(meter_id) REFERENCES utility_meters(id) ON DELETE CASCADE)");
+
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_readings_period ON utility_readings(period_id)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_periods_ym ON utility_periods(period_year, period_month)");
 
@@ -202,6 +203,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "created_at INTEGER NOT NULL, " +
             "source_type TEXT DEFAULT 'manual', " +
             "source_ref_id INTEGER, " +
+            "source_refs TEXT, " +          // NEW v12
             "FOREIGN KEY(period_id) REFERENCES finance_periods(id) ON DELETE CASCADE)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_fin_expenses_period ON finance_expenses(period_id)");
 
@@ -218,6 +220,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "`key` TEXT PRIMARY KEY, " +
             "value TEXT)");
     }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -345,6 +348,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "is_active INTEGER DEFAULT 1, " +
                 "sort_order INTEGER DEFAULT 0, " +
                 "created_at INTEGER NOT NULL)");
+        }
+        if (oldVersion < 11) {
+            db.execSQL("ALTER TABLE finance_expenses ADD COLUMN source_refs TEXT");
         }
     }
 
