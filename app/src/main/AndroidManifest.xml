@@ -65,5 +65,9 @@
     <activity
       android:name=".ui.utilities.UtilitiesActivity"
       android:exported="false" />
+
+    <activity
+      android:name=".ui.finance.FinanceActivity"
+      android:exported="false" />
   </application>
 </manifest>

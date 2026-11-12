@@ -170,6 +170,8 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, com.example.taskmgr.ui.subs.SubscriptionsActivity.class)));
         findViewById(R.id.plate_utilities).setOnClickListener(v ->
             startActivity(new Intent(this, com.example.taskmgr.ui.utilities.UtilitiesActivity.class)));
+        findViewById(R.id.plate_finance).setOnClickListener(v ->
+            startActivity(new Intent(this, com.example.taskmgr.ui.finance.FinanceActivity.class)));
     }
 
     private void ensureNotificationPermissionIfNeeded() {

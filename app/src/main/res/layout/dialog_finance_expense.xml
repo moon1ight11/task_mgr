@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="16dp">
+
+  <EditText
+    android:id="@+id/input_exp_category"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Категория (Аренда, ЖКХ, Еда…)"
+    android:inputType="textCapSentences" />
+
+  <EditText
+    android:id="@+id/input_exp_title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Описание (опционально)"
+    android:inputType="textCapSentences" />
+
+  <EditText
+    android:id="@+id/input_exp_amount"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Сумма, ₽"
+    android:inputType="numberDecimal" />
+</LinearLayout>

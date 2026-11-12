@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 9;
+    private static final int DATABASE_VERSION = 10;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -170,9 +170,49 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "UNIQUE(period_id, meter_id), " +
             "FOREIGN KEY(period_id) REFERENCES utility_periods(id) ON DELETE CASCADE, " +
             "FOREIGN KEY(meter_id) REFERENCES utility_meters(id) ON DELETE CASCADE)");
-
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_readings_period ON utility_readings(period_id)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_periods_ym ON utility_periods(period_year, period_month)");
+
+        db.execSQL("CREATE TABLE finance_incomes (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT, " +
+            "amount REAL NOT NULL, " +
+            "day_of_month INTEGER NOT NULL, " +
+            "is_active INTEGER DEFAULT 1, " +
+            "sort_order INTEGER DEFAULT 0, " +
+            "created_at INTEGER NOT NULL)");
+
+        db.execSQL("CREATE TABLE finance_periods (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "start_at INTEGER NOT NULL, " +
+            "end_at INTEGER NOT NULL, " +
+            "name TEXT NOT NULL, " +
+            "total_income REAL NOT NULL DEFAULT 0, " +
+            "note TEXT, " +
+            "created_at INTEGER NOT NULL, " +
+            "UNIQUE(start_at))");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_fin_periods_start ON finance_periods(start_at)");
+
+        db.execSQL("CREATE TABLE finance_expenses (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "period_id INTEGER NOT NULL, " +
+            "category TEXT NOT NULL, " +
+            "title TEXT, " +
+            "amount REAL NOT NULL, " +
+            "created_at INTEGER NOT NULL, " +
+            "source_type TEXT DEFAULT 'manual', " +
+            "source_ref_id INTEGER, " +
+            "FOREIGN KEY(period_id) REFERENCES finance_periods(id) ON DELETE CASCADE)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_fin_expenses_period ON finance_expenses(period_id)");
+
+        db.execSQL("CREATE TABLE finance_templates (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "category TEXT NOT NULL, " +
+            "title TEXT, " +
+            "default_amount REAL NOT NULL, " +
+            "is_active INTEGER DEFAULT 1, " +
+            "sort_order INTEGER DEFAULT 0, " +
+            "created_at INTEGER NOT NULL)");
 
         db.execSQL("CREATE TABLE app_settings (" +
             "`key` TEXT PRIMARY KEY, " +
@@ -264,5 +304,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_readings_period ON utility_readings(period_id)");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_periods_ym ON utility_periods(period_year, period_month)");
         }
+        if (oldVersion < 10) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS finance_incomes (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT, " +
+                "amount REAL NOT NULL, " +
+                "day_of_month INTEGER NOT NULL, " +
+                "is_active INTEGER DEFAULT 1, " +
+                "sort_order INTEGER DEFAULT 0, " +
+                "created_at INTEGER NOT NULL)");
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS finance_periods (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "start_at INTEGER NOT NULL, " +
+                "end_at INTEGER NOT NULL, " +
+                "name TEXT NOT NULL, " +
+                "total_income REAL NOT NULL DEFAULT 0, " +
+                "note TEXT, " +
+                "created_at INTEGER NOT NULL, " +
+                "UNIQUE(start_at))");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_fin_periods_start ON finance_periods(start_at)");
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS finance_expenses (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "period_id INTEGER NOT NULL, " +
+                "category TEXT NOT NULL, " +
+                "title TEXT, " +
+                "amount REAL NOT NULL, " +
+                "created_at INTEGER NOT NULL, " +
+                "source_type TEXT DEFAULT 'manual', " +
+                "source_ref_id INTEGER, " +
+                "FOREIGN KEY(period_id) REFERENCES finance_periods(id) ON DELETE CASCADE)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_fin_expenses_period ON finance_expenses(period_id)");
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS finance_templates (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "category TEXT NOT NULL, " +
+                "title TEXT, " +
+                "default_amount REAL NOT NULL, " +
+                "is_active INTEGER DEFAULT 1, " +
+                "sort_order INTEGER DEFAULT 0, " +
+                "created_at INTEGER NOT NULL)");
+        }
     }
+
 }

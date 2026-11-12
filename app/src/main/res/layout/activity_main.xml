@@ -308,10 +308,26 @@
         android:text="Подписки" />
     </LinearLayout>
 
-    <Space
+    <LinearLayout
+      android:id="@+id/plate_finance"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
-      android:layout_weight="1" />
+      android:layout_margin="4dp"
+      android:layout_weight="1"
+      android:background="@drawable/bg_plate"
+      android:clickable="true"
+      android:focusable="true"
+      android:orientation="vertical">
+
+      <ImageView
+        style="@style/TaskMGRPlateIcon"
+        android:contentDescription="Финансы"
+        android:src="@drawable/ic_plate_finance" />
+
+      <TextView
+        style="@style/TaskMGRPlateText"
+        android:text="Финансы" />
+    </LinearLayout>
   </LinearLayout>
 
   <com.google.android.material.tabs.TabLayout
