@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 7;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -83,6 +83,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "repeat_interval_km INTEGER, " +
             "repeat_interval_months INTEGER, " +
             "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_tab_status ON tasks(tab_id, status)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_status_priority ON tasks(status, priority)");
 
         db.execSQL("CREATE TABLE history (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -91,6 +93,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "km_at_completion INTEGER, " +
             "note TEXT, " +
             "FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_task ON history(task_id)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_completed ON history(completed_at)");
 
         db.execSQL("CREATE TABLE shopping_items (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -102,6 +106,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "created_at INTEGER NOT NULL, " +
             "category TEXT, " +
             "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab ON shopping_items(tab_id)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab_bought ON shopping_items(tab_id, is_bought)");
 
         db.execSQL("CREATE TABLE reference_entries (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -111,18 +117,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "category TEXT, " +
             "description TEXT, " +
             "FOREIGN KEY(tab_id) REFERENCES tabs(id) ON DELETE CASCADE)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_reference_tab ON reference_entries(tab_id)");
+
+        db.execSQL("CREATE TABLE quick_notes (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "body TEXT NOT NULL, " +
+            "created_at INTEGER NOT NULL, " +
+            "updated_at INTEGER NOT NULL)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_notes_created ON quick_notes(created_at DESC)");
 
         db.execSQL("CREATE TABLE app_settings (" +
             "`key` TEXT PRIMARY KEY, " +
             "value TEXT)");
-
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_tab_status ON tasks(tab_id, status)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_tasks_status_priority ON tasks(status, priority)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_task ON history(task_id)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_history_completed ON history(completed_at)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab ON shopping_items(tab_id)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab_bought ON shopping_items(tab_id, is_bought)");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_reference_tab ON reference_entries(tab_id)");
     }
 
     @Override
@@ -151,6 +157,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab ON shopping_items(tab_id)");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_shopping_tab_bought ON shopping_items(tab_id, is_bought)");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_reference_tab ON reference_entries(tab_id)");
+        }
+        if (oldVersion < 7) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS quick_notes (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "body TEXT NOT NULL, " +
+                "created_at INTEGER NOT NULL, " +
+                "updated_at INTEGER NOT NULL)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_notes_created ON quick_notes(created_at DESC)");
         }
     }
 }

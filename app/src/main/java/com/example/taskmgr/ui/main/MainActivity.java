@@ -164,6 +164,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.plate_private).setOnClickListener(v -> handlePrivateNavClick());
         findViewById(R.id.plate_stats).setOnClickListener(v ->
             startActivity(new Intent(this, StatsActivity.class)));
+        findViewById(R.id.plate_notes).setOnClickListener(v ->
+            startActivity(new Intent(this, com.example.taskmgr.ui.notes.NotesActivity.class)));
     }
 
     private void ensureNotificationPermissionIfNeeded() {
