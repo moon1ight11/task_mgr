@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 8;
+    private static final int DATABASE_VERSION = 9;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -137,6 +137,43 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "created_at INTEGER NOT NULL)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_subs_next ON subscriptions(is_active, next_charge_at)");
 
+        db.execSQL("CREATE TABLE utility_meters (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT NOT NULL, " +
+            "unit TEXT NOT NULL, " +
+            "rate REAL NOT NULL, " +
+            "is_active INTEGER DEFAULT 1, " +
+            "sort_order INTEGER DEFAULT 0, " +
+            "created_at INTEGER NOT NULL)");
+
+        db.execSQL("CREATE TABLE utility_periods (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "period_year INTEGER NOT NULL, " +
+            "period_month INTEGER NOT NULL, " +
+            "house TEXT NOT NULL, " +
+            "note TEXT, " +
+            "paid INTEGER DEFAULT 0, " +
+            "paid_at INTEGER, " +
+            "created_at INTEGER NOT NULL, " +
+            "UNIQUE(period_year, period_month, house))");
+
+        db.execSQL("CREATE TABLE utility_readings (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "period_id INTEGER NOT NULL, " +
+            "meter_id INTEGER NOT NULL, " +
+            "previous_value REAL NOT NULL, " +
+            "current_value REAL NOT NULL, " +
+            "consumption REAL NOT NULL, " +
+            "rate_applied REAL NOT NULL, " +
+            "amount REAL NOT NULL, " +
+            "created_at INTEGER NOT NULL, " +
+            "UNIQUE(period_id, meter_id), " +
+            "FOREIGN KEY(period_id) REFERENCES utility_periods(id) ON DELETE CASCADE, " +
+            "FOREIGN KEY(meter_id) REFERENCES utility_meters(id) ON DELETE CASCADE)");
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_readings_period ON utility_readings(period_id)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_periods_ym ON utility_periods(period_year, period_month)");
+
         db.execSQL("CREATE TABLE app_settings (" +
             "`key` TEXT PRIMARY KEY, " +
             "value TEXT)");
@@ -188,6 +225,44 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "is_active INTEGER DEFAULT 1, " +
                 "created_at INTEGER NOT NULL)");
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_subs_next ON subscriptions(is_active, next_charge_at)");
+        }
+        if (oldVersion < 9) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS utility_meters (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT NOT NULL, " +
+                "unit TEXT NOT NULL, " +
+                "rate REAL NOT NULL, " +
+                "is_active INTEGER DEFAULT 1, " +
+                "sort_order INTEGER DEFAULT 0, " +
+                "created_at INTEGER NOT NULL)");
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS utility_periods (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "period_year INTEGER NOT NULL, " +
+                "period_month INTEGER NOT NULL, " +
+                "house TEXT NOT NULL, " +
+                "note TEXT, " +
+                "paid INTEGER DEFAULT 0, " +
+                "paid_at INTEGER, " +
+                "created_at INTEGER NOT NULL, " +
+                "UNIQUE(period_year, period_month, house))");
+
+            db.execSQL("CREATE TABLE IF NOT EXISTS utility_readings (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "period_id INTEGER NOT NULL, " +
+                "meter_id INTEGER NOT NULL, " +
+                "previous_value REAL NOT NULL, " +
+                "current_value REAL NOT NULL, " +
+                "consumption REAL NOT NULL, " +
+                "rate_applied REAL NOT NULL, " +
+                "amount REAL NOT NULL, " +
+                "created_at INTEGER NOT NULL, " +
+                "UNIQUE(period_id, meter_id), " +
+                "FOREIGN KEY(period_id) REFERENCES utility_periods(id) ON DELETE CASCADE, " +
+                "FOREIGN KEY(meter_id) REFERENCES utility_meters(id) ON DELETE CASCADE)");
+
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_readings_period ON utility_readings(period_id)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_utility_periods_ym ON utility_periods(period_year, period_month)");
         }
     }
 }

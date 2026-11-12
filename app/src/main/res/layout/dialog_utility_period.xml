@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="16dp">
+
+  <TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Дом / адрес"
+    android:textColor="@color/text_secondary"
+    android:textSize="12sp" />
+
+  <EditText
+    android:id="@+id/input_house"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Например: Съёмная на Ленина"
+    android:inputType="textCapSentences" />
+
+  <EditText
+    android:id="@+id/input_note"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:hint="Комментарий (опционально)"
+    android:inputType="textCapSentences|textMultiLine"
+    android:minLines="2"
+    android:gravity="top|start" />
+</LinearLayout>

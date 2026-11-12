@@ -61,5 +61,9 @@
     <activity
       android:name=".ui.subs.SubscriptionsActivity"
       android:exported="false" />
+
+    <activity
+      android:name=".ui.utilities.UtilitiesActivity"
+      android:exported="false" />
   </application>
 </manifest>

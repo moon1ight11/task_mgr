@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="16dp">
+
+  <EditText
+    android:id="@+id/input_meter_name"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Название (Горячая вода, Свет…)"
+    android:inputType="textCapSentences" />
+
+  <EditText
+    android:id="@+id/input_meter_unit"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Единица (м³, кВт·ч, Гкал…)"
+    android:inputType="text" />
+
+  <EditText
+    android:id="@+id/input_meter_rate"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Тариф за единицу, ₽"
+    android:inputType="numberDecimal" />
+
+</LinearLayout>
