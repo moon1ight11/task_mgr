@@ -406,7 +406,19 @@ public class FinancePeriodsController {
                         e.category = it.category != null && !it.category.isEmpty()
                             ? it.category
                             : info.tabName;
-                        e.title = it.isBought ? it.title + " ✓ (куплено)" : it.title;
+
+                        // Title: "Раздел • Вкладка • Название" (+ пометка, если куплено)
+                        StringBuilder t = new StringBuilder();
+                        if (info.label != null && !info.label.isEmpty()) {
+                            t.append(info.label);
+                        } else if (info.tabName != null && !info.tabName.isEmpty()) {
+                            t.append(info.tabName);
+                        }
+                        if (t.length() > 0) t.append(" • ");
+                        t.append(it.title);
+                        if (it.isBought) t.append(" ✓ (куплено)");
+                        e.title = t.toString();
+
                         e.amount = it.price != null ? it.price : 0;
                         e.createdAt = now++;
                         e.sourceType = "shopping_bundle";
@@ -701,6 +713,21 @@ public class FinancePeriodsController {
         EditText inCat = v.findViewById(R.id.input_exp_category);
         EditText inTitle = v.findViewById(R.id.input_exp_title);
         EditText inAmt = v.findViewById(R.id.input_exp_amount);
+        com.google.android.material.button.MaterialButton btnFact =
+            v.findViewById(R.id.btn_type_fact);
+        com.google.android.material.button.MaterialButton btnPlan =
+            v.findViewById(R.id.btn_type_plan);
+
+        // 0 = факт, 1 = план
+        final int[] typeIndex = {0};
+        if (existing != null && !"manual".equals(existing.sourceType)) {
+            typeIndex[0] = 1;
+        }
+
+        Runnable applyType = () -> applySegButtons(btnFact, btnPlan, typeIndex[0]);
+        applyType.run();
+        btnFact.setOnClickListener(b -> { typeIndex[0] = 0; applyType.run(); });
+        btnPlan.setOnClickListener(b -> { typeIndex[0] = 1; applyType.run(); });
 
         if (existing != null) {
             inCat.setText(existing.category);
@@ -731,9 +758,9 @@ public class FinancePeriodsController {
                 e.category = cat;
                 e.title = title.isEmpty() ? null : title;
                 e.amount = amt;
+                e.sourceType = typeIndex[0] == 0 ? "manual" : "planned";
                 if (existing == null) {
                     e.createdAt = System.currentTimeMillis();
-                    e.sourceType = "manual";
                 }
                 DbExecutor.runVoid(
                     () -> { if (existing == null) expenseDao.insert(e); else expenseDao.update(e); },
@@ -742,6 +769,31 @@ public class FinancePeriodsController {
             })
             .setNegativeButton("Отмена", null)
             .show();
+    }
+
+    private void applySegButtons(com.google.android.material.button.MaterialButton bFact,
+                                 com.google.android.material.button.MaterialButton bPlan,
+                                 int selectedIndex) {
+        int accent = ContextCompat.getColor(activity, R.color.neon_green);
+        int accentDim = ContextCompat.getColor(activity, R.color.neon_green_dim);
+        int inactiveStroke = ContextCompat.getColor(activity, R.color.divider_strong);
+        int inactiveText = ContextCompat.getColor(activity, R.color.text_secondary);
+
+        com.google.android.material.button.MaterialButton[] all = {bFact, bPlan};
+        for (int i = 0; i < all.length; i++) {
+            com.google.android.material.button.MaterialButton b = all[i];
+            boolean checked = (i == selectedIndex);
+            b.setChecked(checked);
+            if (checked) {
+                b.setStrokeColor(android.content.res.ColorStateList.valueOf(accent));
+                b.setTextColor(accent);
+                b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(accentDim & 0x33FFFFFF));
+            } else {
+                b.setStrokeColor(android.content.res.ColorStateList.valueOf(inactiveStroke));
+                b.setTextColor(inactiveText);
+                b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0x00000000));
+            }
+        }
     }
 
     private void ensurePeriodsGenerated() {
