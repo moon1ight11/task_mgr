@@ -3,8 +3,10 @@ package com.example.taskmgr.ui.main;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,6 +23,7 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
     private MainPlatesDao dao;
     private MainPlatesSettingsAdapter adapter;
     private List<MainPlate> plates = new ArrayList<>();
+    private ItemTouchHelper itemTouchHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +42,55 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
 
         RecyclerView recycler = findViewById(R.id.plates_settings_recycler);
         recycler.setLayoutManager(new LinearLayoutManager(this));
+
+        itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public boolean isLongPressDragEnabled() {
+                return false; // драг только за ручку
+            }
+
+            @Override
+            public boolean isItemViewSwipeEnabled() {
+                return false;
+            }
+
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView,
+                                        @NonNull RecyclerView.ViewHolder viewHolder) {
+                int drag = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+                return makeMovementFlags(drag, 0);
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                int from = viewHolder.getAdapterPosition();
+                int to = target.getAdapterPosition();
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false;
+
+                adapter.moveItem(from, to);
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                // не используется
+            }
+
+            @Override
+            public void clearView(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                // Когда пользователь отпустил палец — сохраняем порядок в БД.
+                saveOrder();
+            }
+        });
+        itemTouchHelper.attachToRecyclerView(recycler);
+
         adapter = new MainPlatesSettingsAdapter(
             this::onVisibleChanged,
-            this::onMoveUp,
-            this::onMoveDown
+            holder -> itemTouchHelper.startDrag(holder)
         );
         recycler.setAdapter(adapter);
 
@@ -61,17 +109,14 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
         DbExecutor.runVoid(() -> dao.setVisible(p.key, visible), this::load);
     }
 
-    private void onMoveUp(int position) {
-        if (position <= 0 || position >= plates.size()) return;
-        MainPlate a = plates.get(position - 1);
-        MainPlate b = plates.get(position);
-        DbExecutor.runVoid(() -> dao.swap(a.key, b.key), this::load);
-    }
-
-    private void onMoveDown(int position) {
-        if (position < 0 || position >= plates.size() - 1) return;
-        MainPlate a = plates.get(position);
-        MainPlate b = plates.get(position + 1);
-        DbExecutor.runVoid(() -> dao.swap(a.key, b.key), this::load);
+    /**
+     * Сохраняет текущий порядок из адаптера в БД.
+     * sort_order пересчитывается как индекс в списке: 0, 1, 2, ...
+     */
+    private void saveOrder() {
+        List<MainPlate> ordered = new ArrayList<>(adapter.getItems());
+        DbExecutor.runVoid(() -> dao.reorder(ordered), () -> {
+            // после сохранения не перезагружаем — порядок уже правильный
+        });
     }
 }

@@ -27,7 +27,7 @@ public class MainPlatesDao {
         Map<String, int[]> settings = readSettings(); // key -> [visible, sortOrder]
         List<MainPlate> result = new ArrayList<>();
         for (MainPlate tpl : MainPlatesCatalog.all()) {
-            MainPlate p = tpl; // шаблон уже свежий
+            MainPlate p = tpl;
             int[] s = settings.get(p.key);
             if (s != null) {
                 p.isVisible = s[0] != 0;
@@ -63,7 +63,7 @@ public class MainPlatesDao {
         if (updated == 0) insertRow(db, key, visible, nextSortOrder(db));
     }
 
-    /** Меняет sort_order у двух ключей местами. */
+    /** Меняет sort_order у двух ключей местами (оставлен для совместимости). */
     public void swap(String keyA, String keyB) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Integer sa = readSortOrder(db, keyA);
@@ -73,6 +73,36 @@ public class MainPlatesDao {
         if (sb == null) sb = nextSortOrder(db);
         updateSortOrder(db, keyA, sb);
         updateSortOrder(db, keyB, sa);
+    }
+
+    /**
+     * Сохраняет порядок плиток: sort_order = индекс в списке (0..N-1).
+     * Все ключи из списка получают свои позиции; отсутствующие в БД — добавляются.
+     */
+    public void reorder(List<MainPlate> ordered) {
+        if (ordered == null || ordered.isEmpty()) return;
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            for (int i = 0; i < ordered.size(); i++) {
+                MainPlate p = ordered.get(i);
+                ContentValues cv = new ContentValues();
+                cv.put("sort_order", i);
+                int updated = db.update("main_plates", cv, "plate_key = ?",
+                    new String[]{p.key});
+                if (updated == 0) {
+                    ContentValues ins = new ContentValues();
+                    ins.put("plate_key", p.key);
+                    ins.put("is_visible", p.isVisible ? 1 : 0);
+                    ins.put("sort_order", i);
+                    db.insertWithOnConflict("main_plates", null, ins,
+                        SQLiteDatabase.CONFLICT_REPLACE);
+                }
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     private Integer readSortOrder(SQLiteDatabase db, String key) {

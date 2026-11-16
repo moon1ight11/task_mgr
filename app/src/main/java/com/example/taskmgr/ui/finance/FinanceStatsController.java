@@ -83,63 +83,25 @@ public class FinanceStatsController {
             Map<String, Double> byCategory = expenseDao.getCategoryTotals(fromMs, toMs);
             double total = expenseDao.getTotalSpent(fromMs, toMs);
 
-            // Средний остаток и средняя оценка
-            double sumLeftPct = 0;
-            int periodsWithIncome = 0;
+            int periodsWithSpending = 0;
             List<PeriodRow> periodRows = new ArrayList<>();
             for (FinancePeriod p : periods) {
                 List<FinanceExpense> exps = expenseDao.getByPeriod(p.id);
                 double spent = 0;
                 for (FinanceExpense e : exps) spent += e.amount;
-                double left = p.totalIncome - spent;
-                double leftPct = p.totalIncome > 0 ? left / p.totalIncome * 100 : 0;
-                int score = computeScoreForStats(p.totalIncome, spent, exps);
-                if (p.totalIncome > 0) {
-                    sumLeftPct += leftPct;
-                    periodsWithIncome++;
-                }
+                if (spent > 0) periodsWithSpending++;
+
                 PeriodRow row = new PeriodRow();
                 row.period = p;
                 row.spent = spent;
-                row.left = left;
-                row.score = score;
                 periodRows.add(row);
             }
 
-            double avgLeftPct = periodsWithIncome > 0 ? sumLeftPct / periodsWithIncome : 0;
-            double avgScore = 0;
-            int countForScore = 0;
-            for (PeriodRow r : periodRows) {
-                if (r.period.totalIncome > 0) {
-                    avgScore += r.score;
-                    countForScore++;
-                }
-            }
-            if (countForScore > 0) avgScore /= countForScore;
-
-            return new StatsData(total, byCategory, avgLeftPct, avgScore, periodRows);
+            return new StatsData(total, byCategory, periodsWithSpending, periodRows);
         }, data -> {
             if (data == null) return;
             bind(data);
         });
-    }
-
-    private int computeScoreForStats(double income, double spent, List<FinanceExpense> exps) {
-        if (income <= 0) return 0;
-        double left = income - spent;
-        double leftPct = left / income * 100.0;
-        double score = Math.max(0, Math.min(100, leftPct));
-        if (leftPct >= 30) score += 15;
-        else if (leftPct >= 20) score += 10;
-        double hardSum = 0;
-        for (FinanceExpense e : exps) {
-            String c = e.category != null ? e.category.toLowerCase(Locale.getDefault()) : "";
-            if (c.contains("аренд") || c.contains("жкх") || c.contains("кредит")
-                || c.contains("подписк") || c.contains("ипотек")) hardSum += e.amount;
-        }
-        if (hardSum / income > 0.7) score -= 5;
-        score = Math.max(0, Math.min(100, score));
-        return (int) Math.round(score);
     }
 
     private void bind(StatsData data) {
@@ -156,12 +118,13 @@ public class FinanceStatsController {
         } else {
             total.setText(String.format(Locale.getDefault(), "%.2f ₽", data.total));
             avgLeft.setText(String.format(Locale.getDefault(),
-                "Средний остаток: %.0f%%", data.avgLeftPct));
+                "Месяцев с тратами: %d", data.periodsWithSpending));
+            double avgMonth = data.periodsWithSpending > 0
+                ? data.total / data.periodsWithSpending : 0;
             avgScore.setText(String.format(Locale.getDefault(),
-                "Средняя оценка: %d/100", Math.round(data.avgScore)));
+                "Средний расход: %.2f ₽/мес", avgMonth));
         }
 
-        // По категориям
         catContainer.removeAllViews();
         if (data.byCategory.isEmpty()) {
             TextView empty = new TextView(activity);
@@ -177,7 +140,6 @@ public class FinanceStatsController {
             }
         }
 
-        // По периодам (столбики)
         periodContainer.removeAllViews();
         if (data.periodRows.isEmpty()) return;
 
@@ -200,11 +162,7 @@ public class FinanceStatsController {
             LinearLayout.LayoutParams barParams = new LinearLayout.LayoutParams(dp(16), h);
             barParams.bottomMargin = dp(4);
             bar.setLayoutParams(barParams);
-
-            int color = r.left >= 0
-                ? ContextCompat.getColor(activity, R.color.neon_green)
-                : ContextCompat.getColor(activity, R.color.semantic_danger);
-            bar.setBackgroundColor(color);
+            bar.setBackgroundColor(ContextCompat.getColor(activity, R.color.neon_green));
             col.addView(bar);
 
             TextView label = new TextView(activity);
@@ -265,19 +223,16 @@ public class FinanceStatsController {
     private static class StatsData {
         final double total;
         final Map<String, Double> byCategory;
-        final double avgLeftPct;
-        final double avgScore;
+        final int periodsWithSpending;
         final List<PeriodRow> periodRows;
 
-        StatsData(double t, Map<String, Double> bc, double al, double as, List<PeriodRow> pr) {
-            total = t; byCategory = bc; avgLeftPct = al; avgScore = as; periodRows = pr;
+        StatsData(double t, Map<String, Double> bc, int pws, List<PeriodRow> pr) {
+            total = t; byCategory = bc; periodsWithSpending = pws; periodRows = pr;
         }
     }
 
     private static class PeriodRow {
         FinancePeriod period;
         double spent;
-        double left;
-        int score;
     }
 }

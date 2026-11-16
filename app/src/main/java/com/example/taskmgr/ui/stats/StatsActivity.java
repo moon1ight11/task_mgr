@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 
 import com.example.taskmgr.R;
 import com.example.taskmgr.data.dao.StatsDao;
@@ -28,7 +29,7 @@ public class StatsActivity extends AppCompatActivity {
 
     private int currentPeriodDays = PERIOD_ALL;
 
-    private TextView statTotal, statActive, statDone, statPercent, statOverdue;
+    private TextView statTotal, statActive, statDone, statOverdue, statPercent;
     private ProgressBar statPercentBar;
     private LinearLayout priorityContainer;
     private LinearLayout sectionContainer;
@@ -37,7 +38,7 @@ public class StatsActivity extends AppCompatActivity {
     private TextView statAvgTime, statAvgTimeMeta;
     private TextView statOnTime, statOnTimeMeta;
     private ProgressBar statOnTimeBar;
-    private TextView shoppingLine, shoppingSum;
+    private TextView shoppingLine;
 
     private boolean loading = false;
 
@@ -57,9 +58,9 @@ public class StatsActivity extends AppCompatActivity {
         statTotal = findViewById(R.id.stat_total);
         statActive = findViewById(R.id.stat_active);
         statDone = findViewById(R.id.stat_done);
+        statOverdue = findViewById(R.id.stat_overdue);
         statPercent = findViewById(R.id.stat_percent);
         statPercentBar = findViewById(R.id.stat_percent_bar);
-        statOverdue = findViewById(R.id.stat_overdue);
         priorityContainer = findViewById(R.id.priority_container);
         sectionContainer = findViewById(R.id.section_container);
         cardPeriod = findViewById(R.id.card_period);
@@ -72,7 +73,6 @@ public class StatsActivity extends AppCompatActivity {
         statOnTimeMeta = findViewById(R.id.stat_on_time_meta);
         statOnTimeBar = findViewById(R.id.stat_on_time_bar);
         shoppingLine = findViewById(R.id.shopping_line);
-        shoppingSum = findViewById(R.id.shopping_sum);
 
         setupPeriodChips();
         loadStats();
@@ -144,10 +144,13 @@ public class StatsActivity extends AppCompatActivity {
         statTotal.setText(String.valueOf(s.total));
         statActive.setText(String.valueOf(s.active));
         statDone.setText(String.valueOf(s.done));
+        statOverdue.setText(String.valueOf(s.overdue));
+        statOverdue.setTextColor(ContextCompat.getColor(this,
+            s.overdue > 0 ? R.color.semantic_danger : R.color.text_secondary));
+
         int pct = s.percentDone();
         statPercent.setText("Завершено: " + pct + "%");
         statPercentBar.setProgress(pct);
-        statOverdue.setText("Просрочено сейчас: " + s.overdue);
     }
 
     private void bindPriorities(List<StatsDao.PriorityRow> rows) {
@@ -160,10 +163,7 @@ public class StatsActivity extends AppCompatActivity {
         for (String p : order) {
             StatsDao.PriorityRow row = null;
             for (StatsDao.PriorityRow r : rows)
-                if (p.equals(r.priority)) {
-                    row = r;
-                    break;
-                }
+                if (p.equals(r.priority)) { row = r; break; }
             if (row == null) continue;
 
             View v = inf.inflate(R.layout.item_stats_priority, priorityContainer, false);
@@ -202,6 +202,16 @@ public class StatsActivity extends AppCompatActivity {
             int pct = r.percentDone();
             percent.setText(pct + "%");
             bar.setProgress(pct);
+
+            // Подсветка просроченных
+            if (r.overdue > 0) {
+                counts.setText(r.active + "/" + (r.active + r.done)
+                    + " · просроч. " + r.overdue);
+                counts.setTextColor(ContextCompat.getColor(this, R.color.semantic_danger));
+            } else {
+                counts.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
+            }
+
             sectionContainer.addView(v);
         }
     }
@@ -212,13 +222,8 @@ public class StatsActivity extends AppCompatActivity {
             statAvgTimeMeta.setText("Нет данных за период");
             return;
         }
-        statAvgTime.setText(formatDuration((long) s.avgMillis));
-        String meta = String.format(Locale.getDefault(),
-            "Мин: %s • Макс: %s • Всего: %d",
-            formatDuration(s.minMillis),
-            formatDuration(s.maxMillis),
-            s.count);
-        statAvgTimeMeta.setText(meta);
+        statAvgTime.setText(formatDuration(s.medianMillis));
+        statAvgTimeMeta.setText("Всего: " + s.count);
     }
 
     @SuppressWarnings("SetTextI18n")
@@ -244,15 +249,9 @@ public class StatsActivity extends AppCompatActivity {
         long hour = min / 60;
         long day = hour / 24;
 
-        if (day > 0) {
-            return day + "д " + (hour % 24) + "ч";
-        }
-        if (hour > 0) {
-            return hour + "ч " + (min % 60) + "м";
-        }
-        if (min > 0) {
-            return min + "м";
-        }
+        if (day > 0) return day + "д " + (hour % 24) + "ч";
+        if (hour > 0) return hour + "ч " + (min % 60) + "м";
+        if (min > 0) return min + "м";
         return sec + "с";
     }
 
@@ -270,9 +269,8 @@ public class StatsActivity extends AppCompatActivity {
 
     @SuppressWarnings("SetTextI18n")
     private void bindShopping(StatsDao.ShoppingStats s) {
-        shoppingLine.setText("Всего: " + s.total + " • Куплено: " + s.bought
-            + " • Не куплено: " + s.notBought);
-        shoppingSum.setText(String.format(Locale.getDefault(), "Сумма к покупке: %.2f", s.notBoughtSum));
+        shoppingLine.setText(String.format(Locale.getDefault(),
+            "Пунктов: %d · Сумма: %.2f ₽", s.total, s.totalSum));
     }
 
     private record LoadResult(

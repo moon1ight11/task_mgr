@@ -254,38 +254,63 @@ public class UtilitiesStatsController {
         double maxSum = 1;
         for (MonthRow r : s.byMonth) if (r.sum > maxSum) maxSum = r.sum;
 
-        int maxHeightPx = dp(110);
-        SimpleDateFormat fmt = new SimpleDateFormat("LLL", new Locale("ru"));
+        SimpleDateFormat fmt = new SimpleDateFormat("LLL yyyy", new Locale("ru"));
 
         for (MonthRow r : s.byMonth) {
-            LinearLayout col = new LinearLayout(activity);
-            col.setOrientation(LinearLayout.VERTICAL);
-            col.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-            col.setLayoutParams(new LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
-
-            View bar = new View(activity);
-            int h = (int) (maxHeightPx * (r.sum / maxSum));
-            if (r.sum > 0 && h < dp(3)) h = dp(3);
-            LinearLayout.LayoutParams barParams = new LinearLayout.LayoutParams(dp(20), h);
-            barParams.bottomMargin = dp(4);
-            bar.setLayoutParams(barParams);
-            bar.setBackgroundColor(r.sum > 0
-                ? ContextCompat.getColor(activity, R.color.neon_green)
-                : ContextCompat.getColor(activity, R.color.divider_strong));
-            col.addView(bar);
-
             Calendar cal = Calendar.getInstance();
             cal.set(r.year, r.month, 1);
-            TextView label = new TextView(activity);
-            label.setText(fmt.format(cal.getTime()).replace(".", ""));
-            label.setTextSize(9);
-            label.setTextColor(ContextCompat.getColor(activity, R.color.text_tertiary));
-            label.setGravity(Gravity.CENTER);
-            col.addView(label);
+            String label = fmt.format(cal.getTime());
+            label = label.substring(0, 1).toUpperCase(Locale.getDefault())
+                + label.substring(1);
 
-            byMonth.addView(col);
+            byMonth.addView(buildMonthRow(label, r.sum, maxSum));
         }
+    }
+
+    private View buildMonthRow(String label, double sum, double max) {
+        LinearLayout wrapper = new LinearLayout(activity);
+        wrapper.setOrientation(LinearLayout.VERTICAL);
+        wrapper.setPadding(0, dp(6), 0, dp(6));
+
+        LinearLayout top = new LinearLayout(activity);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView name = new TextView(activity);
+        name.setText(label);
+        name.setTextSize(13);
+        name.setTextColor(ContextCompat.getColor(activity, R.color.text_primary));
+        name.setMaxLines(1);
+        name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        name.setLayoutParams(new LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        top.addView(name);
+
+        TextView value = new TextView(activity);
+        value.setText(String.format(Locale.getDefault(), "%.2f ₽", sum));
+        value.setTextSize(13);
+        value.setTypeface(value.getTypeface(), android.graphics.Typeface.BOLD);
+        value.setTextColor(ContextCompat.getColor(activity,
+            sum > 0 ? R.color.neon_green : R.color.text_tertiary));
+        top.addView(value);
+
+        wrapper.addView(top);
+
+        ProgressBar bar = new ProgressBar(activity, null,
+            android.R.attr.progressBarStyleHorizontal);
+        LinearLayout.LayoutParams barLp = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(6));
+        barLp.topMargin = dp(4);
+        bar.setLayoutParams(barLp);
+        bar.setMax(100);
+        bar.setProgress(sum > 0 ? (int) Math.round(100.0 * sum / max) : 0);
+        bar.setProgressTintList(ColorStateList.valueOf(
+            ContextCompat.getColor(activity, R.color.neon_green)));
+        bar.setProgressBackgroundTintList(ColorStateList.valueOf(
+            ContextCompat.getColor(activity, R.color.surface_variant)));
+        wrapper.addView(bar);
+
+        return wrapper;
     }
 
     private View buildMeterRow(MeterRow r, double total, double max) {

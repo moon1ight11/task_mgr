@@ -26,7 +26,7 @@
     <TextView
       android:id="@+id/tv_period_name"
       android:layout_width="0dp"
-      android:layout_height="wrap_content"
+      android:layout_height="44dp"
       android:layout_weight="1"
       android:gravity="center"
       android:text="—"
@@ -34,7 +34,8 @@
       android:textStyle="bold"
       android:textColor="@color/text_primary"
       android:maxLines="1"
-      android:ellipsize="end" />
+      android:ellipsize="end"
+      android:includeFontPadding="false" />
 
     <ImageButton
       android:id="@+id/btn_next_period"
@@ -88,12 +89,20 @@
             android:text="Доход: 0 ₽" />
 
           <TextView
+            android:id="@+id/tv_fin_planned"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/amber"
+            android:text="Запланировано: 0 ₽" />
+
+          <TextView
             android:id="@+id/tv_fin_spent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
-            android:text="Потрачено: 0 ₽" />
+            android:text="Потрачено (факт): 0 ₽" />
 
           <TextView
             android:id="@+id/tv_fin_left"
@@ -103,49 +112,46 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/neon_green"
-            android:text="Остаток: 0 ₽" />
+            android:text="Свободно: 0 ₽" />
 
-          <!-- ==== Блок оценки ==== -->
-
+          <!-- Темп и остаток -->
           <TextView
-            android:id="@+id/tv_fin_score_label"
+            android:id="@+id/tv_fin_avg_day"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:textSize="13sp"
             android:textColor="@color/text_secondary"
-            android:text="Оценка: —" />
-
-          <ProgressBar
-            android:id="@+id/pb_fin_score"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            android:layout_marginTop="4dp"
-            android:max="100"
-            android:progress="0"
-            android:progressTint="@color/neon_green"
-            android:progressBackgroundTint="@color/surface_variant" />
+            android:text="Потрачено в день (факт): —" />
 
           <TextView
-            android:id="@+id/tv_fin_score_subtitle"
+            android:id="@+id/tv_fin_days_left"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary"
-            android:text="—" />
-
-          <TextView
-            android:id="@+id/tv_fin_score_trend"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textColor="@color/text_tertiary"
+            android:text="Осталось дней: —" />
+
+          <TextView
+            android:id="@+id/tv_fin_forecast"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/neon_green"
+            android:text="Можно тратить в день: —" />
+
+          <TextView
+            android:id="@+id/tv_fin_plan_left"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="@color/amber"
+            android:text="План ещё не выполнен: —"
             android:visibility="gone" />
 
-          <!-- ==== Кнопки действий ==== -->
-
+          <!-- Кнопки -->
           <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_fin_add_expense"
             style="@style/Widget.Material3.Button.OutlinedButton"
@@ -191,12 +197,51 @@
         android:textColor="@color/text_secondary"
         android:visibility="gone" />
 
-      <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/fin_expenses_recycler"
+      <!-- Запланировано -->
+      <TextView
+        android:id="@+id/tv_fin_planned_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:nestedScrollingEnabled="false" />
+        android:layout_marginTop="12dp"
+        android:text="Запланировано"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:letterSpacing="0.06"
+        android:visibility="gone" />
+
+      <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fin_planned_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:visibility="gone" />
+
+      <!-- Факт -->
+      <TextView
+        android:id="@+id/tv_fin_fact_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Факт"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:letterSpacing="0.06"
+        android:visibility="gone" />
+
+      <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fin_fact_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:visibility="gone" />
     </LinearLayout>
   </ScrollView>
 </LinearLayout>

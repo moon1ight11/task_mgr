@@ -46,42 +46,52 @@
 
   <!-- Селектор дома -->
   <LinearLayout
-    android:id="@+id/row_house"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:paddingStart="12dp"
     android:paddingEnd="12dp"
-    android:paddingBottom="8dp"
-    android:background="?attr/selectableItemBackground"
-    android:clickable="true"
-    android:focusable="true">
+    android:paddingBottom="8dp">
 
     <TextView
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="Дом:"
+      android:text="Дом"
       android:textColor="@color/text_secondary"
       android:textSize="13sp" />
 
-    <TextView
-      android:id="@+id/tv_house"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      android:layout_weight="1"
-      android:layout_marginStart="6dp"
-      android:text="—"
-      android:textColor="@color/neon_green"
-      android:textSize="14sp"
-      android:textStyle="bold" />
-
-    <TextView
+    <LinearLayout
+      android:id="@+id/row_house"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="▾"
-      android:textColor="@color/text_secondary"
-      android:textSize="14sp" />
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:paddingStart="6dp"
+      android:paddingEnd="6dp"
+      android:background="?attr/selectableItemBackground"
+      android:clickable="true"
+      android:focusable="true">
+
+      <TextView
+        android:id="@+id/tv_house"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="—"
+        android:textColor="@color/neon_green"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="▾"
+        android:textColor="@color/neon_green"
+        android:textSize="14sp" />
+    </LinearLayout>
   </LinearLayout>
 
   <ScrollView

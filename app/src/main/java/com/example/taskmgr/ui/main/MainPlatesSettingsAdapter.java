@@ -1,9 +1,9 @@
 package com.example.taskmgr.ui.main;
 
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,29 +16,42 @@ import com.example.taskmgr.model.MainPlate;
 import com.google.android.material.materialswitch.MaterialSwitch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MainPlatesSettingsAdapter
     extends RecyclerView.Adapter<MainPlatesSettingsAdapter.VH> {
 
     public interface OnVisibleChanged { void onChange(MainPlate p, boolean visible); }
-    public interface OnMove { void onMove(int position); }
+    public interface OnStartDrag { void onStartDrag(RecyclerView.ViewHolder holder); }
 
     private final List<MainPlate> items = new ArrayList<>();
     private final OnVisibleChanged onVisibleChanged;
-    private final OnMove onMoveUp;
-    private final OnMove onMoveDown;
+    private final OnStartDrag onStartDrag;
 
-    public MainPlatesSettingsAdapter(OnVisibleChanged v, OnMove up, OnMove down) {
+    public MainPlatesSettingsAdapter(OnVisibleChanged v, OnStartDrag startDrag) {
         this.onVisibleChanged = v;
-        this.onMoveUp = up;
-        this.onMoveDown = down;
+        this.onStartDrag = startDrag;
     }
 
     public void setItems(List<MainPlate> newItems) {
         items.clear();
         if (newItems != null) items.addAll(newItems);
         notifyDataSetChanged();
+    }
+
+    public List<MainPlate> getItems() {
+        return items;
+    }
+
+    /** Меняет элементы местами в локальном списке (без похода в БД). */
+    public void moveItem(int from, int to) {
+        if (from < to) {
+            for (int i = from; i < to; i++) Collections.swap(items, i, i + 1);
+        } else {
+            for (int i = from; i > to; i--) Collections.swap(items, i, i - 1);
+        }
+        notifyItemMoved(from, to);
     }
 
     @NonNull
@@ -68,14 +81,12 @@ public class MainPlatesSettingsAdapter
             if (onVisibleChanged != null) onVisibleChanged.onChange(p, checked);
         });
 
-        h.btnUp.setEnabled(position > 0);
-        h.btnDown.setEnabled(position < items.size() - 1);
-
-        h.btnUp.setOnClickListener(v -> {
-            if (onMoveUp != null) onMoveUp.onMove(position);
-        });
-        h.btnDown.setOnClickListener(v -> {
-            if (onMoveDown != null) onMoveDown.onMove(position);
+        h.drag.setOnTouchListener((v, event) -> {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN
+                && onStartDrag != null) {
+                onStartDrag.onStartDrag(h);
+            }
+            return false; // пусть ItemTouchHelper сам обрабатывает касание
         });
     }
 
@@ -88,15 +99,14 @@ public class MainPlatesSettingsAdapter
         ImageView icon;
         TextView label;
         MaterialSwitch sw;
-        ImageButton btnUp, btnDown;
+        ImageView drag;
 
         public VH(@NonNull View itemView) {
             super(itemView);
             icon = itemView.findViewById(R.id.setting_icon);
             label = itemView.findViewById(R.id.setting_label);
             sw = itemView.findViewById(R.id.setting_switch);
-            btnUp = itemView.findViewById(R.id.setting_up);
-            btnDown = itemView.findViewById(R.id.setting_down);
+            drag = itemView.findViewById(R.id.setting_drag);
         }
     }
 }

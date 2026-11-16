@@ -33,7 +33,7 @@ public class FinanceExpenseDao {
         cv.put("source_type", e.sourceType != null ? e.sourceType : "manual");
         if (e.sourceRefId != null) cv.put("source_ref_id", e.sourceRefId);
         else cv.putNull("source_ref_id");
-        if (e.sourceRefs != null) cv.put("source_refs", e.sourceRefs); // NEW
+        if (e.sourceRefs != null) cv.put("source_refs", e.sourceRefs);
         else cv.putNull("source_refs");
         return db.insert("finance_expenses", null, cv);
     }
@@ -73,6 +73,23 @@ public class FinanceExpenseDao {
         }
     }
 
+    public double sumByPeriodAndSourceType(long periodId, String sourceType) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        try (Cursor c = db.rawQuery(
+            "SELECT COALESCE(SUM(amount), 0) FROM finance_expenses " +
+                "WHERE period_id = ? AND source_type = ?",
+            new String[]{String.valueOf(periodId), sourceType})) {
+            return c.moveToFirst() ? c.getDouble(0) : 0;
+        }
+    }
+
+    public void markAsFact(long expenseId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("source_type", "manual");
+        db.update("finance_expenses", cv, "id = ?", new String[]{String.valueOf(expenseId)});
+    }
+
     public List<String> getUsedCategories() {
         List<String> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -85,9 +102,6 @@ public class FinanceExpenseDao {
         return result;
     }
 
-    /**
-     * Возвращает id подписок, уже вошедших в bundle-записи этого периода.
-     */
     public Set<Long> getSubscriptionBundleRefIds(long periodId) {
         Set<Long> result = new HashSet<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -100,20 +114,14 @@ public class FinanceExpenseDao {
                 String refs = c.getString(0);
                 if (refs == null || refs.isEmpty()) continue;
                 for (String part : refs.split(",")) {
-                    try {
-                        result.add(Long.parseLong(part.trim()));
-                    } catch (NumberFormatException ignored) {
-                    }
+                    try { result.add(Long.parseLong(part.trim())); }
+                    catch (NumberFormatException ignored) {}
                 }
             }
         }
         return result;
     }
 
-    /**
-     * Старый метод — для записей, где source_type='subscription' и один source_ref_id.
-     * Оставлен на случай, если такие записи остались в БД.
-     */
     public Set<Long> getSubscriptionRefIdsForPeriod(long periodId) {
         Set<Long> result = new HashSet<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -138,7 +146,7 @@ public class FinanceExpenseDao {
         e.sourceType = c.getString(c.getColumnIndexOrThrow("source_type"));
         int refIdx = c.getColumnIndex("source_ref_id");
         if (refIdx >= 0 && !c.isNull(refIdx)) e.sourceRefId = c.getLong(refIdx);
-        int refsIdx = c.getColumnIndex("source_refs"); // NEW
+        int refsIdx = c.getColumnIndex("source_refs");
         if (refsIdx >= 0 && !c.isNull(refsIdx)) e.sourceRefs = c.getString(refsIdx);
         return e;
     }

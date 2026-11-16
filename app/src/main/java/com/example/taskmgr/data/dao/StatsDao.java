@@ -8,6 +8,7 @@ import com.example.taskmgr.data.DatabaseHelper;
 import com.example.taskmgr.util.DateUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class StatsDao {
@@ -17,37 +18,58 @@ public class StatsDao {
             "  SELECT tb.id FROM tabs tb " +
             "  JOIN sections s ON s.id = tb.section_id " +
             "  WHERE s.is_private = 1)";
+
     private final DatabaseHelper dbHelper;
 
     public StatsDao(Context context) {
         this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
+    // ---------------- Сводка «сейчас» ----------------
+
     public Summary getSummary() {
         Summary s = new Summary();
         long startOfToday = DateUtils.startOfDay(System.currentTimeMillis());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // Считаем total / active / done
         try (Cursor c = db.rawQuery(
             "SELECT " +
                 "COUNT(*), " +
                 "SUM(CASE WHEN status='active' THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN status='done' THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN status='active' AND ( " +
-                "     (due_type='exact_date' AND due_date IS NOT NULL AND due_date < ?) " +
-                "     OR (due_type='range' AND due_to IS NOT NULL AND due_to < ?) " +
-                ") THEN 1 ELSE 0 END) " +
+                "SUM(CASE WHEN status='done' THEN 1 ELSE 0 END) " +
                 "FROM tasks WHERE " + NOT_PRIVATE,
-            new String[]{String.valueOf(startOfToday),
-                String.valueOf(startOfToday)})) {
+            null)) {
             if (c.moveToFirst()) {
                 s.total = c.getInt(0);
                 s.active = c.isNull(1) ? 0 : c.getInt(1);
                 s.done = c.isNull(2) ? 0 : c.getInt(2);
-                s.overdue = c.isNull(3) ? 0 : c.getInt(3);
             }
         }
+
+        // overdue: active + (exact_date due_date < startOfToday) + (range due_to < startOfToday)
+        //          + (by_km due_km <= tab.current_km)
+        try (Cursor c = db.rawQuery(
+            "SELECT COUNT(*) FROM tasks t " +
+                "JOIN tabs tb ON tb.id = t.tab_id " +
+                "WHERE t.status='active' AND t.tab_id NOT IN (" +
+                "  SELECT tb2.id FROM tabs tb2 " +
+                "  JOIN sections s2 ON s2.id = tb2.section_id " +
+                "  WHERE s2.is_private = 1) " +
+                "AND ( " +
+                "  (t.due_type='exact_date' AND t.due_date IS NOT NULL AND t.due_date < ?) " +
+                "  OR (t.due_type='range' AND t.due_to IS NOT NULL AND t.due_to < ?) " +
+                "  OR (t.due_type='by_km' AND t.due_km IS NOT NULL " +
+                "      AND tb.current_km IS NOT NULL AND t.due_km <= tb.current_km) " +
+                ")",
+            new String[]{String.valueOf(startOfToday), String.valueOf(startOfToday)})) {
+            if (c.moveToFirst()) s.overdue = c.getInt(0);
+        }
+
         return s;
     }
+
+    // ---------------- «Сейчас»: по приоритетам и разделам ----------------
 
     public List<PriorityRow> getActiveByPriority() {
         List<PriorityRow> result = new ArrayList<>();
@@ -67,10 +89,7 @@ public class StatsDao {
         for (String p : new String[]{"important", "normal", "whatever"}) {
             boolean found = false;
             for (PriorityRow r : result)
-                if (p.equals(r.priority)) {
-                    found = true;
-                    break;
-                }
+                if (p.equals(r.priority)) { found = true; break; }
             if (!found) {
                 PriorityRow r = new PriorityRow();
                 r.priority = p;
@@ -84,28 +103,40 @@ public class StatsDao {
     public List<SectionRow> getBySection() {
         List<SectionRow> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
+        long startOfToday = DateUtils.startOfDay(System.currentTimeMillis());
+
+        // Считаем active / done по разделам + overdue (включая by_km)
         try (Cursor c = db.rawQuery(
             "SELECT s.id, s.name, " +
                 "  SUM(CASE WHEN t.status='active' THEN 1 ELSE 0 END), " +
-                "  SUM(CASE WHEN t.status='done'   THEN 1 ELSE 0 END) " +
+                "  SUM(CASE WHEN t.status='done'   THEN 1 ELSE 0 END), " +
+                "  SUM(CASE WHEN t.status='active' AND ( " +
+                "    (t.due_type='exact_date' AND t.due_date IS NOT NULL AND t.due_date < ?) " +
+                "    OR (t.due_type='range' AND t.due_to IS NOT NULL AND t.due_to < ?) " +
+                "    OR (t.due_type='by_km' AND t.due_km IS NOT NULL " +
+                "        AND tb.current_km IS NOT NULL AND t.due_km <= tb.current_km) " +
+                "  ) THEN 1 ELSE 0 END) " +
                 "FROM sections s " +
                 "LEFT JOIN tabs tb ON tb.section_id = s.id " +
                 "LEFT JOIN tasks t ON t.tab_id = tb.id " +
                 "WHERE s.is_private = 0 " +
                 "GROUP BY s.id, s.name " +
                 "ORDER BY 3 DESC, 4 DESC",
-            null)) {
+            new String[]{String.valueOf(startOfToday), String.valueOf(startOfToday)})) {
             while (c.moveToNext()) {
                 SectionRow r = new SectionRow();
                 r.id = c.getLong(0);
                 r.name = c.getString(1);
                 r.active = c.isNull(2) ? 0 : c.getInt(2);
                 r.done = c.isNull(3) ? 0 : c.getInt(3);
+                r.overdue = c.isNull(4) ? 0 : c.getInt(4);
                 result.add(r);
             }
         }
         return result;
     }
+
+    // ---------------- «За период» ----------------
 
     public PeriodStats getCompletionsForPeriod(int days) {
         PeriodStats p = new PeriodStats();
@@ -123,6 +154,10 @@ public class StatsDao {
         return p;
     }
 
+    /**
+     * Медианное время от создания до выполнения (дни).
+     * Берём completed_at - created_at для выполненных за период задач.
+     */
     public CompletionTimeStats getCompletionTimeStats(int days) {
         CompletionTimeStats s = new CompletionTimeStats();
         long since = days > 0
@@ -131,11 +166,7 @@ public class StatsDao {
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql =
-            "SELECT " +
-                "  COUNT(*), " +
-                "  AVG(h.completed_at - t.created_at), " +
-                "  MIN(h.completed_at - t.created_at), " +
-                "  MAX(h.completed_at - t.created_at) " +
+            "SELECT h.completed_at - t.created_at " +
                 "FROM history h " +
                 "JOIN tasks t ON t.id = h.task_id " +
                 "WHERE h.completed_at >= ? " +
@@ -145,13 +176,22 @@ public class StatsDao {
                 "    JOIN sections s ON s.id = tb.section_id " +
                 "    WHERE s.is_private = 1)";
 
+        List<Long> values = new ArrayList<>();
         try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(since)})) {
-            if (c.moveToFirst()) {
-                s.count = c.isNull(0) ? 0 : c.getInt(0);
-                s.avgMillis = c.isNull(1) ? 0 : c.getDouble(1);
-                s.minMillis = c.isNull(2) ? 0 : c.getLong(2);
-                s.maxMillis = c.isNull(3) ? 0 : c.getLong(3);
+            while (c.moveToNext()) values.add(c.getLong(0));
+        }
+
+        s.count = values.size();
+        if (!values.isEmpty()) {
+            Collections.sort(values);
+            int n = values.size();
+            long median;
+            if (n % 2 == 1) {
+                median = values.get(n / 2);
+            } else {
+                median = (values.get(n / 2 - 1) + values.get(n / 2)) / 2;
             }
+            s.medianMillis = median;
         }
         return s;
     }
@@ -163,26 +203,35 @@ public class StatsDao {
             : 0L;
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // «В срок» = completed_at < startOfDay(due_date) + 1 день  (т.е. в день дедлайна или раньше)
+        // для range — по due_to; для by_km — km_at_completion <= due_km.
+        // Здесь считаем только exact_date и range (у by_km нет надёжной «даты»).
         String sql =
             "SELECT " +
                 "  COUNT(*), " +
                 "  SUM(CASE WHEN " +
-                "    (t.due_type = 'exact_date' AND t.due_date IS NOT NULL AND h.completed_at <= t.due_date) " +
-                "    OR (t.due_type = 'range' AND t.due_to IS NOT NULL AND h.completed_at <= t.due_to) " +
+                "    (t.due_type='exact_date' AND t.due_date IS NOT NULL AND " +
+                "       h.completed_at < (? + (t.due_date / 86400000) * 86400000)) " +
+                "    OR (t.due_type='range' AND t.due_to IS NOT NULL AND " +
+                "       h.completed_at < (? + (t.due_to / 86400000) * 86400000)) " +
                 "    THEN 1 ELSE 0 END) " +
                 "FROM history h " +
                 "JOIN tasks t ON t.id = h.task_id " +
                 "WHERE h.completed_at >= ? " +
                 "  AND ( " +
-                "    (t.due_type = 'exact_date' AND t.due_date IS NOT NULL) " +
-                "    OR (t.due_type = 'range' AND t.due_to IS NOT NULL) " +
+                "    (t.due_type='exact_date' AND t.due_date IS NOT NULL) " +
+                "    OR (t.due_type='range' AND t.due_to IS NOT NULL) " +
                 "  ) " +
                 "  AND t.tab_id NOT IN (" +
                 "    SELECT tb.id FROM tabs tb " +
                 "    JOIN sections s ON s.id = tb.section_id " +
                 "    WHERE s.is_private = 1)";
 
-        try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(since)})) {
+        try (Cursor c = db.rawQuery(sql, new String[]{
+            String.valueOf(since),
+            String.valueOf(since),
+            String.valueOf(since)})) {
             if (c.moveToFirst()) {
                 s.completedWithDeadline = c.isNull(0) ? 0 : c.getInt(0);
                 s.onTime = c.isNull(1) ? 0 : c.getInt(1);
@@ -192,25 +241,25 @@ public class StatsDao {
         return s;
     }
 
+    // ---------------- «Сейчас»: покупки ----------------
+
     public ShoppingStats getShoppingStats() {
         ShoppingStats s = new ShoppingStats();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         try (Cursor c = db.rawQuery(
             "SELECT COUNT(*), " +
-                "SUM(CASE WHEN is_bought=1 THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN is_bought=0 THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN is_bought=0 THEN COALESCE(price,0) ELSE 0 END) " +
+                "SUM(COALESCE(price,0)) " +
                 "FROM shopping_items WHERE " + NOT_PRIVATE,
             null)) {
             if (c.moveToFirst()) {
                 s.total = c.getInt(0);
-                s.bought = c.isNull(1) ? 0 : c.getInt(1);
-                s.notBought = c.isNull(2) ? 0 : c.getInt(2);
-                s.notBoughtSum = c.isNull(3) ? 0 : c.getDouble(3);
+                s.totalSum = c.isNull(1) ? 0 : c.getDouble(1);
             }
         }
         return s;
     }
+
+    // ---------------- DTO ----------------
 
     public static class Summary {
         public int total;
@@ -219,21 +268,16 @@ public class StatsDao {
         public int overdue;
 
         public int percentDone() {
-            int denominator = done + active;
-            if (denominator == 0) return 0;
-            return Math.round(100f * done / denominator);
+            if (total == 0) return 0;
+            return Math.round(100f * done / total);
         }
     }
 
     public static class CompletionTimeStats {
         public int count;
-        public double avgMillis;
-        public long minMillis;
-        public long maxMillis;
+        public long medianMillis;
 
-        public boolean hasData() {
-            return count > 0;
-        }
+        public boolean hasData() { return count > 0; }
     }
 
     public static class DeadlineStats {
@@ -246,9 +290,7 @@ public class StatsDao {
             return Math.round(100f * onTime / completedWithDeadline);
         }
 
-        public boolean hasData() {
-            return completedWithDeadline > 0;
-        }
+        public boolean hasData() { return completedWithDeadline > 0; }
     }
 
     public static class PriorityRow {
@@ -261,6 +303,7 @@ public class StatsDao {
         public String name;
         public int active;
         public int done;
+        public int overdue;
 
         public int percentDone() {
             int denominator = done + active;
@@ -281,8 +324,6 @@ public class StatsDao {
 
     public static class ShoppingStats {
         public int total;
-        public int bought;
-        public int notBought;
-        public double notBoughtSum;
+        public double totalSum;
     }
 }

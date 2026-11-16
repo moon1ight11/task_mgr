@@ -60,12 +60,6 @@ public class FinanceActivity extends AppCompatActivity {
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        findViewById(R.id.fab_finance_add).setOnClickListener(v -> {
-            if (currentTab == 0) periodsController.showAddExpenseDialog();
-            else if (currentTab == 1) settingsController.showAddIncomeDialog();
-            // currentTab == 2 — статистика, FAB скрыт
-        });
-
         updateVisibleTab();
     }
 
@@ -73,10 +67,6 @@ public class FinanceActivity extends AppCompatActivity {
         periodsView.setVisibility(currentTab == 0 ? View.VISIBLE : View.GONE);
         settingsView.setVisibility(currentTab == 1 ? View.VISIBLE : View.GONE);
         statsView.setVisibility(currentTab == 2 ? View.VISIBLE : View.GONE);
-
-        // FAB скрыт на вкладке «Статистика»
-        findViewById(R.id.fab_finance_add).setVisibility(
-            currentTab == 2 ? View.GONE : View.VISIBLE);
 
         if (currentTab == 0) periodsController.load();
         else if (currentTab == 1) settingsController.load();

@@ -19,22 +19,17 @@ public class FinanceExpensesAdapter extends RecyclerView.Adapter<FinanceExpenses
 
     private final List<FinanceExpense> items = new ArrayList<>();
     private final OnExpenseClick click;
+    private final OnExpenseLongClick longClick;
 
-    public FinanceExpensesAdapter(OnExpenseClick click) {
+    public FinanceExpensesAdapter(OnExpenseClick click, OnExpenseLongClick longClick) {
         this.click = click;
+        this.longClick = longClick;
     }
 
     public void setItems(List<FinanceExpense> newItems) {
-        int oldSize = items.size();
         items.clear();
         if (newItems != null) items.addAll(newItems);
-        int newSize = items.size();
-        if (oldSize == newSize) {
-            if (newSize > 0) notifyItemRangeChanged(0, newSize);
-        } else {
-            if (oldSize > 0) notifyItemRangeRemoved(0, oldSize);
-            if (newSize > 0) notifyItemRangeInserted(0, newSize);
-        }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -54,7 +49,12 @@ public class FinanceExpensesAdapter extends RecyclerView.Adapter<FinanceExpenses
             h.title.setVisibility(View.VISIBLE);
         } else h.title.setVisibility(View.GONE);
         h.amount.setText(String.format(Locale.getDefault(), "%.2f ₽", e.amount));
+
         h.itemView.setOnClickListener(v -> { if (click != null) click.onClick(e); });
+        h.itemView.setOnLongClickListener(v -> {
+            if (longClick != null) { longClick.onLongClick(e); return true; }
+            return false;
+        });
     }
 
     @Override
@@ -64,6 +64,10 @@ public class FinanceExpensesAdapter extends RecyclerView.Adapter<FinanceExpenses
 
     public interface OnExpenseClick {
         void onClick(FinanceExpense e);
+    }
+
+    public interface OnExpenseLongClick {
+        void onLongClick(FinanceExpense e);
     }
 
     public static class VH extends RecyclerView.ViewHolder {

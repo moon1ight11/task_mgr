@@ -5,7 +5,6 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,7 +51,8 @@ public class FinancePeriodsController {
     private final FinancePeriodDao periodDao;
     private final FinanceExpenseDao expenseDao;
     private final FinanceTemplateDao templateDao;
-    private final FinanceExpensesAdapter adapter;
+    private final FinanceExpensesAdapter plannedAdapter;
+    private final FinanceExpensesAdapter factAdapter;
 
     private List<FinancePeriod> periods = new ArrayList<>();
     private final List<FinanceTemplate> templatesForPick = new ArrayList<>();
@@ -69,10 +69,17 @@ public class FinancePeriodsController {
         expenseDao = new FinanceExpenseDao(activity);
         templateDao = new FinanceTemplateDao(activity);
 
-        RecyclerView recycler = root.findViewById(R.id.fin_expenses_recycler);
-        recycler.setLayoutManager(new LinearLayoutManager(activity));
-        adapter = new FinanceExpensesAdapter(this::showExpenseActions);
-        recycler.setAdapter(adapter);
+        RecyclerView plannedRecycler = root.findViewById(R.id.fin_planned_recycler);
+        plannedRecycler.setLayoutManager(new LinearLayoutManager(activity));
+        plannedRecycler.setHasFixedSize(false);
+        plannedAdapter = new FinanceExpensesAdapter(this::showExpenseActions, this::showPlannedActions);
+        plannedRecycler.setAdapter(plannedAdapter);
+
+        RecyclerView factRecycler = root.findViewById(R.id.fin_fact_recycler);
+        factRecycler.setLayoutManager(new LinearLayoutManager(activity));
+        factRecycler.setHasFixedSize(false);
+        factAdapter = new FinanceExpensesAdapter(this::showExpenseActions, null);
+        factRecycler.setAdapter(factAdapter);
 
         root.findViewById(R.id.btn_prev_period).setOnClickListener(v -> {
             if (currentIndex > 0) { currentIndex--; bindCurrentPeriod(); }
@@ -166,8 +173,10 @@ public class FinancePeriodsController {
                                 e.title = t.title;
                                 e.amount = t.defaultAmount;
                                 e.createdAt = now++;
-                                e.sourceType = "manual";
-                                expenseDao.insert(e);
+                                e.sourceType = "template";
+                                long id = expenseDao.insert(e);
+                                if (id <= 0) android.util.Log.e("Finance",
+                                    "template insert failed, periodId=" + pid);
                             }
                         }, this::bindCurrentPeriod);
                     })
@@ -205,9 +214,7 @@ public class FinancePeriodsController {
             }
 
             List<Subscription> available = new ArrayList<>();
-            for (Subscription s : subs) {
-                if (!already.contains(s.id)) available.add(s);
-            }
+            for (Subscription s : subs) if (!already.contains(s.id)) available.add(s);
             if (available.isEmpty()) {
                 Toast.makeText(activity, "Все подписки этого периода уже добавлены",
                     Toast.LENGTH_LONG).show();
@@ -276,7 +283,7 @@ public class FinancePeriodsController {
         });
     }
 
-    // ---------------- покупки ----------------
+    // ---------------- покупки (двухшаговый импорт) ----------------
 
     public void showPickShoppingDialog() {
         if (currentPeriod == null) {
@@ -292,16 +299,23 @@ public class FinancePeriodsController {
 
             List<Tab> allTabs = tabDao.getAll();
             Map<Long, String> sectionNames = new HashMap<>();
-            for (Section s : sectionDao.getAll()) sectionNames.put(s.id, s.name);
+            Set<Long> privateSectionIds = new HashSet<>();
+            for (Section s : sectionDao.getAll()) {
+                sectionNames.put(s.id, s.name);
+                if (s.isPrivate) privateSectionIds.add(s.id);
+            }
 
             List<TabShoppingInfo> infos = new ArrayList<>();
             for (Tab t : allTabs) {
                 if (!t.showShopping) continue;
+                if (privateSectionIds.contains(t.sectionId)) continue;
                 List<ShoppingItem> items = shopDao.getByTabSorted(
                     t.id, null, ShoppingDao.SortMode.CREATED, true);
                 if (items.isEmpty()) continue;
+                int notBought = 0;
                 double sum = 0;
                 for (ShoppingItem it : items) {
+                    if (!it.isBought) notBought++;
                     if (it.price != null) sum += it.price;
                 }
                 String sectionName = sectionNames.get(t.sectionId);
@@ -313,6 +327,7 @@ public class FinancePeriodsController {
                 info.tabName = t.name;
                 info.label = label;
                 info.count = items.size();
+                info.notBought = notBought;
                 info.sum = sum;
                 infos.add(info);
             }
@@ -327,11 +342,11 @@ public class FinancePeriodsController {
             String[] labels = new String[res.infos.size()];
             for (int i = 0; i < res.infos.size(); i++) {
                 TabShoppingInfo info = res.infos.get(i);
-                labels[i] = info.label + " · " + info.count + " поз. · "
+                labels[i] = info.label + " · " + info.notBought + "/" + info.count + " не куплено · "
                     + String.format(Locale.getDefault(), "%.2f ₽", info.sum);
             }
             new AlertDialog.Builder(activity)
-                .setTitle("Вкладка с покупками")
+                .setTitle("Выберите вкладку")
                 .setItems(labels, (d, which) -> {
                     TabShoppingInfo info = res.infos.get(which);
                     showShoppingItemsDialog(info, res.already, pid);
@@ -364,12 +379,21 @@ public class FinancePeriodsController {
                 .inflate(R.layout.dialog_finance_shopping_pick, null);
             LinearLayout container = v.findViewById(R.id.container_shopping_pick);
 
+            CheckBox selectAll = new CheckBox(activity);
+            selectAll.setText("Выбрать всё");
+            selectAll.setTextColor(ContextCompat.getColor(activity, R.color.neon_green));
+            selectAll.setTextSize(14);
+            selectAll.setPadding(0, dp(4), 0, dp(8));
+            container.addView(selectAll);
+
+            List<CheckBox> itemBoxes = new ArrayList<>();
+
             for (ShoppingItem it : available) {
                 CheckBox cb = new CheckBox(activity);
                 String pricePart = it.price != null
                     ? String.format(Locale.getDefault(), " — %.2f ₽", it.price)
                     : "";
-                String statusPart = it.isBought ? " ✓" : "";
+                String statusPart = it.isBought ? " ✓ (куплено)" : "";
                 cb.setText(it.title + pricePart + statusPart);
                 cb.setTextSize(14);
                 cb.setTextColor(ContextCompat.getColor(activity, R.color.text_primary));
@@ -379,13 +403,20 @@ public class FinancePeriodsController {
                     if (checked) picked.add(id);
                     else picked.remove(id);
                 });
+                itemBoxes.add(cb);
                 container.addView(cb);
             }
+
+            selectAll.setOnCheckedChangeListener((b, checked) -> {
+                for (int i = 0; i < itemBoxes.size(); i++) {
+                    itemBoxes.get(i).setChecked(checked);
+                }
+            });
 
             new AlertDialog.Builder(activity)
                 .setTitle("Покупки: " + info.label)
                 .setView(v)
-                .setPositiveButton("Добавить", (d, w) -> {
+                .setPositiveButton("Добавить как план", (d, w) -> {
                     if (picked.isEmpty()) return;
                     StringBuilder names = new StringBuilder();
                     StringBuilder refs = new StringBuilder();
@@ -401,19 +432,33 @@ public class FinancePeriodsController {
                     final double totalFinal = total;
                     final String namesFinal = names.toString();
                     final String refsFinal = refs.toString();
-                    final String category = info.tabName;
 
-                    DbExecutor.runVoid(() -> {
+                    // Группируем по категории покупки, если она задана; иначе — имя вкладки.
+                    // Самый простой вариант: создаём по одной записи на покупку.
+                    List<FinanceExpense> toInsert = new ArrayList<>();
+                    long now = System.currentTimeMillis();
+                    for (ShoppingItem it : available) {
+                        if (!picked.contains(it.id)) continue;
                         FinanceExpense e = new FinanceExpense();
                         e.periodId = pid;
-                        e.category = category;
-                        e.title = namesFinal;
-                        e.amount = totalFinal;
-                        e.createdAt = System.currentTimeMillis();
+                        e.category = it.category != null && !it.category.isEmpty()
+                            ? it.category
+                            : info.tabName;
+                        e.title = it.isBought ? it.title + " ✓ (куплено)" : it.title;
+                        e.amount = it.price != null ? it.price : 0;
+                        e.createdAt = now++;
                         e.sourceType = "shopping_bundle";
                         e.sourceRefId = null;
-                        e.sourceRefs = refsFinal;
-                        expenseDao.insert(e);
+                        e.sourceRefs = String.valueOf(it.id);
+                        toInsert.add(e);
+                    }
+
+                    DbExecutor.runVoid(() -> {
+                        for (FinanceExpense e : toInsert) {
+                            long id = expenseDao.insert(e);
+                            if (id <= 0) android.util.Log.e("Finance",
+                                "shopping insert failed, periodId=" + pid);
+                        }
                     }, this::bindCurrentPeriod);
                 })
                 .setNegativeButton("Отмена", null)
@@ -427,11 +472,15 @@ public class FinancePeriodsController {
         TextView tvName = root.findViewById(R.id.tv_period_name);
         TextView tvRange = root.findViewById(R.id.tv_fin_period_range);
         TextView tvIncome = root.findViewById(R.id.tv_fin_income);
+        TextView tvPlanned = root.findViewById(R.id.tv_fin_planned);
         TextView tvSpent = root.findViewById(R.id.tv_fin_spent);
         TextView tvLeft = root.findViewById(R.id.tv_fin_left);
         TextView empty = root.findViewById(R.id.tv_fin_empty);
-        RecyclerView recycler = root.findViewById(R.id.fin_expenses_recycler);
         View card = root.findViewById(R.id.card_fin_summary);
+        View plannedHeader = root.findViewById(R.id.tv_fin_planned_header);
+        View factHeader = root.findViewById(R.id.tv_fin_fact_header);
+        RecyclerView plannedRecycler = root.findViewById(R.id.fin_planned_recycler);
+        RecyclerView factRecycler = root.findViewById(R.id.fin_fact_recycler);
 
         if (periods.isEmpty() || currentIndex < 0 || currentIndex >= periods.size()) {
             currentPeriod = null;
@@ -439,15 +488,18 @@ public class FinancePeriodsController {
             card.setVisibility(View.GONE);
             empty.setText("Нет периодов. Добавьте поступления в настройках.");
             empty.setVisibility(View.VISIBLE);
-            recycler.setVisibility(View.GONE);
-            adapter.setItems(new ArrayList<>());
+            plannedHeader.setVisibility(View.GONE);
+            factHeader.setVisibility(View.GONE);
+            plannedRecycler.setVisibility(View.GONE);
+            factRecycler.setVisibility(View.GONE);
+            plannedAdapter.setItems(new ArrayList<>());
+            factAdapter.setItems(new ArrayList<>());
             return;
         }
 
         currentPeriod = periods.get(currentIndex);
         card.setVisibility(View.VISIBLE);
         empty.setVisibility(View.GONE);
-        recycler.setVisibility(View.VISIBLE);
 
         tvName.setText(currentPeriod.name);
 
@@ -462,63 +514,97 @@ public class FinancePeriodsController {
         });
 
         final long pid = currentPeriod.id;
-        final FinancePeriod prevPeriod = currentIndex > 0 ? periods.get(currentIndex - 1) : null;
 
         DbExecutor.run(() -> {
-            List<FinanceExpense> current = expenseDao.getByPeriod(pid);
-            double currentSpent = 0;
-            for (FinanceExpense e : current) currentSpent += e.amount;
-            double prevSpent = 0;
-            if (prevPeriod != null) {
-                List<FinanceExpense> prevList = expenseDao.getByPeriod(prevPeriod.id);
-                for (FinanceExpense e : prevList) prevSpent += e.amount;
+            List<FinanceExpense> all = expenseDao.getByPeriod(pid);
+            List<FinanceExpense> planned = new ArrayList<>();
+            List<FinanceExpense> fact = new ArrayList<>();
+            double plannedSum = 0;
+            double factSum = 0;
+            for (FinanceExpense e : all) {
+                if ("manual".equals(e.sourceType)) {
+                    fact.add(e);
+                    factSum += e.amount;
+                } else {
+                    planned.add(e);
+                    plannedSum += e.amount;
+                }
             }
-            return new BindData(current, currentSpent, prevSpent);
+            return new BindData(planned, fact, plannedSum, factSum);
         }, data -> {
             if (data == null) return;
-            double spent = data.currentSpent;
-            double left = currentPeriod.totalIncome - spent;
+            double left = currentPeriod.totalIncome - data.plannedSum - data.factSum;
 
-            tvSpent.setText(String.format(Locale.getDefault(), "Потрачено: %.2f ₽", spent));
-            tvLeft.setText(String.format(Locale.getDefault(), "Остаток: %.2f ₽", left));
+            tvPlanned.setText(String.format(Locale.getDefault(),
+                "Запланировано: %.2f ₽", data.plannedSum));
+            tvSpent.setText(String.format(Locale.getDefault(),
+                "Потрачено (факт): %.2f ₽", data.factSum));
+            tvLeft.setText(String.format(Locale.getDefault(),
+                "Свободно: %.2f ₽", left));
             tvLeft.setTextColor(ContextCompat.getColor(activity,
                 left >= 0 ? R.color.neon_green : R.color.semantic_danger));
 
-            Score score = computeScore(currentPeriod, spent, data.current,
-                prevPeriod, data.prevSpent);
-            bindScore(score);
+            bindForecast(data.factSum, data.plannedSum);
 
-            adapter.setItems(data.current);
+            plannedHeader.setVisibility(data.planned.isEmpty() ? View.GONE : View.VISIBLE);
+            plannedRecycler.setVisibility(data.planned.isEmpty() ? View.GONE : View.VISIBLE);
+            plannedAdapter.setItems(data.planned);
+
+            factHeader.setVisibility(data.fact.isEmpty() ? View.GONE : View.VISIBLE);
+            factRecycler.setVisibility(data.fact.isEmpty() ? View.GONE : View.VISIBLE);
+            factAdapter.setItems(data.fact);
         });
     }
 
-    private void bindScore(Score score) {
-        TextView tvLabel = root.findViewById(R.id.tv_fin_score_label);
-        ProgressBar pb = root.findViewById(R.id.pb_fin_score);
-        TextView tvSub = root.findViewById(R.id.tv_fin_score_subtitle);
-        TextView tvTrend = root.findViewById(R.id.tv_fin_score_trend);
+    private void bindForecast(double spent, double planned) {
+        TextView tvAvgDay = root.findViewById(R.id.tv_fin_avg_day);
+        TextView tvDaysLeft = root.findViewById(R.id.tv_fin_days_left);
+        TextView tvCanSpend = root.findViewById(R.id.tv_fin_forecast);
+        TextView tvPlanLeft = root.findViewById(R.id.tv_fin_plan_left);
 
-        if (score == null) {
-            tvLabel.setText("Оценка: —");
-            pb.setProgress(0);
-            tvSub.setText("—");
-            tvTrend.setVisibility(View.GONE);
+        if (currentPeriod == null) {
+            tvAvgDay.setText("Потрачено в день (факт): —");
+            tvDaysLeft.setText("Осталось дней: —");
+            tvCanSpend.setText("Можно тратить в день: —");
+            tvCanSpend.setTextColor(ContextCompat.getColor(activity, R.color.text_secondary));
+            tvPlanLeft.setVisibility(View.GONE);
             return;
         }
 
-        int color = ContextCompat.getColor(activity, score.colorRes);
-        tvLabel.setText(String.format(Locale.getDefault(), "Оценка: %d/100 · %s",
-            score.value, score.label));
-        tvLabel.setTextColor(color);
-        pb.setProgress(score.value);
-        pb.setProgressTintList(android.content.res.ColorStateList.valueOf(color));
-        tvSub.setText(score.subtitle);
+        long now = System.currentTimeMillis();
+        long start = currentPeriod.startAt;
+        long end = currentPeriod.endAt;
+        double dayMs = 24.0 * 60 * 60 * 1000;
+        double daysTotal = (end - start) / dayMs;
+        double elapsed = Math.max(0, Math.min(now, end) - start) / dayMs;
+        double daysLeft = Math.max(0, daysTotal - elapsed);
 
-        if (score.trendText != null && !score.trendText.isEmpty()) {
-            tvTrend.setText(score.trendText);
-            tvTrend.setVisibility(View.VISIBLE);
+        // Реальный темп — только факт, за прошедшие дни
+        double factPerDay = elapsed > 0 ? spent / elapsed : 0;
+
+        // Сколько ещё можно тратить в день, чтобы уложиться в доход
+        // с учётом уже запланированного
+        double freeNow = currentPeriod.totalIncome - planned - spent;
+        double canSpendPerDay = daysLeft > 0 ? freeNow / daysLeft : 0;
+
+        tvAvgDay.setText(String.format(Locale.getDefault(),
+            "Потрачено в день (факт): %.2f ₽", factPerDay));
+        tvDaysLeft.setText(String.format(Locale.getDefault(),
+            "Осталось дней: %.0f", daysLeft));
+        tvCanSpend.setText(String.format(Locale.getDefault(),
+            "Можно тратить в день: %.2f ₽", canSpendPerDay));
+        tvCanSpend.setTextColor(ContextCompat.getColor(activity,
+            canSpendPerDay > 0 ? R.color.neon_green : R.color.semantic_danger));
+
+        // «План ещё не выполнен» = сумма плана, который ещё висит.
+        // У нас план = planned (сумма всех записей source_type != manual),
+        // он ещё не переведён в факт, значит всё ещё «не выполнен».
+        if (planned > 0) {
+            tvPlanLeft.setText(String.format(Locale.getDefault(),
+                "План ещё не выполнен: %.2f ₽", planned));
+            tvPlanLeft.setVisibility(View.VISIBLE);
         } else {
-            tvTrend.setVisibility(View.GONE);
+            tvPlanLeft.setVisibility(View.GONE);
         }
     }
 
@@ -588,68 +674,6 @@ public class FinancePeriodsController {
             .show();
     }
 
-    // ---------------- оценка ----------------
-
-    private Score computeScore(FinancePeriod period, double spent, List<FinanceExpense> expenses,
-                               FinancePeriod prevPeriod, double prevSpent) {
-        Score s = new Score();
-        if (period.totalIncome <= 0) {
-            s.value = 0;
-            s.label = "—";
-            s.colorRes = R.color.text_tertiary;
-            s.subtitle = "Введите доход в настройках";
-            s.trendText = "";
-            return s;
-        }
-
-        double left = period.totalIncome - spent;
-        double leftPct = left / period.totalIncome * 100.0;
-
-        double score = Math.max(0, Math.min(100, leftPct));
-
-        if (leftPct >= 30) score += 15;
-        else if (leftPct >= 20) score += 10;
-
-        double hardSum = 0;
-        for (FinanceExpense e : expenses) {
-            if (isHardCategory(e.category)) hardSum += e.amount;
-        }
-        if (hardSum / period.totalIncome > 0.7) score -= 5;
-
-        score = Math.max(0, Math.min(100, score));
-        s.value = (int) Math.round(score);
-
-        if (s.value >= 70) { s.label = "Отлично"; s.colorRes = R.color.neon_green; }
-        else if (s.value >= 50) { s.label = "Хорошо"; s.colorRes = R.color.neon_green; }
-        else if (s.value >= 30) { s.label = "Средне"; s.colorRes = R.color.semantic_warning; }
-        else { s.label = "Плохо"; s.colorRes = R.color.semantic_danger; }
-
-        s.subtitle = String.format(Locale.getDefault(),
-            "В копилку: %.2f ₽ (%.0f%%)", left, leftPct);
-
-        if (prevPeriod != null && prevPeriod.totalIncome > 0) {
-            double prevLeft = prevPeriod.totalIncome - prevSpent;
-            double prevPct = prevLeft / prevPeriod.totalIncome * 100.0;
-            double delta = leftPct - prevPct;
-            if (Math.abs(delta) >= 0.5) {
-                s.trendText = String.format(Locale.getDefault(),
-                    "%s%.1f%% к прошлому периоду", delta >= 0 ? "+" : "", delta);
-            } else {
-                s.trendText = "Как в прошлом периоде";
-            }
-        } else {
-            s.trendText = "";
-        }
-        return s;
-    }
-
-    private boolean isHardCategory(String cat) {
-        if (cat == null) return false;
-        String c = cat.toLowerCase(Locale.getDefault());
-        return c.contains("аренд") || c.contains("жкх") || c.contains("кредит")
-            || c.contains("подписк") || c.contains("ипотек");
-    }
-
     public void showAddExpenseDialog() {
         if (currentPeriod == null) {
             Toast.makeText(activity, "Сначала настройте поступления во вкладке «Настройки»",
@@ -665,6 +689,25 @@ public class FinancePeriodsController {
             .setItems(new String[]{"Редактировать", "Удалить"}, (d, w) -> {
                 if (w == 0) showExpenseDialog(e);
                 else {
+                    DbExecutor.runVoid(() -> expenseDao.delete(e.id), this::bindCurrentPeriod);
+                }
+            })
+            .show();
+    }
+
+    private void showPlannedActions(FinanceExpense e) {
+        new AlertDialog.Builder(activity)
+            .setTitle(e.category)
+            .setItems(new String[]{
+                "Отметить как потраченное",
+                "Редактировать",
+                "Удалить"
+            }, (d, w) -> {
+                if (w == 0) {
+                    DbExecutor.runVoid(() -> expenseDao.markAsFact(e.id), this::bindCurrentPeriod);
+                } else if (w == 1) {
+                    showExpenseDialog(e);
+                } else {
                     DbExecutor.runVoid(() -> expenseDao.delete(e.id), this::bindCurrentPeriod);
                 }
             })
@@ -797,20 +840,13 @@ public class FinancePeriodsController {
 
     // ---------------- вложенные классы ----------------
 
-    private static class Score {
-        int value;
-        String label;
-        int colorRes;
-        String subtitle;
-        String trendText;
-    }
-
     private static class BindData {
-        final List<FinanceExpense> current;
-        final double currentSpent;
-        final double prevSpent;
-        BindData(List<FinanceExpense> c, double cs, double ps) {
-            current = c; currentSpent = cs; prevSpent = ps;
+        final List<FinanceExpense> planned;
+        final List<FinanceExpense> fact;
+        final double plannedSum;
+        final double factSum;
+        BindData(List<FinanceExpense> p, List<FinanceExpense> f, double ps, double fs) {
+            planned = p; fact = f; plannedSum = ps; factSum = fs;
         }
     }
 
@@ -831,6 +867,7 @@ public class FinancePeriodsController {
         String tabName;
         String label;
         int count;
+        int notBought;
         double sum;
     }
 
