@@ -112,18 +112,16 @@ public class UtilitiesStatsController {
         StatsData s = new StatsData();
         s.months = months;
 
-        // Вычисляем окно в Java: [fromYear/fromMonth; текущий месяц]
         Calendar from = Calendar.getInstance();
         from.add(Calendar.MONTH, -(months - 1));
         int fromYear = from.get(Calendar.YEAR);
-        int fromMonth = from.get(Calendar.MONTH); // 0..11
+        int fromMonth = from.get(Calendar.MONTH);
         Calendar now = Calendar.getInstance();
         int toYear = now.get(Calendar.YEAR);
         int toMonth = now.get(Calendar.MONTH);
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // Условие по окну (period_month тоже 0..11 как в Calendar)
         String window = "(p.period_year > ? OR (p.period_year = ? AND p.period_month >= ?)) " +
             "AND (p.period_year < ? OR (p.period_year = ? AND p.period_month <= ?))";
         List<String> baseArgs = new ArrayList<>();
@@ -141,7 +139,6 @@ public class UtilitiesStatsController {
         }
         String where = " WHERE " + window + houseCond;
 
-        // 1) Всего + месяцев с данными
         String totalSql = "SELECT SUM(r.amount), " +
             "COUNT(DISTINCT p.period_year || '-' || p.period_month) " +
             "FROM utility_readings r JOIN utility_periods p ON p.id = r.period_id" + where;
@@ -152,7 +149,6 @@ public class UtilitiesStatsController {
             }
         }
 
-        // 2) По счётчикам
         String byMeterSql = "SELECT r.meter_id, m.name, SUM(r.amount) " +
             "FROM utility_readings r " +
             "JOIN utility_periods p ON p.id = r.period_id " +
@@ -168,7 +164,6 @@ public class UtilitiesStatsController {
             }
         }
 
-        // 3) По месяцам
         Map<String, Double> byMonth = new HashMap<>();
         String byMonthSql = "SELECT p.period_year, p.period_month, SUM(r.amount) " +
             "FROM utility_readings r JOIN utility_periods p ON p.id = r.period_id" + where +
@@ -179,7 +174,6 @@ public class UtilitiesStatsController {
             }
         }
 
-        // Заполняем нулями весь диапазон
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.MONTH, -(months - 1));
         for (int i = 0; i < months; i++) {

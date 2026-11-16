@@ -1,7 +1,6 @@
 package com.example.taskmgr.ui.main;
 
 import android.os.Bundle;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -75,14 +74,12 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // не используется
             }
 
             @Override
             public void clearView(@NonNull RecyclerView recyclerView,
                                   @NonNull RecyclerView.ViewHolder viewHolder) {
                 super.clearView(recyclerView, viewHolder);
-                // Когда пользователь отпустил палец — сохраняем порядок в БД.
                 saveOrder();
             }
         });
@@ -109,14 +106,9 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
         DbExecutor.runVoid(() -> dao.setVisible(p.key, visible), this::load);
     }
 
-    /**
-     * Сохраняет текущий порядок из адаптера в БД.
-     * sort_order пересчитывается как индекс в списке: 0, 1, 2, ...
-     */
     private void saveOrder() {
         List<MainPlate> ordered = new ArrayList<>(adapter.getItems());
         DbExecutor.runVoid(() -> dao.reorder(ordered), () -> {
-            // после сохранения не перезагружаем — порядок уже правильный
         });
     }
 }

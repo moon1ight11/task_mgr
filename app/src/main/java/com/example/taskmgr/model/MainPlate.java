@@ -10,8 +10,8 @@ public class MainPlate {
     public Kind kind;
     public String sectionName;  // для Kind.SECTION — имя раздела
     public Class<?> activityClass; // для Kind.ACTIVITY
-    public boolean tintGreen;   // зелёная иконка (Авто, Заметки, ЖКХ, Подписки, Финансы)
-    public boolean showBadge;   // показывать счётчик активных задач (Дом, Гараж, Авто, IT, Здоровье, Развлечения)
+    public boolean tintGreen;   // зелёная иконка
+    public boolean showBadge;   // показывать счётчик активных задач
 
     public boolean isVisible = true;
     public int sortOrder;

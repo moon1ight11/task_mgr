@@ -64,42 +64,11 @@ public class FinanceExpenseDao {
         return result;
     }
 
-    public double sumByPeriod(long periodId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.rawQuery(
-            "SELECT COALESCE(SUM(amount), 0) FROM finance_expenses WHERE period_id = ?",
-            new String[]{String.valueOf(periodId)})) {
-            return c.moveToFirst() ? c.getDouble(0) : 0;
-        }
-    }
-
-    public double sumByPeriodAndSourceType(long periodId, String sourceType) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.rawQuery(
-            "SELECT COALESCE(SUM(amount), 0) FROM finance_expenses " +
-                "WHERE period_id = ? AND source_type = ?",
-            new String[]{String.valueOf(periodId), sourceType})) {
-            return c.moveToFirst() ? c.getDouble(0) : 0;
-        }
-    }
-
     public void markAsFact(long expenseId) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("source_type", "manual");
         db.update("finance_expenses", cv, "id = ?", new String[]{String.valueOf(expenseId)});
-    }
-
-    public List<String> getUsedCategories() {
-        List<String> result = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.rawQuery(
-            "SELECT DISTINCT category FROM finance_expenses " +
-                "WHERE category IS NOT NULL AND category <> '' " +
-                "ORDER BY category COLLATE NOCASE ASC", null)) {
-            while (c.moveToNext()) result.add(c.getString(0));
-        }
-        return result;
     }
 
     public Set<Long> getSubscriptionBundleRefIds(long periodId) {

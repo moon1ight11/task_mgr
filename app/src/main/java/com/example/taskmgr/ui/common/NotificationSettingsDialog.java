@@ -46,7 +46,6 @@ public final class NotificationSettingsDialog {
         TextView tvEvening = view.findViewById(R.id.time_evening);
         TextView tvMorning = view.findViewById(R.id.time_morning);
 
-        // Подписки
         com.google.android.material.materialswitch.MaterialSwitch swSubs =
             view.findViewById(R.id.switch_subs);
         View rowSubsDays = view.findViewById(R.id.row_subs_days);
@@ -54,7 +53,6 @@ public final class NotificationSettingsDialog {
         MaterialButton btnSubs3 = view.findViewById(R.id.btn_subs_3);
         MaterialButton btnSubs7 = view.findViewById(R.id.btn_subs_7);
 
-        // --- читаем настройки ---
         boolean evEnabled = readBool(dao, AppSettingsDao.KEY_NOTIF_EVENING_ENABLED);
         boolean moEnabled = readBool(dao, AppSettingsDao.KEY_NOTIF_MORNING_ENABLED);
         int evH = readInt(dao, AppSettingsDao.KEY_NOTIF_EVENING_HOUR, AppSettingsDao.DEFAULT_EVENING_HOUR);
@@ -69,7 +67,6 @@ public final class NotificationSettingsDialog {
         final int[] mo = {moH, moM};
         final int[] subsDaysState = {subsDays};
 
-        // --- заполняем UI ---
         swEvening.setChecked(evEnabled);
         swMorning.setChecked(moEnabled);
         swSubs.setChecked(subsEnabled);
@@ -80,7 +77,6 @@ public final class NotificationSettingsDialog {
         rowMorning.setAlpha(moEnabled ? 1f : 0.5f);
         rowSubsDays.setAlpha(subsEnabled ? 1f : 0.5f);
 
-        // --- кнопки 1/3/7 ---
         List<MaterialButton> dayButtons = List.of(btnSubs1, btnSubs3, btnSubs7);
         int[] dayValues = {1, 3, 7};
 
@@ -94,7 +90,6 @@ public final class NotificationSettingsDialog {
         btnSubs7.setOnClickListener(v -> { subsDaysState[0] = 7; refreshDays.run(); });
         refreshDays.run();
 
-        // --- слушатели ---
         swEvening.setOnCheckedChangeListener((b, checked) -> {
             rowEvening.setAlpha(checked ? 1f : 0.5f);
             if (checked) ensureNotificationPermission(activity);

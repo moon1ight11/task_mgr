@@ -4,8 +4,8 @@ public class Subscription {
     public long id;
     public String name;
     public double amount;
-    public int chargeDay;       // 1..31
-    public long nextChargeAt;   // timestamp
+    public int chargeDay;
+    public long nextChargeAt;
     public String description;
     public boolean isActive = true;
     public long createdAt;

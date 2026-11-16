@@ -83,8 +83,4 @@ public final class MainPlatesCatalog {
     public static List<MainPlate> all() {
         return new ArrayList<>(CATALOG.values());
     }
-
-    public static List<String> allKeys() {
-        return new ArrayList<>(CATALOG.keySet());
-    }
 }

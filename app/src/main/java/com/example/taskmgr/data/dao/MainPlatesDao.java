@@ -22,9 +22,8 @@ public class MainPlatesDao {
         this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
-    /** Возвращает ВСЕ плитки каталога, объединённые с сохранёнными настройками. */
     public List<MainPlate> getAll() {
-        Map<String, int[]> settings = readSettings(); // key -> [visible, sortOrder]
+        Map<String, int[]> settings = readSettings();
         List<MainPlate> result = new ArrayList<>();
         for (MainPlate tpl : MainPlatesCatalog.all()) {
             MainPlate p = tpl;
@@ -63,22 +62,6 @@ public class MainPlatesDao {
         if (updated == 0) insertRow(db, key, visible, nextSortOrder(db));
     }
 
-    /** Меняет sort_order у двух ключей местами (оставлен для совместимости). */
-    public void swap(String keyA, String keyB) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        Integer sa = readSortOrder(db, keyA);
-        Integer sb = readSortOrder(db, keyB);
-        if (sa == null && sb == null) return;
-        if (sa == null) sa = nextSortOrder(db);
-        if (sb == null) sb = nextSortOrder(db);
-        updateSortOrder(db, keyA, sb);
-        updateSortOrder(db, keyB, sa);
-    }
-
-    /**
-     * Сохраняет порядок плиток: sort_order = индекс в списке (0..N-1).
-     * Все ключи из списка получают свои позиции; отсутствующие в БД — добавляются.
-     */
     public void reorder(List<MainPlate> ordered) {
         if (ordered == null || ordered.isEmpty()) return;
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -103,20 +86,6 @@ public class MainPlatesDao {
         } finally {
             db.endTransaction();
         }
-    }
-
-    private Integer readSortOrder(SQLiteDatabase db, String key) {
-        try (Cursor c = db.query("main_plates", new String[]{"sort_order"},
-            "plate_key = ?", new String[]{key}, null, null, null)) {
-            return c.moveToFirst() ? c.getInt(0) : null;
-        }
-    }
-
-    private void updateSortOrder(SQLiteDatabase db, String key, int order) {
-        ContentValues cv = new ContentValues();
-        cv.put("sort_order", order);
-        int updated = db.update("main_plates", cv, "plate_key = ?", new String[]{key});
-        if (updated == 0) insertRow(db, key, true, order);
     }
 
     private int nextSortOrder(SQLiteDatabase db) {

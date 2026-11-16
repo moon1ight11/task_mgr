@@ -28,7 +28,6 @@ import com.example.taskmgr.service.NotificationScheduler;
 import com.example.taskmgr.ui.common.CompleteTaskDialog;
 import com.example.taskmgr.ui.common.NotificationSettingsDialog;
 import com.example.taskmgr.ui.section.SectionActivity;
-import com.example.taskmgr.ui.stats.StatsActivity;
 import com.example.taskmgr.ui.tab.TabActivity;
 import com.example.taskmgr.util.AppLock;
 import com.example.taskmgr.util.DbExecutor;
@@ -86,17 +85,14 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_plates_settings).setOnClickListener(v ->
             startActivity(new Intent(this, MainPlatesSettingsActivity.class)));
 
-        // На случай, если будильники сбились (обновление, ручная очистка и т.п.)
         NotificationScheduler.scheduleAll(this);
         ensureNotificationPermissionIfNeeded();
 
-        // --- Плитки главного экрана (RecyclerView, 4 колонки) ---
         RecyclerView platesRecycler = findViewById(R.id.main_plates_recycler);
         platesRecycler.setLayoutManager(new GridLayoutManager(this, 4));
         mainPlatesAdapter = new MainPlatesAdapter(this::onPlateClick);
         platesRecycler.setAdapter(mainPlatesAdapter);
 
-        // --- Вкладки ленты (Дедлайн / Важные) ---
         TabLayout mainTabs = findViewById(R.id.main_tabs);
         mainTabs.addTab(mainTabs.newTab().setText("Дедлайн"));
         mainTabs.addTab(mainTabs.newTab().setText("Важные"));
@@ -141,15 +137,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Обновляем плитки при возврате с экрана настроек плиток
         if (mainPlatesDao != null) {
             loadMainPlates();
         }
     }
-
-    // ============================================================
-    //  Плитки главного экрана
-    // ============================================================
 
     private void onPlateClick(MainPlate p) {
         if (p == null || p.kind == null) return;
@@ -168,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
         DbExecutor.run(() -> {
             List<MainPlate> plates = mainPlatesDao.getAll();
 
-            // Счётчики активных задач по разделам — для бейджей
             Map<Long, Integer> rawCounts = taskDao.getActiveCountsByAllSections();
             Map<Long, String> sectionNameById = new HashMap<>();
             for (Section s : sectionDao.getAll()) sectionNameById.put(s.id, s.name);
@@ -211,10 +201,6 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    // ============================================================
-    //  Задачи / лента
-    // ============================================================
-
     private boolean isAutoTask(Task task) {
         try {
             return tabDao.isAutoTab(task.tabId);
@@ -249,10 +235,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    // ============================================================
-    //  Разрешения / будильники
-    // ============================================================
-
     private void ensureNotificationPermissionIfNeeded() {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return;
         if (androidx.core.content.ContextCompat.checkSelfPermission(this,
@@ -271,10 +253,6 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     }
-
-    // ============================================================
-    //  Сидинг разделов
-    // ============================================================
 
     private void seedSectionsIfEmptyBlocking() {
         List<Section> existing = sectionDao.getAll();
@@ -306,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
             sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 11, true));
         }
 
-        // Для уже существующих пользователей: добавить недостающие стандартные разделы
         String[] required = {"Работа", "Животные", "Спорт", "Учёба"};
         java.util.Set<String> existingNames = new java.util.HashSet<>();
         for (Section s : existing) existingNames.add(s.name);
@@ -317,10 +294,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    // ============================================================
-    //  Лента задач
-    // ============================================================
 
     private void loadTasks() {
         final int myGeneration = ++loadGeneration;
@@ -366,10 +339,6 @@ public class MainActivity extends AppCompatActivity {
             tasksRecycler.setVisibility(empty ? View.GONE : View.VISIBLE);
         });
     }
-
-    // ============================================================
-    //  Навигация по разделам
-    // ============================================================
 
     private void openSectionByName(String name) {
         if (name == null) return;
@@ -428,10 +397,6 @@ public class MainActivity extends AppCompatActivity {
         i.putExtra(SectionActivity.EXTRA_SECTION_NAME, s.name);
         startActivity(i);
     }
-
-    // ============================================================
-    //  PIN
-    // ============================================================
 
     private void showCreatePasswordDialog(OnSuccess onSuccess) {
         View view = getLayoutInflater().inflate(R.layout.dialog_set_password, null);
@@ -542,10 +507,6 @@ public class MainActivity extends AppCompatActivity {
         helper.focusFirst();
     }
 
-    // ============================================================
-    //  Permissions result
-    // ============================================================
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -557,10 +518,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    // ============================================================
-    //  Хелперы / records
-    // ============================================================
 
     private interface OnSuccess {
         void run();

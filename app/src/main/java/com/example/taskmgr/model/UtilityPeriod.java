@@ -1,10 +1,9 @@
-// com/example/taskmgr/model/UtilityPeriod.java
 package com.example.taskmgr.model;
 
 public class UtilityPeriod {
     public long id;
     public int periodYear;
-    public int periodMonth; // 0-based (Calendar.MONTH)
+    public int periodMonth;
     public String house;
     public String note;
     public boolean paid;

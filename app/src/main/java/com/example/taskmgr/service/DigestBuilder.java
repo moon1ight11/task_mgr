@@ -41,11 +41,8 @@ public final class DigestBuilder {
         }
         long dayEnd = dayStart + 24L * 60 * 60 * 1000;
 
-        // Задачи на день
         List<Task> tasks = taskDao.getTasksForDay(dayStart, dayEnd);
 
-        // Подписки — только в утренней сводке (forTomorrow == false),
-        // в окне [сегодня; сегодня + N дней], где N — из настроек
         List<Subscription> subs = null;
         int subsDays = 0;
         if (!forTomorrow && isSubsEnabled(settingsDao)) {
@@ -72,7 +69,6 @@ public final class DigestBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append(greeting);
 
-        // Задачи
         if (hasTasks) {
             int shown = 0;
             for (Task t : tasks) {
@@ -86,15 +82,12 @@ public final class DigestBuilder {
             }
         }
 
-        // Подписки
         if (hasSubs) {
             appendSubscriptionsBlock(context, sb, subs, subsDays);
         }
 
         return new Digest(title, greeting, sb.toString(), tasks.size());
     }
-
-    // ---------- Подписки ----------
 
     private static boolean isSubsEnabled(AppSettingsDao dao) {
         String v = dao.get(AppSettingsDao.KEY_NOTIF_SUBS_ENABLED);
@@ -140,8 +133,6 @@ public final class DigestBuilder {
             sb.append('\n').append("…и ещё ").append(subs.size() - MAX_SUB_LINES);
         }
     }
-
-    // ---------- Задачи ----------
 
     private static int countImportant(List<Task> tasks) {
         int n = 0;

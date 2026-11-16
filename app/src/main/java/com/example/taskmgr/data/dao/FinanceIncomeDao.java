@@ -1,4 +1,3 @@
-// com/example/taskmgr/data/dao/FinanceIncomeDao.java
 package com.example.taskmgr.data.dao;
 
 import android.content.ContentValues;

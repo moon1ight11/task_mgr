@@ -55,7 +55,6 @@ public final class UpdateChecker {
 
                     JSONObject json = new JSONObject(sb.toString());
 
-                    // Пропускаем черновики и пререлизы
                     if (!json.optBoolean("draft") && !json.optBoolean("prerelease")) {
                         String tag = json.getString("tag_name");
                         String notes = json.optString("body", "");

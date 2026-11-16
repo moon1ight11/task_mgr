@@ -1,4 +1,3 @@
-// com/example/taskmgr/model/FinanceTemplate.java
 package com.example.taskmgr.model;
 
 public class FinanceTemplate {

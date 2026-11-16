@@ -114,8 +114,6 @@ public class FinancePeriodsController {
         });
     }
 
-    // ---------------- шаблоны ----------------
-
     public void showPickTemplatesDialog() {
         if (currentPeriod == null) {
             Toast.makeText(activity, "Сначала выберите период", Toast.LENGTH_SHORT).show();
@@ -185,8 +183,6 @@ public class FinancePeriodsController {
             }
         );
     }
-
-    // ---------------- подписки ----------------
 
     public void showPickSubscriptionsDialog() {
         if (currentPeriod == null) {
@@ -282,8 +278,6 @@ public class FinancePeriodsController {
                 .show();
         });
     }
-
-    // ---------------- покупки (двухшаговый импорт) ----------------
 
     public void showPickShoppingDialog() {
         if (currentPeriod == null) {
@@ -433,8 +427,6 @@ public class FinancePeriodsController {
                     final String namesFinal = names.toString();
                     final String refsFinal = refs.toString();
 
-                    // Группируем по категории покупки, если она задана; иначе — имя вкладки.
-                    // Самый простой вариант: создаём по одной записи на покупку.
                     List<FinanceExpense> toInsert = new ArrayList<>();
                     long now = System.currentTimeMillis();
                     for (ShoppingItem it : available) {
@@ -465,8 +457,6 @@ public class FinancePeriodsController {
                 .show();
         });
     }
-
-    // ---------------- bind ----------------
 
     private void bindCurrentPeriod() {
         TextView tvName = root.findViewById(R.id.tv_period_name);
@@ -579,11 +569,8 @@ public class FinancePeriodsController {
         double elapsed = Math.max(0, Math.min(now, end) - start) / dayMs;
         double daysLeft = Math.max(0, daysTotal - elapsed);
 
-        // Реальный темп — только факт, за прошедшие дни
         double factPerDay = elapsed > 0 ? spent / elapsed : 0;
 
-        // Сколько ещё можно тратить в день, чтобы уложиться в доход
-        // с учётом уже запланированного
         double freeNow = currentPeriod.totalIncome - planned - spent;
         double canSpendPerDay = daysLeft > 0 ? freeNow / daysLeft : 0;
 
@@ -596,9 +583,6 @@ public class FinancePeriodsController {
         tvCanSpend.setTextColor(ContextCompat.getColor(activity,
             canSpendPerDay > 0 ? R.color.neon_green : R.color.semantic_danger));
 
-        // «План ещё не выполнен» = сумма плана, который ещё висит.
-        // У нас план = planned (сумма всех записей source_type != manual),
-        // он ещё не переведён в факт, значит всё ещё «не выполнен».
         if (planned > 0) {
             tvPlanLeft.setText(String.format(Locale.getDefault(),
                 "План ещё не выполнен: %.2f ₽", planned));
@@ -762,8 +746,6 @@ public class FinancePeriodsController {
             .show();
     }
 
-    // ---------------- генерация периодов ----------------
-
     private void ensurePeriodsGenerated() {
         List<FinanceIncome> incomes = incomeDao.getAll(true);
         if (incomes.isEmpty()) return;
@@ -837,8 +819,6 @@ public class FinancePeriodsController {
     private int dp(int v) {
         return (int) (v * activity.getResources().getDisplayMetrics().density);
     }
-
-    // ---------------- вложенные классы ----------------
 
     private static class BindData {
         final List<FinanceExpense> planned;

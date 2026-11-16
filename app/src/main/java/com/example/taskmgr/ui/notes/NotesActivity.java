@@ -18,7 +18,6 @@ import com.example.taskmgr.util.DbExecutor;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.Collections;
-import java.util.List;
 
 public class NotesActivity extends AppCompatActivity {
 

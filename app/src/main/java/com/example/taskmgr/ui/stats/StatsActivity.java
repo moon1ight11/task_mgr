@@ -203,7 +203,6 @@ public class StatsActivity extends AppCompatActivity {
             percent.setText(pct + "%");
             bar.setProgress(pct);
 
-            // Подсветка просроченных
             if (r.overdue > 0) {
                 counts.setText(r.active + "/" + (r.active + r.done)
                     + " · просроч. " + r.overdue);

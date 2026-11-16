@@ -1,16 +1,12 @@
-// com/example/taskmgr/ui/utilities/UtilitiesBillController.java
 package com.example.taskmgr.ui.utilities;
 
 import android.app.Activity;
-import android.content.Context;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,7 +36,7 @@ public class UtilitiesBillController {
     private final UtilityReadingDao readingDao;
     private final UtilitiesReadingAdapter adapter;
 
-    private int year, month; // Calendar.MONTH
+    private int year, month;
     private String selectedHouse;
     private UtilityPeriod currentPeriod;
     private List<UtilityMeter> activeMeters = new ArrayList<>();
@@ -93,7 +89,6 @@ public class UtilitiesBillController {
         readingsByMeter.clear();
         for (UtilityReading r : res.readings) readingsByMeter.put(r.meterId, r);
 
-        // Заголовок месяца
         Calendar c = Calendar.getInstance();
         c.set(Calendar.YEAR, year);
         c.set(Calendar.MONTH, month);
@@ -101,11 +96,9 @@ public class UtilitiesBillController {
         String monthLabel = fmt.format(c.getTime());
         ((TextView) root.findViewById(R.id.tv_month)).setText(capitalize(monthLabel));
 
-        // Дом
         TextView tvHouse = root.findViewById(R.id.tv_house);
         tvHouse.setText(selectedHouse != null ? selectedHouse : "—");
 
-        // Сводка
         TextView tvTitle = root.findViewById(R.id.tv_summary_title);
         TextView tvTotal = root.findViewById(R.id.tv_summary_total);
         TextView tvNote = root.findViewById(R.id.tv_summary_note);
@@ -173,7 +166,6 @@ public class UtilitiesBillController {
             inCurr.setText(formatNum(existing.currentValue));
             inRate.setText(formatNum(existing.rateApplied));
         } else {
-            // Предзаполняем предыдущее = последнее current для этого счётчика
             double last = readingDao.getLastCurrentValue(meter.id);
             if (last > 0) {
                 inPrev.setText(formatNum(last));

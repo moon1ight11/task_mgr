@@ -1,4 +1,3 @@
-// com/example/taskmgr/data/dao/FinancePeriodDao.java
 package com.example.taskmgr.data.dao;
 
 import android.content.ContentValues;
@@ -76,16 +75,6 @@ public class FinancePeriodDao {
             while (c.moveToNext()) result.add(fromCursor(c));
         }
         return result;
-    }
-
-    public FinancePeriod findCurrent(long now) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.query("finance_periods", null,
-            "start_at <= ? AND end_at > ?",
-            new String[]{String.valueOf(now), String.valueOf(now)},
-            null, null, "start_at DESC", "1")) {
-            return c.moveToFirst() ? fromCursor(c) : null;
-        }
     }
 
     private FinancePeriod fromCursor(Cursor c) {

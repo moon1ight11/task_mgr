@@ -1,4 +1,3 @@
-// com/example/taskmgr/ui/notes/NoteEditActivity.java
 package com.example.taskmgr.ui.notes;
 
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.example.taskmgr.R;
 import com.example.taskmgr.data.dao.QuickNoteDao;
-import com.example.taskmgr.model.QuickNote;
 import com.example.taskmgr.util.DbExecutor;
 
 public class NoteEditActivity extends AppCompatActivity {
@@ -85,7 +83,6 @@ public class NoteEditActivity extends AppCompatActivity {
         String text = edit.getText().toString().trim();
         if (noteId > 0) {
             if (text.isEmpty()) {
-                // пустая — удаляем
                 DbExecutor.runVoid(() -> dao.delete(noteId), this::finish);
             } else {
                 DbExecutor.runVoid(() -> dao.update(noteId, text), this::finish);

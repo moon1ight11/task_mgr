@@ -17,7 +17,6 @@ import com.example.taskmgr.model.FinanceIncome;
 import com.example.taskmgr.model.FinanceTemplate;
 import com.example.taskmgr.util.DbExecutor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -147,8 +146,6 @@ public class FinanceSettingsController {
             .setNegativeButton("Отмена", null)
             .show();
     }
-
-    // ---- шаблоны ----
 
     private void bindTemplates(List<FinanceTemplate> list) {
         LinearLayout container = root.findViewById(R.id.container_templates);

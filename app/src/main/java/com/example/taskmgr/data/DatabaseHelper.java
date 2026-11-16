@@ -228,7 +228,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         seedMainPlates(db);
     }
 
-
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
@@ -367,9 +366,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             seedMainPlates(db);
         }
         if (oldVersion < 13) {
-            // Новые плитки: Работа / Животные / Спорт / Учёба
             String[] newKeys = {"work", "pets", "sport", "study"};
-            int base = 6; // после ent (индекс 6 в старом порядке) — сдвигаем
+            int base = 6;
             for (int i = 0; i < newKeys.length; i++) {
                 ContentValues cv = new ContentValues();
                 cv.put("plate_key", newKeys[i]);
@@ -378,7 +376,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.insertWithOnConflict("main_plates", null, cv,
                     SQLiteDatabase.CONFLICT_IGNORE);
             }
-            // Существующие ключи после "ent" сдвигаем, чтобы не было коллизий sort_order
             db.execSQL("UPDATE main_plates SET sort_order = sort_order + 4 " +
                 "WHERE plate_key IN ('notes','private','utilities','stats','subs','finance')");
         }
@@ -398,6 +395,4 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.insertWithOnConflict("main_plates", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
         }
     }
-
-
 }

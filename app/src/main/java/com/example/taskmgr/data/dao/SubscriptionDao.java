@@ -1,4 +1,3 @@
-// com/example/taskmgr/data/dao/SubscriptionDao.java
 package com.example.taskmgr.data.dao;
 
 import android.content.ContentValues;
@@ -109,21 +108,16 @@ public class SubscriptionDao {
         return result;
     }
 
-    // ---- helpers ----
-
     public static long computeNextChargeAt(int chargeDay) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.HOUR_OF_DAY, 0);
         c.set(Calendar.MINUTE, 0);
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
         int maxDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
         c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay, maxDay));
         long candidate = c.getTimeInMillis();
         if (candidate < DateUtils.startOfDay(System.currentTimeMillis())) {
-            // следующий месяц
             c.add(Calendar.MONTH, 1);
             c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay,
                 c.getActualMaximum(Calendar.DAY_OF_MONTH)));

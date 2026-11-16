@@ -1,4 +1,3 @@
-// com/example/taskmgr/ui/utilities/UtilitiesReadingAdapter.java
 package com.example.taskmgr.ui.utilities;
 
 import android.content.Context;
@@ -14,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.taskmgr.R;
 import com.example.taskmgr.model.UtilityMeter;
 import com.example.taskmgr.model.UtilityReading;
-import com.example.taskmgr.ui.main.TaskAdapter;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -47,13 +47,6 @@ public class UtilityMeterDao {
         db.delete("utility_meters", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    public void setActive(long id, boolean active) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("is_active", active ? 1 : 0);
-        db.update("utility_meters", cv, "id = ?", new String[]{String.valueOf(id)});
-    }
-
     public List<UtilityMeter> getAll(boolean activeOnly) {
         List<UtilityMeter> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();

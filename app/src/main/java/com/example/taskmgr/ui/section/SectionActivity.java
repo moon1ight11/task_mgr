@@ -51,7 +51,6 @@ public class SectionActivity extends AppCompatActivity {
         String sectionName = getIntent().getStringExtra(EXTRA_SECTION_NAME);
         isAutoSection = "Авто".equals(sectionName);
 
-        // Проверка приватности: если раздел приватный и сессия не разблокирована — закрываем.
         SectionDao sectionDao = new SectionDao(this);
         Section s = sectionDao.getById(sectionId);
         if (s == null) {

@@ -27,17 +27,6 @@ public class HistoryDao {
         return db.insert("history", null, cv);
     }
 
-    public List<HistoryEntry> getByTask(long taskId) {
-        List<HistoryEntry> result = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.query("history", null, "task_id = ?", new String[]{String.valueOf(taskId)}, null, null, "completed_at DESC")) {
-            while (c.moveToNext()) {
-                result.add(fromCursor(c));
-            }
-        }
-        return result;
-    }
-
     public List<HistoryEntry> getByTab(long tabId) {
         List<HistoryEntry> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();

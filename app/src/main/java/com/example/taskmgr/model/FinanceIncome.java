@@ -4,7 +4,7 @@ public class FinanceIncome {
     public long id;
     public String name;
     public double amount;
-    public int dayOfMonth; // 1..31
+    public int dayOfMonth;
     public boolean isActive = true;
     public int sortOrder;
     public long createdAt;

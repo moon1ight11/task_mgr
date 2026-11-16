@@ -44,7 +44,6 @@ public class MainPlatesSettingsAdapter
         return items;
     }
 
-    /** Меняет элементы местами в локальном списке (без похода в БД). */
     public void moveItem(int from, int to) {
         if (from < to) {
             for (int i = from; i < to; i++) Collections.swap(items, i, i + 1);
@@ -86,7 +85,7 @@ public class MainPlatesSettingsAdapter
                 && onStartDrag != null) {
                 onStartDrag.onStartDrag(h);
             }
-            return false; // пусть ItemTouchHelper сам обрабатывает касание
+            return false;
         });
     }
 

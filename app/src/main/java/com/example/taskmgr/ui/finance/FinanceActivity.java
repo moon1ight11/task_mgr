@@ -33,7 +33,6 @@ public class FinanceActivity extends AppCompatActivity {
 
         FrameLayout content = findViewById(R.id.finance_content);
 
-        // Инфлейтим три вкладки
         periodsView = getLayoutInflater().inflate(R.layout.fragment_finance_periods, content, false);
         settingsView = getLayoutInflater().inflate(R.layout.fragment_finance_settings, content, false);
         statsView = getLayoutInflater().inflate(R.layout.fragment_finance_stats, content, false);
@@ -42,7 +41,6 @@ public class FinanceActivity extends AppCompatActivity {
         content.addView(settingsView);
         content.addView(statsView);
 
-        // Контроллеры
         periodsController = new FinancePeriodsController(this, periodsView);
         settingsController = new FinanceSettingsController(this, settingsView);
         statsController = new FinanceStatsController(this, statsView);

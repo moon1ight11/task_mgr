@@ -74,7 +74,6 @@ public class SubscriptionsAdapter extends RecyclerView.Adapter<SubscriptionsAdap
         long today = DateUtils.startOfDay(System.currentTimeMillis());
         boolean overdue = s.isActive && s.nextChargeAt < today;
 
-        // стикер: число + месяц
         SimpleDateFormat dayFmt = new SimpleDateFormat("d", Locale.getDefault());
         SimpleDateFormat monthFmt = new SimpleDateFormat("MMM", new Locale("ru"));
         h.day.setText(dayFmt.format(new Date(s.nextChargeAt)));

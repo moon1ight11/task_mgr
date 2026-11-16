@@ -25,8 +25,6 @@ public class StatsDao {
         this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
-    // ---------------- Сводка «сейчас» ----------------
-
     public Summary getSummary() {
         Summary s = new Summary();
         long startOfToday = DateUtils.startOfDay(System.currentTimeMillis());
@@ -47,8 +45,6 @@ public class StatsDao {
             }
         }
 
-        // overdue: active + (exact_date due_date < startOfToday) + (range due_to < startOfToday)
-        //          + (by_km due_km <= tab.current_km)
         try (Cursor c = db.rawQuery(
             "SELECT COUNT(*) FROM tasks t " +
                 "JOIN tabs tb ON tb.id = t.tab_id " +
@@ -68,8 +64,6 @@ public class StatsDao {
 
         return s;
     }
-
-    // ---------------- «Сейчас»: по приоритетам и разделам ----------------
 
     public List<PriorityRow> getActiveByPriority() {
         List<PriorityRow> result = new ArrayList<>();
@@ -105,7 +99,6 @@ public class StatsDao {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         long startOfToday = DateUtils.startOfDay(System.currentTimeMillis());
 
-        // Считаем active / done по разделам + overdue (включая by_km)
         try (Cursor c = db.rawQuery(
             "SELECT s.id, s.name, " +
                 "  SUM(CASE WHEN t.status='active' THEN 1 ELSE 0 END), " +
@@ -136,8 +129,6 @@ public class StatsDao {
         return result;
     }
 
-    // ---------------- «За период» ----------------
-
     public PeriodStats getCompletionsForPeriod(int days) {
         PeriodStats p = new PeriodStats();
         p.days = days;
@@ -154,10 +145,6 @@ public class StatsDao {
         return p;
     }
 
-    /**
-     * Медианное время от создания до выполнения (дни).
-     * Берём completed_at - created_at для выполненных за период задач.
-     */
     public CompletionTimeStats getCompletionTimeStats(int days) {
         CompletionTimeStats s = new CompletionTimeStats();
         long since = days > 0
@@ -204,9 +191,6 @@ public class StatsDao {
 
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // «В срок» = completed_at < startOfDay(due_date) + 1 день  (т.е. в день дедлайна или раньше)
-        // для range — по due_to; для by_km — km_at_completion <= due_km.
-        // Здесь считаем только exact_date и range (у by_km нет надёжной «даты»).
         String sql =
             "SELECT " +
                 "  COUNT(*), " +
@@ -241,8 +225,6 @@ public class StatsDao {
         return s;
     }
 
-    // ---------------- «Сейчас»: покупки ----------------
-
     public ShoppingStats getShoppingStats() {
         ShoppingStats s = new ShoppingStats();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -258,8 +240,6 @@ public class StatsDao {
         }
         return s;
     }
-
-    // ---------------- DTO ----------------
 
     public static class Summary {
         public int total;

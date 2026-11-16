@@ -42,16 +42,6 @@ public class UtilityReadingDao {
         db.delete("utility_readings", "id = ?", new String[]{String.valueOf(id)});
     }
 
-    public UtilityReading getByPeriodAndMeter(long periodId, long meterId) {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.query("utility_readings", null,
-            "period_id = ? AND meter_id = ?",
-            new String[]{String.valueOf(periodId), String.valueOf(meterId)},
-            null, null, null)) {
-            return c.moveToFirst() ? fromCursor(c) : null;
-        }
-    }
-
     public List<UtilityReading> getByPeriod(long periodId) {
         List<UtilityReading> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -63,9 +53,6 @@ public class UtilityReadingDao {
         return result;
     }
 
-    /**
-     * Последнее текущее показание для счётчика — для предзаполнения "предыдущего".
-     */
     public double getLastCurrentValue(long meterId) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String sql = "SELECT r.current_value FROM utility_readings r " +

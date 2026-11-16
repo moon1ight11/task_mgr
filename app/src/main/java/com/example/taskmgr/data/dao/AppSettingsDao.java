@@ -14,7 +14,7 @@ public class AppSettingsDao {
     public static final String KEY_PRIVATE_PWD_ITER = "private_pwd_iter";
 
     public static final String KEY_NOTIF_SUBS_ENABLED = "notif_subs_enabled";
-    public static final String KEY_NOTIF_SUBS_DAYS = "notif_subs_days"; // 1, 3, 7
+    public static final String KEY_NOTIF_SUBS_DAYS = "notif_subs_days";
     public static final int DEFAULT_SUBS_DAYS = 1;
 
     public static final String KEY_NOTIF_EVENING_ENABLED = "notif_evening_enabled";
