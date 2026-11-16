@@ -8,7 +8,7 @@ import android.content.ContentValues;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 13;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -366,11 +366,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "sort_order INTEGER DEFAULT 0)");
             seedMainPlates(db);
         }
+        if (oldVersion < 13) {
+            // Новые плитки: Работа / Животные / Спорт / Учёба
+            String[] newKeys = {"work", "pets", "sport", "study"};
+            int base = 6; // после ent (индекс 6 в старом порядке) — сдвигаем
+            for (int i = 0; i < newKeys.length; i++) {
+                ContentValues cv = new ContentValues();
+                cv.put("plate_key", newKeys[i]);
+                cv.put("is_visible", 1);
+                cv.put("sort_order", base + i);
+                db.insertWithOnConflict("main_plates", null, cv,
+                    SQLiteDatabase.CONFLICT_IGNORE);
+            }
+            // Существующие ключи после "ent" сдвигаем, чтобы не было коллизий sort_order
+            db.execSQL("UPDATE main_plates SET sort_order = sort_order + 4 " +
+                "WHERE plate_key IN ('notes','private','utilities','stats','subs','finance')");
+        }
     }
 
     private static void seedMainPlates(SQLiteDatabase db) {
         String[] keys = {
             "home", "garage", "auto", "it", "health", "ent",
+            "work", "pets", "sport", "study",
             "notes", "private", "utilities", "stats", "subs", "finance"
         };
         for (int i = 0; i < keys.length; i++) {

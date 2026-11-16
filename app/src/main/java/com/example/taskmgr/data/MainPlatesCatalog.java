@@ -30,6 +30,14 @@ public final class MainPlatesCatalog {
             MainPlate.Kind.SECTION, "Здоровье", null, false, true));
         add(build("ent", "Развлечения", R.drawable.ic_plate_ent,
             MainPlate.Kind.SECTION, "Развлечения", null, false, true));
+        add(build("work", "Работа", R.drawable.ic_plate_work,
+            MainPlate.Kind.SECTION, "Работа", null, false, true));
+        add(build("pets", "Животные", R.drawable.ic_plate_pets,
+            MainPlate.Kind.SECTION, "Животные", null, false, true));
+        add(build("sport", "Спорт", R.drawable.ic_plate_sport,
+            MainPlate.Kind.SECTION, "Спорт", null, false, true));
+        add(build("study", "Учёба", R.drawable.ic_plate_study,
+            MainPlate.Kind.SECTION, "Учёба", null, false, true));
 
         add(build("notes", "Заметки", R.drawable.ic_plate_notes,
             MainPlate.Kind.ACTIVITY, null, NotesActivity.class, true, false));

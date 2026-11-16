@@ -203,6 +203,10 @@ public class MainActivity extends AppCompatActivity {
             case "IT" -> "it";
             case "Здоровье" -> "health";
             case "Развлечения" -> "ent";
+            case "Работа" -> "work";
+            case "Животные" -> "pets";
+            case "Спорт" -> "sport";
+            case "Учёба" -> "study";
             default -> null;
         };
     }
@@ -290,12 +294,27 @@ public class MainActivity extends AppCompatActivity {
             sectionDao.insert(new Section("IT", "it", 4));
             sectionDao.insert(new Section("Здоровье", "health", 5));
             sectionDao.insert(new Section("Развлечения", "ent", 6));
-            sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 7, true));
+            sectionDao.insert(new Section("Работа", "work", 7));
+            sectionDao.insert(new Section("Животные", "pets", 8));
+            sectionDao.insert(new Section("Спорт", "sport", 9));
+            sectionDao.insert(new Section("Учёба", "study", 10));
+            sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 11, true));
             return;
         }
 
         if (!hasPrivate) {
-            sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 7, true));
+            sectionDao.insert(new Section(PRIVATE_SECTION_NAME, null, 11, true));
+        }
+
+        // Для уже существующих пользователей: добавить недостающие стандартные разделы
+        String[] required = {"Работа", "Животные", "Спорт", "Учёба"};
+        java.util.Set<String> existingNames = new java.util.HashSet<>();
+        for (Section s : existing) existingNames.add(s.name);
+        int nextOrder = 7;
+        for (String name : required) {
+            if (!existingNames.contains(name)) {
+                sectionDao.insert(new Section(name, null, nextOrder++));
+            }
         }
     }
 
