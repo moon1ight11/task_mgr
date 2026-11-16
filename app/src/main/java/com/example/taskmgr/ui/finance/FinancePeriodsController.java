@@ -10,8 +10,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.taskmgr.R;
 import com.example.taskmgr.data.dao.FinanceExpenseDao;
@@ -51,8 +49,6 @@ public class FinancePeriodsController {
     private final FinancePeriodDao periodDao;
     private final FinanceExpenseDao expenseDao;
     private final FinanceTemplateDao templateDao;
-    private final FinanceExpensesAdapter plannedAdapter;
-    private final FinanceExpensesAdapter factAdapter;
 
     private List<FinancePeriod> periods = new ArrayList<>();
     private final List<FinanceTemplate> templatesForPick = new ArrayList<>();
@@ -68,18 +64,6 @@ public class FinancePeriodsController {
         periodDao = new FinancePeriodDao(activity);
         expenseDao = new FinanceExpenseDao(activity);
         templateDao = new FinanceTemplateDao(activity);
-
-        RecyclerView plannedRecycler = root.findViewById(R.id.fin_planned_recycler);
-        plannedRecycler.setLayoutManager(new LinearLayoutManager(activity));
-        plannedRecycler.setHasFixedSize(false);
-        plannedAdapter = new FinanceExpensesAdapter(this::showExpenseActions, this::showPlannedActions);
-        plannedRecycler.setAdapter(plannedAdapter);
-
-        RecyclerView factRecycler = root.findViewById(R.id.fin_fact_recycler);
-        factRecycler.setLayoutManager(new LinearLayoutManager(activity));
-        factRecycler.setHasFixedSize(false);
-        factAdapter = new FinanceExpensesAdapter(this::showExpenseActions, null);
-        factRecycler.setAdapter(factAdapter);
 
         root.findViewById(R.id.btn_prev_period).setOnClickListener(v -> {
             if (currentIndex > 0) { currentIndex--; bindCurrentPeriod(); }
@@ -412,20 +396,6 @@ public class FinancePeriodsController {
                 .setView(v)
                 .setPositiveButton("Добавить как план", (d, w) -> {
                     if (picked.isEmpty()) return;
-                    StringBuilder names = new StringBuilder();
-                    StringBuilder refs = new StringBuilder();
-                    double total = 0;
-                    for (ShoppingItem it : available) {
-                        if (!picked.contains(it.id)) continue;
-                        if (names.length() > 0) names.append(", ");
-                        names.append(it.title);
-                        if (refs.length() > 0) refs.append(",");
-                        refs.append(it.id);
-                        if (it.price != null) total += it.price;
-                    }
-                    final double totalFinal = total;
-                    final String namesFinal = names.toString();
-                    final String refsFinal = refs.toString();
 
                     List<FinanceExpense> toInsert = new ArrayList<>();
                     long now = System.currentTimeMillis();
@@ -469,8 +439,8 @@ public class FinancePeriodsController {
         View card = root.findViewById(R.id.card_fin_summary);
         View plannedHeader = root.findViewById(R.id.tv_fin_planned_header);
         View factHeader = root.findViewById(R.id.tv_fin_fact_header);
-        RecyclerView plannedRecycler = root.findViewById(R.id.fin_planned_recycler);
-        RecyclerView factRecycler = root.findViewById(R.id.fin_fact_recycler);
+        LinearLayout plannedContainer = root.findViewById(R.id.fin_planned_container);
+        LinearLayout factContainer = root.findViewById(R.id.fin_fact_container);
 
         if (periods.isEmpty() || currentIndex < 0 || currentIndex >= periods.size()) {
             currentPeriod = null;
@@ -480,10 +450,10 @@ public class FinancePeriodsController {
             empty.setVisibility(View.VISIBLE);
             plannedHeader.setVisibility(View.GONE);
             factHeader.setVisibility(View.GONE);
-            plannedRecycler.setVisibility(View.GONE);
-            factRecycler.setVisibility(View.GONE);
-            plannedAdapter.setItems(new ArrayList<>());
-            factAdapter.setItems(new ArrayList<>());
+            plannedContainer.setVisibility(View.GONE);
+            factContainer.setVisibility(View.GONE);
+            plannedContainer.removeAllViews();
+            factContainer.removeAllViews();
             return;
         }
 
@@ -537,13 +507,42 @@ public class FinancePeriodsController {
             bindForecast(data.factSum, data.plannedSum);
 
             plannedHeader.setVisibility(data.planned.isEmpty() ? View.GONE : View.VISIBLE);
-            plannedRecycler.setVisibility(data.planned.isEmpty() ? View.GONE : View.VISIBLE);
-            plannedAdapter.setItems(data.planned);
+            plannedContainer.setVisibility(data.planned.isEmpty() ? View.GONE : View.VISIBLE);
+            bindExpensesList(plannedContainer, data.planned, true);
 
             factHeader.setVisibility(data.fact.isEmpty() ? View.GONE : View.VISIBLE);
-            factRecycler.setVisibility(data.fact.isEmpty() ? View.GONE : View.VISIBLE);
-            factAdapter.setItems(data.fact);
+            factContainer.setVisibility(data.fact.isEmpty() ? View.GONE : View.VISIBLE);
+            bindExpensesList(factContainer, data.fact, false);
         });
+    }
+
+    private void bindExpensesList(LinearLayout container, List<FinanceExpense> list, boolean isPlanned) {
+        container.removeAllViews();
+        for (FinanceExpense e : list) {
+            View item = activity.getLayoutInflater()
+                .inflate(R.layout.item_finance_expense, container, false);
+            TextView category = item.findViewById(R.id.fin_exp_category);
+            TextView title = item.findViewById(R.id.fin_exp_title);
+            TextView amount = item.findViewById(R.id.fin_exp_amount);
+
+            category.setText(e.category);
+            if (e.title != null && !e.title.isEmpty()) {
+                title.setText(e.title);
+                title.setVisibility(View.VISIBLE);
+            } else {
+                title.setVisibility(View.GONE);
+            }
+            amount.setText(String.format(Locale.getDefault(), "%.2f ₽", e.amount));
+
+            item.setOnClickListener(v -> showExpenseActions(e));
+            if (isPlanned) {
+                item.setOnLongClickListener(v -> {
+                    showPlannedActions(e);
+                    return true;
+                });
+            }
+            container.addView(item);
+        }
     }
 
     private void bindForecast(double spent, double planned) {
@@ -570,7 +569,6 @@ public class FinancePeriodsController {
         double daysLeft = Math.max(0, daysTotal - elapsed);
 
         double factPerDay = elapsed > 0 ? spent / elapsed : 0;
-
         double freeNow = currentPeriod.totalIncome - planned - spent;
         double canSpendPerDay = daysLeft > 0 ? freeNow / daysLeft : 0;
 
