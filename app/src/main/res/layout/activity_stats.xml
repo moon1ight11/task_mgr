@@ -25,7 +25,6 @@
       android:orientation="vertical"
       android:padding="12dp">
 
-      <!-- ===== СЕКЦИЯ: СЕЙЧАС ===== -->
       <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,7 +37,6 @@
         android:layout_marginStart="4dp"
         android:layout_marginBottom="4dp" />
 
-      <!-- Сводка -->
       <com.google.android.material.card.MaterialCardView
         style="@style/Widget.TaskMGR.Card"
         android:layout_width="match_parent"
@@ -173,8 +171,8 @@
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <!-- По приоритетам -->
       <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_priority"
         style="@style/Widget.TaskMGR.Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -202,8 +200,8 @@
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <!-- По разделам -->
       <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_section"
         style="@style/Widget.TaskMGR.Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -231,8 +229,8 @@
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <!-- Покупки -->
       <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_shopping"
         style="@style/Widget.TaskMGR.Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -262,7 +260,6 @@
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <!-- ===== СЕКЦИЯ: ЗА ПЕРИОД ===== -->
       <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -276,7 +273,6 @@
         android:layout_marginTop="20dp"
         android:layout_marginBottom="4dp" />
 
-      <!-- Период-чипы -->
       <com.google.android.material.chip.ChipGroup
         android:id="@+id/period_chip_group"
         android:layout_width="wrap_content"
@@ -286,7 +282,6 @@
         app:selectionRequired="true"
         app:chipSpacingHorizontal="8dp" />
 
-      <!-- Выполнено за период -->
       <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_period"
         style="@style/Widget.TaskMGR.Card"
@@ -328,7 +323,6 @@
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <!-- Медианное время выполнения -->
       <com.google.android.material.card.MaterialCardView
         style="@style/Widget.TaskMGR.Card"
         android:layout_width="match_parent"
@@ -369,7 +363,6 @@
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <!-- Дедлайн -->
       <com.google.android.material.card.MaterialCardView
         style="@style/Widget.TaskMGR.Card"
         android:layout_width="match_parent"

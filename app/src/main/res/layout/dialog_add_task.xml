@@ -34,7 +34,6 @@
             android:text="Приоритет"
             android:layout_marginTop="8dp" />
 
-        <!-- Приоритет: 3 кнопки -->
         <LinearLayout
             android:id="@+id/group_priority"
             android:layout_width="match_parent"
@@ -75,7 +74,6 @@
             android:text="Срок"
             android:layout_marginTop="8dp" />
 
-        <!-- Тип дедлайна: 4 кнопки (для не-авто третья скрыта программно) -->
         <LinearLayout
             android:id="@+id/group_due_type"
             android:layout_width="match_parent"

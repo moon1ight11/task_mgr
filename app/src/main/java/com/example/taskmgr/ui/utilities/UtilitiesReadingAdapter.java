@@ -22,11 +22,16 @@ import java.util.Map;
 public class UtilitiesReadingAdapter extends RecyclerView.Adapter<UtilitiesReadingAdapter.VH> {
 
     private final List<UtilityMeter> meters = new ArrayList<>();
-    private Map<Long, UtilityReading> readings;
     private final OnMeterClick click;
+    private Map<Long, UtilityReading> readings;
 
     public UtilitiesReadingAdapter(Context ignored, OnMeterClick click) {
         this.click = click;
+    }
+
+    private static String formatNum(double v) {
+        if (v == Math.floor(v) && !Double.isInfinite(v)) return String.valueOf((long) v);
+        return String.format(Locale.getDefault(), "%.2f", v);
     }
 
     public void setItems(List<UtilityMeter> newMeters, Map<Long, UtilityReading> newReadings) {
@@ -68,8 +73,9 @@ public class UtilitiesReadingAdapter extends RecyclerView.Adapter<UtilitiesReadi
             h.stripe.setBackgroundColor(ContextCompat.getColor(ctx, R.color.neon_green));
         } else {
             h.amount.setText("—");
-            h.formula.setText("не заполнено · тариф " +
-                String.format(Locale.getDefault(), "%.2f ₽/%s", m.rate, m.unit));
+            String TariffText = "не заполнено · тариф " +
+                String.format(Locale.getDefault(), "%.2f ₽/%s", m.rate, m.unit);
+            h.formula.setText(TariffText);
             h.stripe.setBackgroundColor(ContextCompat.getColor(ctx, R.color.divider_strong));
         }
 
@@ -81,11 +87,6 @@ public class UtilitiesReadingAdapter extends RecyclerView.Adapter<UtilitiesReadi
     @Override
     public int getItemCount() {
         return meters.size();
-    }
-
-    private static String formatNum(double v) {
-        if (v == Math.floor(v) && !Double.isInfinite(v)) return String.valueOf((long) v);
-        return String.format(Locale.getDefault(), "%.2f", v);
     }
 
     public interface OnMeterClick {

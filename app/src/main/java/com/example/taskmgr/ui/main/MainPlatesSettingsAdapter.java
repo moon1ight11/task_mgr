@@ -1,5 +1,6 @@
 package com.example.taskmgr.ui.main;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -22,26 +23,23 @@ import java.util.List;
 public class MainPlatesSettingsAdapter
     extends RecyclerView.Adapter<MainPlatesSettingsAdapter.VH> {
 
-    public interface OnVisibleChanged { void onChange(MainPlate p, boolean visible); }
-    public interface OnStartDrag { void onStartDrag(RecyclerView.ViewHolder holder); }
-
     private final List<MainPlate> items = new ArrayList<>();
     private final OnVisibleChanged onVisibleChanged;
     private final OnStartDrag onStartDrag;
-
     public MainPlatesSettingsAdapter(OnVisibleChanged v, OnStartDrag startDrag) {
         this.onVisibleChanged = v;
         this.onStartDrag = startDrag;
     }
 
+    public List<MainPlate> getItems() {
+        return items;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
     public void setItems(List<MainPlate> newItems) {
         items.clear();
         if (newItems != null) items.addAll(newItems);
         notifyDataSetChanged();
-    }
-
-    public List<MainPlate> getItems() {
-        return items;
     }
 
     public void moveItem(int from, int to) {
@@ -61,6 +59,7 @@ public class MainPlatesSettingsAdapter
         return new VH(v);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
         MainPlate p = items.get(position);
@@ -77,12 +76,12 @@ public class MainPlatesSettingsAdapter
         h.sw.setOnCheckedChangeListener(null);
         h.sw.setChecked(p.isVisible);
         h.sw.setOnCheckedChangeListener((b, checked) -> {
+            p.isVisible = checked;
             if (onVisibleChanged != null) onVisibleChanged.onChange(p, checked);
         });
 
         h.drag.setOnTouchListener((v, event) -> {
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN
-                && onStartDrag != null) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN && onStartDrag != null) {
                 onStartDrag.onStartDrag(h);
             }
             return false;
@@ -92,6 +91,15 @@ public class MainPlatesSettingsAdapter
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    public interface OnVisibleChanged {
+        void onChange(MainPlate p, boolean visible);
+    }
+
+
+    public interface OnStartDrag {
+        void onStartDrag(RecyclerView.ViewHolder holder);
     }
 
     public static class VH extends RecyclerView.ViewHolder {

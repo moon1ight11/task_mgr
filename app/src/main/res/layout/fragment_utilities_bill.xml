@@ -4,7 +4,6 @@
   android:layout_height="match_parent"
   android:orientation="vertical">
 
-  <!-- Селектор месяца -->
   <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -44,7 +43,6 @@
       android:contentDescription="Следующий месяц" />
   </LinearLayout>
 
-  <!-- Селектор дома -->
   <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -106,7 +104,6 @@
       android:orientation="vertical"
       android:padding="12dp">
 
-      <!-- Карточка-итог -->
       <com.google.android.material.card.MaterialCardView
         android:id="@+id/card_summary"
         style="@style/Widget.TaskMGR.Card"
@@ -177,7 +174,6 @@
         android:text="Создать квитанцию"
         android:visibility="gone" />
 
-      <!-- Список счётчиков -->
       <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/readings_recycler"
         android:layout_width="match_parent"
@@ -185,7 +181,6 @@
         android:layout_marginTop="8dp"
         android:nestedScrollingEnabled="false" />
 
-      <!-- Сводка внизу -->
       <TextView
         android:id="@+id/tv_footer_total"
         android:layout_width="match_parent"

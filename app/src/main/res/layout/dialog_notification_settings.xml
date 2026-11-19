@@ -11,7 +11,6 @@
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
-    <!-- ================= СЕКЦИЯ: СВОДКИ ================= -->
     <TextView
       style="@style/TaskMGRSegLabel"
       android:layout_width="wrap_content"
@@ -20,7 +19,6 @@
       android:layout_marginBottom="4dp"
       android:text="Сводки" />
 
-    <!-- УТРО -->
     <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
@@ -95,7 +93,6 @@
       android:layout_marginEnd="16dp"
       android:background="@color/divider" />
 
-    <!-- ВЕЧЕР -->
     <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
@@ -163,7 +160,6 @@
         android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- ================= СЕКЦИЯ: ПОДПИСКИ ================= -->
     <View
       android:layout_width="match_parent"
       android:layout_height="1dp"
@@ -269,7 +265,6 @@
       </LinearLayout>
     </LinearLayout>
 
-    <!-- ================= О ПРИЛОЖЕНИИ ================= -->
     <View
       android:layout_width="match_parent"
       android:layout_height="1dp"

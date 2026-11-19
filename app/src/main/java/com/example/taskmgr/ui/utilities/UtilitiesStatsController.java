@@ -82,7 +82,8 @@ public class UtilitiesStatsController {
     private void setupHouseSpinner() {
         Spinner spinner = root.findViewById(R.id.spinner_house);
         spinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View v, int pos, long id) {
                 if (!spinnerReady) return;
                 String chosen = pos == 0 ? null : houses.get(pos - 1);
                 if ((chosen == null && selectedHouse != null)
@@ -91,7 +92,10 @@ public class UtilitiesStatsController {
                     load();
                 }
             }
-            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
         });
     }
 
@@ -182,7 +186,8 @@ public class UtilitiesStatsController {
             MonthRow row = new MonthRow();
             row.year = y;
             row.month = m;
-            row.sum = byMonth.getOrDefault(y + "-" + m, 0.0);
+            Double val = byMonth.get(y + "-" + m);
+            row.sum = (val != null) ? val : 0.0;
             s.byMonth.add(row);
             cal.add(Calendar.MONTH, 1);
         }
@@ -237,7 +242,7 @@ public class UtilitiesStatsController {
             double max = 1;
             for (MeterRow r : s.byMeter) if (r.sum > max) max = r.sum;
             for (MeterRow r : s.byMeter) {
-                byMeter.addView(buildMeterRow(r, s.total, max));
+                byMeter.addView(buildMeterRow(r, max));
             }
         }
 
@@ -307,7 +312,7 @@ public class UtilitiesStatsController {
         return wrapper;
     }
 
-    private View buildMeterRow(MeterRow r, double total, double max) {
+    private View buildMeterRow(MeterRow r, double max) {
         LinearLayout wrapper = new LinearLayout(activity);
         wrapper.setOrientation(LinearLayout.VERTICAL);
         wrapper.setPadding(0, dp(6), 0, dp(6));
@@ -370,9 +375,6 @@ public class UtilitiesStatsController {
         double sum;
     }
 
-    private static class LoadResult {
-        final List<String> houses;
-        final StatsData data;
-        LoadResult(List<String> h, StatsData d) { houses = h; data = d; }
+    private record LoadResult(List<String> houses, StatsData data) {
     }
 }

@@ -264,9 +264,6 @@ public class FinanceSettingsController {
         return (int) (v * activity.getResources().getDisplayMetrics().density);
     }
 
-    private static class LoadResult {
-        final List<FinanceIncome> incomes;
-        final List<FinanceTemplate> templates;
-        LoadResult(List<FinanceIncome> i, List<FinanceTemplate> t) { incomes = i; templates = t; }
+    private record LoadResult(List<FinanceIncome> incomes, List<FinanceTemplate> templates) {
     }
 }

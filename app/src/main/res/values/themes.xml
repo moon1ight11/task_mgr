@@ -71,10 +71,8 @@
     </style>
 
     <style name="TaskMGRWindowAnimation" parent="@android:style/Animation.Activity">
-        <!-- Открытие: новый экран проявляется, старый стоит на месте -->
         <item name="android:activityOpenEnterAnimation">@anim/fade_in</item>
         <item name="android:activityOpenExitAnimation">@anim/no_anim</item>
-        <!-- Закрытие (back): старый проявляется, текущий стоит на месте -->
         <item name="android:activityCloseEnterAnimation">@anim/fade_in</item>
         <item name="android:activityCloseExitAnimation">@anim/no_anim</item>
     </style>

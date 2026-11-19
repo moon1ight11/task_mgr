@@ -5,6 +5,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -19,7 +20,6 @@ public class NoteEditActivity extends AppCompatActivity {
     private QuickNoteDao dao;
     private EditText edit;
     private long noteId = -1;
-    private long createdAt = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,13 +42,18 @@ public class NoteEditActivity extends AppCompatActivity {
         if (noteId > 0) {
             DbExecutor.run(() -> dao.getById(noteId), note -> {
                 if (note == null) return;
-                createdAt = note.createdAt;
                 edit.setText(note.body);
                 edit.setSelection(edit.getText().length());
             });
         }
 
         edit.requestFocus();
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                saveAndFinish();
+            }
+        });
     }
 
     @Override
@@ -72,12 +77,12 @@ public class NoteEditActivity extends AppCompatActivity {
     private void confirmDelete() {
         new androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Удалить заметку?")
-            .setPositiveButton("Удалить", (d, w) -> {
-                DbExecutor.runVoid(() -> dao.delete(noteId), this::finish);
-            })
+            .setPositiveButton("Удалить", (d, w) ->
+                DbExecutor.runVoid(() -> dao.delete(noteId), this::finish))
             .setNegativeButton("Отмена", null)
             .show();
     }
+
 
     private void saveAndFinish() {
         String text = edit.getText().toString().trim();
@@ -94,10 +99,5 @@ public class NoteEditActivity extends AppCompatActivity {
                 finish();
             }
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        saveAndFinish();
     }
 }

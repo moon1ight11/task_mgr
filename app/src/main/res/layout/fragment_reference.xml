@@ -24,7 +24,6 @@
             app:chipSpacingHorizontal="8dp" />
     </HorizontalScrollView>
 
-    <!-- Сортировка -->
     <TextView
         style="@style/TaskMGRSegLabel"
         android:text="Сортировка"

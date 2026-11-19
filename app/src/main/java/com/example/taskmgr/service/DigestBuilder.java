@@ -63,8 +63,8 @@ public final class DigestBuilder {
         for (Section s : sectionDao.getAll()) sectionsById.put(s.id, s.name);
 
         int important = countImportant(tasks);
-        String title = buildTitle(tasks.size(), important, forTomorrow, hasSubs, subs, subsDays);
-        String greeting = buildGreeting(tasks.size(), important, forTomorrow, hasSubs, subs, subsDays);
+        String title = buildTitle(tasks.size(), important, forTomorrow, hasSubs, subs);
+        String greeting = buildGreeting(tasks.size(), important, forTomorrow, hasSubs);
 
         StringBuilder sb = new StringBuilder();
         sb.append(greeting);
@@ -83,7 +83,7 @@ public final class DigestBuilder {
         }
 
         if (hasSubs) {
-            appendSubscriptionsBlock(context, sb, subs, subsDays);
+            appendSubscriptionsBlock(sb, subs, subsDays);
         }
 
         return new Digest(title, greeting, sb.toString(), tasks.size());
@@ -104,7 +104,7 @@ public final class DigestBuilder {
         }
     }
 
-    private static void appendSubscriptionsBlock(Context context, StringBuilder sb,
+    private static void appendSubscriptionsBlock(StringBuilder sb,
                                                  List<Subscription> subs, int days) {
         if (subs == null || subs.isEmpty()) return;
 
@@ -141,7 +141,7 @@ public final class DigestBuilder {
     }
 
     private static String buildTitle(int count, int important, boolean forTomorrow,
-                                     boolean hasSubs, List<Subscription> subs, int subsDays) {
+                                     boolean hasSubs, List<Subscription> subs) {
         String when = forTomorrow ? "Завтра" : "Сегодня";
         StringBuilder sb = new StringBuilder(when).append(": ");
         if (count > 0) {
@@ -158,22 +158,18 @@ public final class DigestBuilder {
         return sb.toString();
     }
 
-    private static String buildGreeting(int count, int important, boolean forTomorrow,
-                                        boolean hasSubs, List<Subscription> subs, int subsDays) {
-        StringBuilder sb = new StringBuilder();
+    private static String buildGreeting(int count, int important, boolean forTomorrow, boolean hasSubs) {
         if (forTomorrow) {
-            sb.append("Привет! Не забудь, что завтра у тебя ")
-                .append(count).append(' ').append(tasksWord(count))
-                .append(". Заполни ежедневник :)");
-            return sb.toString();
+            return "Привет! Не забудь, что завтра у тебя "
+                + count + ' ' + tasksWord(count)
+                + ". Заполни ежедневник :)";
         }
 
         if (count == 0 && hasSubs) {
-            sb.append("Доброго утра! Задач на сегодня нет, но есть списания:");
-            return sb.toString();
+            return "Доброго утра! Задач на сегодня нет, но есть списания:";
         }
 
-        sb.append("Доброго утра! ");
+        StringBuilder sb = new StringBuilder("Доброго утра! ");
         if (count > 0) {
             sb.append("Не забудь, сегодня у тебя ")
                 .append(count).append(' ').append(tasksWord(count));
@@ -189,6 +185,7 @@ public final class DigestBuilder {
         }
         return sb.toString();
     }
+
 
     private static String buildTaskLine(Task t, Map<Long, Tab> tabsById,
                                         Map<Long, String> sectionsById) {

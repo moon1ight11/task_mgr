@@ -17,7 +17,6 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
-    <!-- Строка 1: категории -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -36,7 +35,6 @@
             app:chipSpacingHorizontal="8dp" />
     </HorizontalScrollView>
 
-    <!-- Строка 2: сортировка -->
     <TextView
         style="@style/TaskMGRSegLabel"
         android:text="Сортировка"

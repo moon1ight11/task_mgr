@@ -8,7 +8,7 @@ import android.content.ContentValues;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "taskmgr.db";
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 14;
     private static volatile DatabaseHelper instance;
 
     private DatabaseHelper(Context context) {
@@ -126,6 +126,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "created_at INTEGER NOT NULL, " +
             "updated_at INTEGER NOT NULL)");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_notes_created ON quick_notes(created_at DESC)");
+
+        db.execSQL("CREATE TABLE smoking_log (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "smoked_at INTEGER NOT NULL, " +
+            "count INTEGER NOT NULL DEFAULT 1, " +
+            "note TEXT)");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_smoking_smoked_at ON smoking_log(smoked_at)");
 
         db.execSQL("CREATE TABLE subscriptions (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -379,13 +386,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("UPDATE main_plates SET sort_order = sort_order + 4 " +
                 "WHERE plate_key IN ('notes','private','utilities','stats','subs','finance')");
         }
+        if (oldVersion < 14) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS smoking_log (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "smoked_at INTEGER NOT NULL, " +
+                "count INTEGER NOT NULL DEFAULT 1, " +
+                "note TEXT)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_smoking_smoked_at ON smoking_log(smoked_at)");
+            db.execSQL("INSERT OR IGNORE INTO main_plates (plate_key, is_visible, sort_order) " +
+                "SELECT 'smoking', 1, COALESCE(MAX(sort_order), 0) + 1 FROM main_plates");
+            db.execSQL("UPDATE main_plates " +
+                "SET sort_order = (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM main_plates) " +
+                "WHERE plate_key = 'smoking'");
+        }
     }
 
     private static void seedMainPlates(SQLiteDatabase db) {
         String[] keys = {
             "home", "garage", "auto", "it", "health", "ent",
             "work", "pets", "sport", "study",
-            "notes", "private", "utilities", "stats", "subs", "finance"
+            "notes", "private", "utilities", "stats", "subs", "finance", "smoking"
         };
         for (int i = 0; i < keys.length; i++) {
             ContentValues cv = new ContentValues();

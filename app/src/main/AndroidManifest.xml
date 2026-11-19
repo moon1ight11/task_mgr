@@ -71,6 +71,10 @@
       android:exported="false" />
 
     <activity
+      android:name=".ui.smoking.SmokingActivity"
+      android:exported="false" />
+
+    <activity
       android:name=".ui.main.MainPlatesSettingsActivity"
       android:exported="false" />
   </application>

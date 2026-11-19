@@ -35,12 +35,10 @@ public class UtilitiesBillController {
     private final UtilityPeriodDao periodDao;
     private final UtilityReadingDao readingDao;
     private final UtilitiesReadingAdapter adapter;
-
+    private final Map<Long, UtilityReading> readingsByMeter = new HashMap<>();
     private int year, month;
     private String selectedHouse;
     private UtilityPeriod currentPeriod;
-    private List<UtilityMeter> activeMeters = new ArrayList<>();
-    private Map<Long, UtilityReading> readingsByMeter = new HashMap<>();
 
     public UtilitiesBillController(Activity activity, View root) {
         this.activity = activity;
@@ -58,13 +56,46 @@ public class UtilitiesBillController {
         adapter = new UtilitiesReadingAdapter(activity, this::onReadingClick);
         recycler.setAdapter(adapter);
 
-        root.findViewById(R.id.btn_prev_month).setOnClickListener(v -> { month--; if (month < 0) { month = 11; year--; } load(); });
-        root.findViewById(R.id.btn_next_month).setOnClickListener(v -> { month++; if (month > 11) { month = 0; year++; } load(); });
+        root.findViewById(R.id.btn_prev_month).setOnClickListener(v -> {
+            month--;
+            if (month < 0) {
+                month = 11;
+                year--;
+            }
+            load();
+        });
+        root.findViewById(R.id.btn_next_month).setOnClickListener(v -> {
+            month++;
+            if (month > 11) {
+                month = 0;
+                year++;
+            }
+            load();
+        });
         root.findViewById(R.id.row_house).setOnClickListener(v -> showHousePicker());
         root.findViewById(R.id.btn_create_period).setOnClickListener(v -> createPeriod());
         root.findViewById(R.id.btn_toggle_paid).setOnClickListener(v -> togglePaid());
 
         load();
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
+    }
+
+    private static double parseDouble(String s) {
+        if (s == null || s.trim().isEmpty()) return 0;
+        try {
+            return Double.parseDouble(s.trim().replace(',', '.'));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private static String formatNum(double v) {
+        if (v == Math.floor(v) && !Double.isInfinite(v)) return String.valueOf((long) v);
+        return String.format(Locale.getDefault(), "%.2f", v);
     }
 
     public void load() {
@@ -78,13 +109,12 @@ public class UtilitiesBillController {
             List<UtilityReading> readings = p != null ? readingDao.getByPeriod(p.id) : new ArrayList<>();
             List<String> houses = periodDao.getHouses();
             return new LoadResult(meters, p, readings, houseToUse, houses);
-        }, res -> bind(res));
+        }, this::bind);
     }
 
     private void bind(LoadResult res) {
         if (res == null) return;
         selectedHouse = res.house;
-        activeMeters = res.meters;
         currentPeriod = res.period;
         readingsByMeter.clear();
         for (UtilityReading r : res.readings) readingsByMeter.put(r.meterId, r);
@@ -108,7 +138,8 @@ public class UtilitiesBillController {
         RecyclerView recycler = root.findViewById(R.id.readings_recycler);
         TextView footer = root.findViewById(R.id.tv_footer_total);
 
-        tvTitle.setText(capitalize(monthLabel) + (selectedHouse != null ? " · " + selectedHouse : ""));
+        String selHouseText = capitalize(monthLabel) + (selectedHouse != null ? " · " + selectedHouse : "");
+        tvTitle.setText(selHouseText);
 
         if (currentPeriod == null) {
             tvTotal.setText("—");
@@ -140,9 +171,10 @@ public class UtilitiesBillController {
         btnPaid.setText(currentPeriod.paid ? "Вернуть в неоплачено" : "Оплатить всё");
         btnPaid.setTag(currentPeriod.paid);
 
-        footer.setText("Итого за месяц: " + String.format(Locale.getDefault(), "%.2f ₽", total));
+        String SumText = "Итого за месяц: " + String.format(Locale.getDefault(), "%.2f ₽", total);
+        footer.setText(SumText);
 
-        adapter.setItems(activeMeters, readingsByMeter);
+        adapter.setItems(res.meters, readingsByMeter);
     }
 
     private void onReadingClick(UtilityMeter meter) {
@@ -189,9 +221,18 @@ public class UtilitiesBillController {
                 formatNum(consumption), meter.unit, amount));
         };
         android.text.TextWatcher tw = new android.text.TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
-            @Override public void onTextChanged(CharSequence s, int a, int b, int c) { recalc.run(); }
-            @Override public void afterTextChanged(android.text.Editable s) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int a, int b, int c) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int a, int b, int c) {
+                recalc.run();
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+            }
         };
         inPrev.addTextChangedListener(tw);
         inCurr.addTextChangedListener(tw);
@@ -283,7 +324,6 @@ public class UtilitiesBillController {
         EditText inNote = v.findViewById(R.id.input_note);
         if (house != null) inHouse.setText(house);
 
-        final String[] houseFinal = {house};
         AlertDialog dlg = new AlertDialog.Builder(activity)
             .setTitle("Квитанция за " + monthLabel())
             .setView(v)
@@ -321,34 +361,6 @@ public class UtilitiesBillController {
         return capitalize(new SimpleDateFormat("LLLL yyyy", new Locale("ru")).format(c.getTime()));
     }
 
-    private static String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return s.substring(0, 1).toUpperCase() + s.substring(1);
-    }
-
-    private static double parseDouble(String s) {
-        if (s == null || s.trim().isEmpty()) return 0;
-        try { return Double.parseDouble(s.trim().replace(',', '.')); }
-        catch (NumberFormatException e) { return 0; }
-    }
-
-    private static String formatNum(double v) {
-        if (v == Math.floor(v) && !Double.isInfinite(v)) return String.valueOf((long) v);
-        return String.format(Locale.getDefault(), "%.2f", v);
-    }
-
-    private static class LoadResult {
-        final List<UtilityMeter> meters;
-        final UtilityPeriod period;
-        final List<UtilityReading> readings;
-        final String house;
-        final List<String> houses;
-        LoadResult(List<UtilityMeter> m, UtilityPeriod p, List<UtilityReading> r,
-                   String h, List<String> hs) {
-            meters = m; period = p; readings = r; house = h; houses = hs;
-        }
-    }
-
     public void showAddMeterDialog() {
         View v = activity.getLayoutInflater().inflate(R.layout.dialog_add_meter, null);
         EditText inName = v.findViewById(R.id.input_meter_name);
@@ -380,5 +392,15 @@ public class UtilitiesBillController {
             .show();
     }
 
-    private record HouseData(List<String> houses, String last) {}
+    private record LoadResult(
+        List<UtilityMeter> meters,
+        UtilityPeriod period,
+        List<UtilityReading> readings,
+        String house,
+        List<String> houses
+    ) {
+    }
+
+    private record HouseData(List<String> houses, String last) {
+    }
 }

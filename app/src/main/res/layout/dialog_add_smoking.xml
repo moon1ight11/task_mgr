@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  android:padding="16dp">
+
+  <EditText
+    android:id="@+id/input_smoke_count"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Сколько сигарет"
+    android:inputType="number"
+    android:text="1" />
+
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:text="Дата и время записи"
+    android:textSize="13sp"
+    android:textColor="@color/text_secondary" />
+
+  <com.google.android.material.button.MaterialButton
+    android:id="@+id/btn_smoke_when"
+    style="@style/Widget.Material3.Button.OutlinedButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:text="Сейчас" />
+</LinearLayout>

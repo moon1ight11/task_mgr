@@ -30,7 +30,6 @@ public class StatsDao {
         long startOfToday = DateUtils.startOfDay(System.currentTimeMillis());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        // Считаем total / active / done
         try (Cursor c = db.rawQuery(
             "SELECT " +
                 "COUNT(*), " +
@@ -83,7 +82,10 @@ public class StatsDao {
         for (String p : new String[]{"important", "normal", "whatever"}) {
             boolean found = false;
             for (PriorityRow r : result)
-                if (p.equals(r.priority)) { found = true; break; }
+                if (p.equals(r.priority)) {
+                    found = true;
+                    break;
+                }
             if (!found) {
                 PriorityRow r = new PriorityRow();
                 r.priority = p;
@@ -196,9 +198,11 @@ public class StatsDao {
                 "  COUNT(*), " +
                 "  SUM(CASE WHEN " +
                 "    (t.due_type='exact_date' AND t.due_date IS NOT NULL AND " +
-                "       h.completed_at < (? + (t.due_date / 86400000) * 86400000)) " +
+                "       date(h.completed_at / 1000, 'unixepoch', 'localtime') <= " +
+                "       date(t.due_date / 1000, 'unixepoch', 'localtime')) " +
                 "    OR (t.due_type='range' AND t.due_to IS NOT NULL AND " +
-                "       h.completed_at < (? + (t.due_to / 86400000) * 86400000)) " +
+                "       date(h.completed_at / 1000, 'unixepoch', 'localtime') <= " +
+                "       date(t.due_to / 1000, 'unixepoch', 'localtime')) " +
                 "    THEN 1 ELSE 0 END) " +
                 "FROM history h " +
                 "JOIN tasks t ON t.id = h.task_id " +
@@ -212,10 +216,7 @@ public class StatsDao {
                 "    JOIN sections s ON s.id = tb.section_id " +
                 "    WHERE s.is_private = 1)";
 
-        try (Cursor c = db.rawQuery(sql, new String[]{
-            String.valueOf(since),
-            String.valueOf(since),
-            String.valueOf(since)})) {
+        try (Cursor c = db.rawQuery(sql, new String[]{String.valueOf(since)})) {
             if (c.moveToFirst()) {
                 s.completedWithDeadline = c.isNull(0) ? 0 : c.getInt(0);
                 s.onTime = c.isNull(1) ? 0 : c.getInt(1);
@@ -257,7 +258,9 @@ public class StatsDao {
         public int count;
         public long medianMillis;
 
-        public boolean hasData() { return count > 0; }
+        public boolean hasData() {
+            return count > 0;
+        }
     }
 
     public static class DeadlineStats {
@@ -270,7 +273,9 @@ public class StatsDao {
             return Math.round(100f * onTime / completedWithDeadline);
         }
 
-        public boolean hasData() { return completedWithDeadline > 0; }
+        public boolean hasData() {
+            return completedWithDeadline > 0;
+        }
     }
 
     public static class PriorityRow {

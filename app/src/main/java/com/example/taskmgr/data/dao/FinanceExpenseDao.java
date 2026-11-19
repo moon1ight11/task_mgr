@@ -11,8 +11,8 @@ import com.example.taskmgr.model.FinanceExpense;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 public class FinanceExpenseDao {
     private final DatabaseHelper dbHelper;
@@ -45,6 +45,7 @@ public class FinanceExpenseDao {
         if (e.title != null) cv.put("title", e.title);
         else cv.putNull("title");
         cv.put("amount", e.amount);
+        cv.put("source_type", e.sourceType != null ? e.sourceType : "manual");
         db.update("finance_expenses", cv, "id = ?", new String[]{String.valueOf(e.id)});
     }
 
@@ -71,6 +72,13 @@ public class FinanceExpenseDao {
         db.update("finance_expenses", cv, "id = ?", new String[]{String.valueOf(expenseId)});
     }
 
+    public void markAsPlanned(long expenseId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("source_type", "planned");
+        db.update("finance_expenses", cv, "id = ?", new String[]{String.valueOf(expenseId)});
+    }
+
     public Set<Long> getSubscriptionBundleRefIds(long periodId) {
         Set<Long> result = new HashSet<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -83,8 +91,10 @@ public class FinanceExpenseDao {
                 String refs = c.getString(0);
                 if (refs == null || refs.isEmpty()) continue;
                 for (String part : refs.split(",")) {
-                    try { result.add(Long.parseLong(part.trim())); }
-                    catch (NumberFormatException ignored) {}
+                    try {
+                        result.add(Long.parseLong(part.trim()));
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
         }
@@ -132,8 +142,10 @@ public class FinanceExpenseDao {
                 String refs = c.getString(0);
                 if (refs == null || refs.isEmpty()) continue;
                 for (String part : refs.split(",")) {
-                    try { result.add(Long.parseLong(part.trim())); }
-                    catch (NumberFormatException ignored) {}
+                    try {
+                        result.add(Long.parseLong(part.trim()));
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             }
         }

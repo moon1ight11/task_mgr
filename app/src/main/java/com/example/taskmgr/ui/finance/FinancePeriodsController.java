@@ -49,11 +49,10 @@ public class FinancePeriodsController {
     private final FinancePeriodDao periodDao;
     private final FinanceExpenseDao expenseDao;
     private final FinanceTemplateDao templateDao;
-
-    private List<FinancePeriod> periods = new ArrayList<>();
     private final List<FinanceTemplate> templatesForPick = new ArrayList<>();
     private final Set<Long> pickedTemplateIds = new HashSet<>();
     private final Set<Long> pickedSubIds = new HashSet<>();
+    private List<FinancePeriod> periods = new ArrayList<>();
     private int currentIndex = 0;
     private FinancePeriod currentPeriod;
 
@@ -66,10 +65,16 @@ public class FinancePeriodsController {
         templateDao = new FinanceTemplateDao(activity);
 
         root.findViewById(R.id.btn_prev_period).setOnClickListener(v -> {
-            if (currentIndex > 0) { currentIndex--; bindCurrentPeriod(); }
+            if (currentIndex > 0) {
+                currentIndex--;
+                bindCurrentPeriod();
+            }
         });
         root.findViewById(R.id.btn_next_period).setOnClickListener(v -> {
-            if (currentIndex < periods.size() - 1) { currentIndex++; bindCurrentPeriod(); }
+            if (currentIndex < periods.size() - 1) {
+                currentIndex++;
+                bindCurrentPeriod();
+            }
         });
         root.findViewById(R.id.btn_fin_add_expense).setOnClickListener(v -> showAddExpenseDialog());
         root.findViewById(R.id.btn_fin_add_from_template)
@@ -87,7 +92,10 @@ public class FinancePeriodsController {
             int idx = 0;
             long now = System.currentTimeMillis();
             for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).startAt <= now && list.get(i).endAt > now) { idx = i; break; }
+                if (list.get(i).startAt <= now && list.get(i).endAt > now) {
+                    idx = i;
+                    break;
+                }
             }
             return new LoadResult(list, idx);
         }, res -> {
@@ -104,7 +112,7 @@ public class FinancePeriodsController {
             return;
         }
         DbExecutor.run(
-            (java.util.concurrent.Callable<List<FinanceTemplate>>) () -> templateDao.getAll(true),
+            () -> templateDao.getAll(true),
             (List<FinanceTemplate> list) -> {
                 if (list == null || list.isEmpty()) {
                     Toast.makeText(activity, "Шаблонов нет. Добавьте их в «Настройках»",
@@ -124,7 +132,8 @@ public class FinancePeriodsController {
                     String catPart = t.category;
                     String subPart = (t.title != null && !t.title.isEmpty()) ? " · " + t.title : "";
                     String amountPart = String.format(Locale.getDefault(), " — %.2f ₽", t.defaultAmount);
-                    cb.setText(catPart + subPart + amountPart);
+                    String label = catPart + subPart + amountPart;
+                    cb.setText(label);
                     cb.setTextSize(14);
                     cb.setTextColor(ContextCompat.getColor(activity, R.color.text_primary));
                     cb.setPadding(0, dp(6), 0, dp(6));
@@ -372,7 +381,8 @@ public class FinancePeriodsController {
                     ? String.format(Locale.getDefault(), " — %.2f ₽", it.price)
                     : "";
                 String statusPart = it.isBought ? " ✓ (куплено)" : "";
-                cb.setText(it.title + pricePart + statusPart);
+                String part = it.title + pricePart + statusPart;
+                cb.setText(part);
                 cb.setTextSize(14);
                 cb.setTextColor(ContextCompat.getColor(activity, R.color.text_primary));
                 cb.setPadding(0, dp(6), 0, dp(6));
@@ -476,8 +486,11 @@ public class FinancePeriodsController {
         tvName.setText(currentPeriod.name);
 
         SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
-        tvRange.setText(df.format(new Date(currentPeriod.startAt)) + " — "
-            + df.format(new Date(currentPeriod.endAt)));
+
+        String rangeText = df.format(new Date(currentPeriod.startAt))
+            + " — "
+            + df.format(new Date(currentPeriod.endAt));
+        tvRange.setText(rangeText);
 
         tvIncome.setText(String.format(Locale.getDefault(), "Доход: %.2f ₽", currentPeriod.totalIncome));
         card.setOnLongClickListener(v -> {
@@ -546,12 +559,14 @@ public class FinancePeriodsController {
             }
             amount.setText(String.format(Locale.getDefault(), "%.2f ₽", e.amount));
 
-            item.setOnClickListener(v -> showExpenseActions(e));
             if (isPlanned) {
+                item.setOnClickListener(v -> showPlannedActions(e));
                 item.setOnLongClickListener(v -> {
                     showPlannedActions(e);
                     return true;
                 });
+            } else {
+                item.setOnClickListener(v -> showExpenseActions(e));
             }
             container.addView(item);
         }
@@ -680,9 +695,16 @@ public class FinancePeriodsController {
     private void showExpenseActions(FinanceExpense e) {
         new AlertDialog.Builder(activity)
             .setTitle(e.category)
-            .setItems(new String[]{"Редактировать", "Удалить"}, (d, w) -> {
-                if (w == 0) showExpenseDialog(e);
-                else {
+            .setItems(new String[]{
+                "Отметить как план",
+                "Редактировать",
+                "Удалить"
+            }, (d, w) -> {
+                if (w == 0) {
+                    DbExecutor.runVoid(() -> expenseDao.markAsPlanned(e.id), this::bindCurrentPeriod);
+                } else if (w == 1) {
+                    showExpenseDialog(e);
+                } else {
                     DbExecutor.runVoid(() -> expenseDao.delete(e.id), this::bindCurrentPeriod);
                 }
             })
@@ -726,8 +748,14 @@ public class FinancePeriodsController {
 
         Runnable applyType = () -> applySegButtons(btnFact, btnPlan, typeIndex[0]);
         applyType.run();
-        btnFact.setOnClickListener(b -> { typeIndex[0] = 0; applyType.run(); });
-        btnPlan.setOnClickListener(b -> { typeIndex[0] = 1; applyType.run(); });
+        btnFact.setOnClickListener(b -> {
+            typeIndex[0] = 0;
+            applyType.run();
+        });
+        btnPlan.setOnClickListener(b -> {
+            typeIndex[0] = 1;
+            applyType.run();
+        });
 
         if (existing != null) {
             inCat.setText(existing.category);
@@ -758,12 +786,24 @@ public class FinancePeriodsController {
                 e.category = cat;
                 e.title = title.isEmpty() ? null : title;
                 e.amount = amt;
-                e.sourceType = typeIndex[0] == 0 ? "manual" : "planned";
+                if (typeIndex[0] == 0) {
+                    e.sourceType = "manual";
+                } else if (existing != null
+                    && !"manual".equals(existing.sourceType)
+                    && !"planned".equals(existing.sourceType)) {
+                    // Не теряем привязку импортированной траты (шаблон/подписки/покупки).
+                    e.sourceType = existing.sourceType;
+                } else {
+                    e.sourceType = "planned";
+                }
                 if (existing == null) {
                     e.createdAt = System.currentTimeMillis();
                 }
                 DbExecutor.runVoid(
-                    () -> { if (existing == null) expenseDao.insert(e); else expenseDao.update(e); },
+                    () -> {
+                        if (existing == null) expenseDao.insert(e);
+                        else expenseDao.update(e);
+                    },
                     this::bindCurrentPeriod
                 );
             })
@@ -800,13 +840,9 @@ public class FinancePeriodsController {
         List<FinanceIncome> incomes = incomeDao.getAll(true);
         if (incomes.isEmpty()) return;
 
-        List<Integer> days = new ArrayList<>();
-        for (FinanceIncome i : incomes) {
-            if (!days.contains(i.dayOfMonth)) days.add(i.dayOfMonth);
-        }
-        days.sort(Integer::compareTo);
-
+        List<Integer> days = extractSortedUniqueDays(incomes);
         Calendar now = Calendar.getInstance();
+
         for (int m = 0; m < 6; m++) {
             Calendar month = (Calendar) now.clone();
             month.add(Calendar.MONTH, m);
@@ -814,52 +850,75 @@ public class FinancePeriodsController {
             int mon = month.get(Calendar.MONTH);
             int maxDay = month.getActualMaximum(Calendar.DAY_OF_MONTH);
 
-            List<Long> startDates = new ArrayList<>();
-            for (int day : days) {
-                int d = Math.min(day, maxDay);
-                Calendar c = Calendar.getInstance();
-                c.set(year, mon, d, 0, 0, 0);
-                c.set(Calendar.MILLISECOND, 0);
-                startDates.add(c.getTimeInMillis());
-            }
-            startDates.sort(Long::compareTo);
+            List<Long> startDates = buildMonthStartDates(year, mon, maxDay, days);
 
             for (int i = 0; i < startDates.size(); i++) {
                 long startAt = startDates.get(i);
-                long endAt;
-                if (i + 1 < startDates.size()) {
-                    endAt = startDates.get(i + 1);
-                } else {
-                    Calendar next = Calendar.getInstance();
-                    next.set(year, mon, 1, 0, 0, 0);
-                    next.set(Calendar.MILLISECOND, 0);
-                    next.add(Calendar.MONTH, 1);
-                    int nextYear = next.get(Calendar.YEAR);
-                    int nextMonth = next.get(Calendar.MONTH);
-                    int nextMaxDay = next.getActualMaximum(Calendar.DAY_OF_MONTH);
-                    int firstDay = Math.min(days.get(0), nextMaxDay);
-                    Calendar c = Calendar.getInstance();
-                    c.set(nextYear, nextMonth, firstDay, 0, 0, 0);
-                    c.set(Calendar.MILLISECOND, 0);
-                    endAt = c.getTimeInMillis();
-                }
                 if (periodDao.findByStart(startAt) != null) continue;
 
-                double sum = 0;
-                for (FinanceIncome inc : incomes) {
-                    Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis(startAt);
-                    if (c.get(Calendar.DAY_OF_MONTH) == Math.min(inc.dayOfMonth, maxDay)) {
-                        sum += inc.amount;
-                    }
-                }
+                long endAt = (i + 1 < startDates.size())
+                    ? startDates.get(i + 1)
+                    : calcFirstStartOfNextMonth(year, mon, days.get(0));
 
+                double sum = calcIncomeSumForStart(incomes, startAt, maxDay);
                 String name = buildPeriodName(startAt, endAt);
-                FinancePeriod p = new FinancePeriod(startAt, endAt, name, sum);
-                periodDao.insert(p);
+                periodDao.insert(new FinancePeriod(startAt, endAt, name, sum));
             }
         }
     }
+
+    private List<Integer> extractSortedUniqueDays(List<FinanceIncome> incomes) {
+        List<Integer> days = new ArrayList<>();
+        for (FinanceIncome inc : incomes) {
+            if (!days.contains(inc.dayOfMonth)) {
+                days.add(inc.dayOfMonth);
+            }
+        }
+        days.sort(Integer::compareTo);
+        return days;
+    }
+
+    private List<Long> buildMonthStartDates(int year, int month, int maxDay, List<Integer> days) {
+        List<Long> startDates = new ArrayList<>(days.size());
+        for (int day : days) {
+            startDates.add(startOfDayMillis(year, month, Math.min(day, maxDay)));
+        }
+        startDates.sort(Long::compareTo);
+        return startDates;
+    }
+
+    private long calcFirstStartOfNextMonth(int year, int month, int firstPayDay) {
+        Calendar next = Calendar.getInstance();
+        next.set(year, month, 1, 0, 0, 0);
+        next.set(Calendar.MILLISECOND, 0);
+        next.add(Calendar.MONTH, 1);
+
+        int nextMaxDay = next.getActualMaximum(Calendar.DAY_OF_MONTH);
+        int day = Math.min(firstPayDay, nextMaxDay);
+        return startOfDayMillis(next.get(Calendar.YEAR), next.get(Calendar.MONTH), day);
+    }
+
+    private double calcIncomeSumForStart(List<FinanceIncome> incomes, long startAt, int maxDay) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(startAt);
+        int startDay = c.get(Calendar.DAY_OF_MONTH);
+
+        double sum = 0;
+        for (FinanceIncome inc : incomes) {
+            if (startDay == Math.min(inc.dayOfMonth, maxDay)) {
+                sum += inc.amount;
+            }
+        }
+        return sum;
+    }
+
+    private long startOfDayMillis(int year, int month, int day) {
+        Calendar c = Calendar.getInstance();
+        c.set(year, month, day, 0, 0, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTimeInMillis();
+    }
+
 
     private String buildPeriodName(long startAt, long endAt) {
         SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
@@ -870,26 +929,18 @@ public class FinancePeriodsController {
         return (int) (v * activity.getResources().getDisplayMetrics().density);
     }
 
-    private static class BindData {
-        final List<FinanceExpense> planned;
-        final List<FinanceExpense> fact;
-        final double plannedSum;
-        final double factSum;
-        BindData(List<FinanceExpense> p, List<FinanceExpense> f, double ps, double fs) {
-            planned = p; fact = f; plannedSum = ps; factSum = fs;
-        }
+    private record BindData(
+        List<FinanceExpense> planned,
+        List<FinanceExpense> fact,
+        double plannedSum,
+        double factSum
+    ) {
     }
 
-    private static class LoadResult {
-        final List<FinancePeriod> periods;
-        final int index;
-        LoadResult(List<FinancePeriod> p, int i) { periods = p; index = i; }
+    private record LoadResult(List<FinancePeriod> periods, int index) {
     }
 
-    private static class SubPickResult {
-        final List<Subscription> subs;
-        final Set<Long> already;
-        SubPickResult(List<Subscription> s, Set<Long> a) { subs = s; already = a; }
+    private record SubPickResult(List<Subscription> subs, Set<Long> already) {
     }
 
     private static class TabShoppingInfo {
@@ -901,9 +952,6 @@ public class FinancePeriodsController {
         double sum;
     }
 
-    private static class ShoppingPickResult {
-        final List<TabShoppingInfo> infos;
-        final Set<Long> already;
-        ShoppingPickResult(List<TabShoppingInfo> i, Set<Long> a) { infos = i; already = a; }
+    private record ShoppingPickResult(List<TabShoppingInfo> infos, Set<Long> already) {
     }
 }

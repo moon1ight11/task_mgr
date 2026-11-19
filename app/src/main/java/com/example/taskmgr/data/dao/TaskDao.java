@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.example.taskmgr.data.DatabaseHelper;
 import com.example.taskmgr.model.Task;
-import com.example.taskmgr.util.DateUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,36 +91,38 @@ public class TaskDao {
 
     public List<Task> getDeadlineSoon(Collection<Long> excludedTabIds) {
         long now = System.currentTimeMillis();
-        long startOfToday = DateUtils.startOfDay(now);
         long soon = now + SOON_WINDOW_MS;
 
-        WhereArgs wa = buildDeadlineSoonWhere(startOfToday, soon, excludedTabIds);
+        WhereArgs wa = buildDeadlineSoonWhere(soon, excludedTabIds);
         return query(wa.where(), wa.args());
     }
 
-    private WhereArgs buildDeadlineSoonWhere(long startOfToday, long soon,
+    private WhereArgs buildDeadlineSoonWhere(long soon,
                                              Collection<Long> excludedTabIds) {
-        StringBuilder where = new StringBuilder();
-        where.append("status = 'active' ")
-            .append("AND (priority IS NULL OR priority <> 'important') ")
-            .append("AND ( ")
-            .append("  (due_type = 'exact_date' AND due_date IS NOT NULL AND due_date >= ? AND due_date <= ?) ")
-            .append("  OR (due_type = 'range' AND ( ")
-            .append("       (due_to IS NOT NULL AND due_to <= ?) ")
-            .append("       OR (due_from IS NOT NULL AND due_from <= ?) ")
-            .append("     )) ")
-            .append("  OR (due_type = 'by_km' AND due_km IS NOT NULL) ")
-            .append(")");
+        StringBuilder where = new StringBuilder(baseDeadlineSql());
 
         List<String> args = new ArrayList<>();
-        args.add(String.valueOf(startOfToday));
-        args.add(String.valueOf(soon));
-        args.add(String.valueOf(soon));
-        args.add(String.valueOf(soon));
+        String soonStr = String.valueOf(soon);
+        args.add(soonStr);
+        args.add(soonStr);
+        args.add(soonStr);
 
         appendNotIn(where, args, excludedTabIds);
 
         return new WhereArgs(where.toString(), args.toArray(new String[0]));
+    }
+
+    private String baseDeadlineSql() {
+        return "status = 'active' " +
+            "AND (priority IS NULL OR priority <> 'important') " +
+            "AND ( " +
+            "  (due_type = 'exact_date' AND due_date IS NOT NULL AND due_date <= ?) " +
+            "  OR (due_type = 'range' AND ( " +
+            "       (due_to IS NOT NULL AND due_to <= ?) " +
+            "       OR (due_from IS NOT NULL AND due_from <= ?) " +
+            "     )) " +
+            "  OR (due_type = 'by_km' AND due_km IS NOT NULL) " +
+            ")";
     }
 
     public List<Task> getImportant(Collection<Long> excludedTabIds) {
@@ -133,7 +134,6 @@ public class TaskDao {
     }
 
     public List<Task> getTasksForDay(long dayStart, long dayEnd) {
-        long endExclusive = dayEnd; // dayStart + 24ч
 
         String sql =
             "SELECT " +
@@ -159,8 +159,8 @@ public class TaskDao {
         List<Task> result = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         try (Cursor c = db.rawQuery(sql, new String[]{
-            String.valueOf(dayStart), String.valueOf(endExclusive),
-            String.valueOf(endExclusive), String.valueOf(dayStart)
+            String.valueOf(dayStart), String.valueOf(dayEnd),
+            String.valueOf(dayEnd), String.valueOf(dayStart)
         })) {
             while (c.moveToNext()) {
                 result.add(fromCursor(c));

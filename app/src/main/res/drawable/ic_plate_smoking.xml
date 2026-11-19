@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportWidth="24"
+  android:viewportHeight="24">
+
+  <!-- Сигарета строго по центру (Y: 10..14, X: 2.5..21.5) -->
+  <path
+    android:fillColor="#00000000"
+    android:strokeColor="#E2E8F0"
+    android:strokeWidth="1.7"
+    android:strokeLineCap="round"
+    android:strokeLineJoin="round"
+    android:pathData="M2.5,10 L15.5,10 L15.5,14 L2.5,14 Z M7,10 L7,14 M18.5,10 L18.5,14 M21.5,10 L21.5,14" />
+
+  <!-- Дымок над кончиком -->
+  <path
+    android:fillColor="#00000000"
+    android:strokeColor="#E2E8F0"
+    android:strokeWidth="1.5"
+    android:strokeLineCap="round"
+    android:pathData="M18.5,8 C18.5,6.6 20.5,6.6 20.5,5.2 C20.5,4.2 19.5,3.8 19.2,3 M15.5,8 C15.5,6.8 17.2,6.8 17.2,5.6" />
+
+  <!-- Перечёркивающая линия -->
+  <path
+    android:fillColor="#00000000"
+    android:strokeColor="#FF3B6B"
+    android:strokeWidth="2.0"
+    android:strokeLineCap="round"
+    android:pathData="M4,4 L20,20" />
+</vector>

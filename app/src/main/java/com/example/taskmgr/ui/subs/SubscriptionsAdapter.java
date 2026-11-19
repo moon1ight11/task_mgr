@@ -89,7 +89,8 @@ public class SubscriptionsAdapter extends RecyclerView.Adapter<SubscriptionsAdap
             h.sticker.setBackgroundResource(R.drawable.bg_subs_sticker_overdue);
             h.day.setTextColor(ContextCompat.getColor(ctx, R.color.semantic_danger));
             h.month.setTextColor(ContextCompat.getColor(ctx, R.color.semantic_danger));
-            h.status.setText("Просрочено · " + date);
+            String lostText = "Просрочено · " + date;
+            h.status.setText(lostText);
             h.status.setTextColor(ContextCompat.getColor(ctx, R.color.semantic_danger));
         } else {
             long daysLeft = (s.nextChargeAt - today) / (24L * 60 * 60 * 1000);
@@ -103,7 +104,8 @@ public class SubscriptionsAdapter extends RecyclerView.Adapter<SubscriptionsAdap
             String tail = daysLeft == 0 ? "сегодня"
                 : daysLeft == 1 ? "завтра"
                 : "через " + daysLeft + " дн.";
-            h.status.setText(date + " · " + tail);
+            String dateText = date + " · " + tail;
+            h.status.setText(dateText);
             h.status.setTextColor(ContextCompat.getColor(ctx, R.color.text_secondary));
         }
 

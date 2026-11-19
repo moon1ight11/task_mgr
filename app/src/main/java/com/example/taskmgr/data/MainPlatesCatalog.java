@@ -5,6 +5,7 @@ import com.example.taskmgr.model.MainPlate;
 import com.example.taskmgr.ui.finance.FinanceActivity;
 import com.example.taskmgr.ui.notes.NotesActivity;
 import com.example.taskmgr.ui.stats.StatsActivity;
+import com.example.taskmgr.ui.smoking.SmokingActivity;
 import com.example.taskmgr.ui.subs.SubscriptionsActivity;
 import com.example.taskmgr.ui.utilities.UtilitiesActivity;
 
@@ -51,6 +52,8 @@ public final class MainPlatesCatalog {
             MainPlate.Kind.ACTIVITY, null, SubscriptionsActivity.class, true, false));
         add(build("finance", "Финансы", R.drawable.ic_plate_finance,
             MainPlate.Kind.ACTIVITY, null, FinanceActivity.class, true, false));
+        add(build("smoking", "Курение", R.drawable.ic_plate_smoking,
+            MainPlate.Kind.ACTIVITY, null, SmokingActivity.class, false, false));
     }
 
     private MainPlatesCatalog() {

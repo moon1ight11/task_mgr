@@ -21,7 +21,6 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
 
     private MainPlatesDao dao;
     private MainPlatesSettingsAdapter adapter;
-    private List<MainPlate> plates = new ArrayList<>();
     private ItemTouchHelper itemTouchHelper;
 
     @Override
@@ -64,13 +63,15 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
             public boolean onMove(@NonNull RecyclerView recyclerView,
                                   @NonNull RecyclerView.ViewHolder viewHolder,
                                   @NonNull RecyclerView.ViewHolder target) {
-                int from = viewHolder.getAdapterPosition();
-                int to = target.getAdapterPosition();
-                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false;
+                int from = viewHolder.getBindingAdapterPosition();
+                int to = target.getBindingAdapterPosition();
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION)
+                    return false;
 
                 adapter.moveItem(from, to);
                 return true;
             }
+
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
@@ -97,8 +98,7 @@ public class MainPlatesSettingsActivity extends AppCompatActivity {
     private void load() {
         DbExecutor.run(() -> dao.getAll(), list -> {
             if (list == null) return;
-            plates = list;
-            adapter.setItems(plates);
+            adapter.setItems(list);
         });
     }
 

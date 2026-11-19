@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ============ Neon Garden ============ -->
     <color name="bg">#0A0F1A</color>
     <color name="surface">#111A2B</color>
     <color name="surface_raised">#16223A</color>
@@ -20,7 +19,6 @@
     <color name="divider">#1E2A3F</color>
     <color name="divider_strong">#2A3A55</color>
 
-    <!-- ============ Семантические роли ============ -->
     <!-- Accent: только интерактив (кнопки, активные сегменты, фокус, "done") -->
     <color name="semantic_accent">@color/neon_green</color>
 
@@ -39,13 +37,11 @@
     <color name="semantic_neutral_weak">@color/divider_strong</color>
     <color name="semantic_neutral_none">@color/divider</color>
 
-    <!-- ============ Срочность (алиасы, для обратной совместимости) ============ -->
     <color name="urgency_overdue">@color/semantic_danger</color>
     <color name="urgency_soon">@color/semantic_warning</color>
     <color name="urgency_normal">@color/semantic_neutral</color>
     <color name="urgency_none">@color/semantic_neutral_weak</color>
 
-    <!-- Старые имена -->
     <color name="colorPrimary">@color/bg</color>
     <color name="colorPrimaryDark">#05080F</color>
     <color name="colorAccent">@color/neon_green</color>

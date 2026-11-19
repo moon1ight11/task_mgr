@@ -33,6 +33,9 @@ public class StatsActivity extends AppCompatActivity {
     private ProgressBar statPercentBar;
     private LinearLayout priorityContainer;
     private LinearLayout sectionContainer;
+    private View cardPriority;
+    private View cardSection;
+    private View cardShopping;
     private View cardPeriod;
     private TextView periodTitle, periodCompletions, periodAvg;
     private TextView statAvgTime, statAvgTimeMeta;
@@ -63,6 +66,9 @@ public class StatsActivity extends AppCompatActivity {
         statPercentBar = findViewById(R.id.stat_percent_bar);
         priorityContainer = findViewById(R.id.priority_container);
         sectionContainer = findViewById(R.id.section_container);
+        cardPriority = findViewById(R.id.card_priority);
+        cardSection = findViewById(R.id.card_section);
+        cardShopping = findViewById(R.id.card_shopping);
         cardPeriod = findViewById(R.id.card_period);
         periodTitle = findViewById(R.id.period_title);
         periodCompletions = findViewById(R.id.period_completions);
@@ -163,8 +169,12 @@ public class StatsActivity extends AppCompatActivity {
         for (String p : order) {
             StatsDao.PriorityRow row = null;
             for (StatsDao.PriorityRow r : rows)
-                if (p.equals(r.priority)) { row = r; break; }
-            if (row == null) continue;
+                if (p.equals(r.priority)) {
+                    row = r;
+                    break;
+                }
+            // Нулевые строки не показываем — блок не должен выглядеть как «0/0».
+            if (row == null || row.active <= 0) continue;
 
             View v = inf.inflate(R.layout.item_stats_priority, priorityContainer, false);
             TextView name = v.findViewById(R.id.prio_name);
@@ -176,6 +186,8 @@ public class StatsActivity extends AppCompatActivity {
             bar.setProgress((int) Math.round(100.0 * row.active / max));
             priorityContainer.addView(v);
         }
+        cardPriority.setVisibility(
+            priorityContainer.getChildCount() == 0 ? View.GONE : View.VISIBLE);
     }
 
     private String priorityLabel(String p) {
@@ -191,6 +203,9 @@ public class StatsActivity extends AppCompatActivity {
         sectionContainer.removeAllViews();
         LayoutInflater inf = LayoutInflater.from(this);
         for (StatsDao.SectionRow r : rows) {
+            // Строки «0/0» (нет ни активных, ни выполненных) не показываем.
+            if (r.active == 0 && r.done == 0) continue;
+
             View v = inf.inflate(R.layout.item_stats_section, sectionContainer, false);
             TextView name = v.findViewById(R.id.row_name);
             TextView counts = v.findViewById(R.id.row_counts);
@@ -213,6 +228,8 @@ public class StatsActivity extends AppCompatActivity {
 
             sectionContainer.addView(v);
         }
+        cardSection.setVisibility(
+            sectionContainer.getChildCount() == 0 ? View.GONE : View.VISIBLE);
     }
 
     private void bindCompletionTime(StatsDao.CompletionTimeStats s) {
@@ -222,7 +239,8 @@ public class StatsActivity extends AppCompatActivity {
             return;
         }
         statAvgTime.setText(formatDuration(s.medianMillis));
-        statAvgTimeMeta.setText("Всего: " + s.count);
+        String totalText = "Всего: " + s.count;
+        statAvgTimeMeta.setText(totalText);
     }
 
     @SuppressWarnings("SetTextI18n")
@@ -268,6 +286,11 @@ public class StatsActivity extends AppCompatActivity {
 
     @SuppressWarnings("SetTextI18n")
     private void bindShopping(StatsDao.ShoppingStats s) {
+        if (s.total == 0) {
+            cardShopping.setVisibility(View.GONE);
+            return;
+        }
+        cardShopping.setVisibility(View.VISIBLE);
         shoppingLine.setText(String.format(Locale.getDefault(),
             "Пунктов: %d · Сумма: %.2f ₽", s.total, s.totalSum));
     }

@@ -20,6 +20,37 @@ public class SubscriptionDao {
         this.dbHelper = DatabaseHelper.getInstance(context);
     }
 
+    public static long computeNextChargeAt(int chargeDay) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        int maxDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+        c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay, maxDay));
+        long candidate = c.getTimeInMillis();
+        if (candidate < DateUtils.startOfDay(System.currentTimeMillis())) {
+            c.add(Calendar.MONTH, 1);
+            c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay,
+                c.getActualMaximum(Calendar.DAY_OF_MONTH)));
+            candidate = c.getTimeInMillis();
+        }
+        return candidate;
+    }
+
+    public static long addMonthsClamped(long baseMs, int months, int chargeDay) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(baseMs);
+        c.add(Calendar.MONTH, months);
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        int maxDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
+        c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay, maxDay));
+        return c.getTimeInMillis();
+    }
+
     public long insert(Subscription s) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -106,37 +137,6 @@ public class SubscriptionDao {
             while (c.moveToNext()) result.add(fromCursor(c));
         }
         return result;
-    }
-
-    public static long computeNextChargeAt(int chargeDay) {
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        int maxDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-        c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay, maxDay));
-        long candidate = c.getTimeInMillis();
-        if (candidate < DateUtils.startOfDay(System.currentTimeMillis())) {
-            c.add(Calendar.MONTH, 1);
-            c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay,
-                c.getActualMaximum(Calendar.DAY_OF_MONTH)));
-            candidate = c.getTimeInMillis();
-        }
-        return candidate;
-    }
-
-    public static long addMonthsClamped(long baseMs, int months, int chargeDay) {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(baseMs);
-        c.add(Calendar.MONTH, months);
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        int maxDay = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-        c.set(Calendar.DAY_OF_MONTH, Math.min(chargeDay, maxDay));
-        return c.getTimeInMillis();
     }
 
     private Subscription fromCursor(Cursor c) {

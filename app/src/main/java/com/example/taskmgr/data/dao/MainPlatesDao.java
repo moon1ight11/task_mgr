@@ -10,12 +10,12 @@ import com.example.taskmgr.data.MainPlatesCatalog;
 import com.example.taskmgr.model.MainPlate;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MainPlatesDao {
-
     private final DatabaseHelper dbHelper;
 
     public MainPlatesDao(Context context) {
@@ -26,27 +26,24 @@ public class MainPlatesDao {
         Map<String, int[]> settings = readSettings();
         List<MainPlate> result = new ArrayList<>();
         for (MainPlate tpl : MainPlatesCatalog.all()) {
-            MainPlate p = tpl;
-            int[] s = settings.get(p.key);
+            int[] s = settings.get(tpl.key);
             if (s != null) {
-                p.isVisible = s[0] != 0;
-                p.sortOrder = s[1];
+                tpl.isVisible = s[0] != 0;
+                tpl.sortOrder = s[1];
             } else {
-                p.isVisible = true;
-                p.sortOrder = Integer.MAX_VALUE;
+                tpl.isVisible = true;
+                tpl.sortOrder = Integer.MAX_VALUE;
             }
-            result.add(p);
+            result.add(tpl);
         }
-        result.sort((a, b) -> Integer.compare(a.sortOrder, b.sortOrder));
+        result.sort(Comparator.comparingInt(a -> a.sortOrder));
         return result;
     }
 
     private Map<String, int[]> readSettings() {
         Map<String, int[]> map = new HashMap<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        try (Cursor c = db.query("main_plates",
-            new String[]{"plate_key", "is_visible", "sort_order"},
-            null, null, null, null, null)) {
+        try (Cursor c = db.query("main_plates", new String[]{"plate_key", "is_visible", "sort_order"}, null, null, null, null, null)) {
             while (c.moveToNext()) {
                 map.put(c.getString(0), new int[]{c.getInt(1), c.getInt(2)});
             }
@@ -71,15 +68,13 @@ public class MainPlatesDao {
                 MainPlate p = ordered.get(i);
                 ContentValues cv = new ContentValues();
                 cv.put("sort_order", i);
-                int updated = db.update("main_plates", cv, "plate_key = ?",
-                    new String[]{p.key});
+                int updated = db.update("main_plates", cv, "plate_key = ?", new String[]{p.key});
                 if (updated == 0) {
                     ContentValues ins = new ContentValues();
                     ins.put("plate_key", p.key);
                     ins.put("is_visible", p.isVisible ? 1 : 0);
                     ins.put("sort_order", i);
-                    db.insertWithOnConflict("main_plates", null, ins,
-                        SQLiteDatabase.CONFLICT_REPLACE);
+                    db.insertWithOnConflict("main_plates", null, ins, SQLiteDatabase.CONFLICT_REPLACE);
                 }
             }
             db.setTransactionSuccessful();

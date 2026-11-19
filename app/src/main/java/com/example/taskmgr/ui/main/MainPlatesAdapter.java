@@ -1,5 +1,6 @@
 package com.example.taskmgr.ui.main;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,18 +22,14 @@ import java.util.Map;
 
 public class MainPlatesAdapter extends RecyclerView.Adapter<MainPlatesAdapter.VH> {
 
-    public interface OnPlateClick {
-        void onClick(MainPlate plate);
-    }
-
     private final List<MainPlate> items = new ArrayList<>();
     private final Map<String, Integer> badgeByKey = new HashMap<>();
     private final OnPlateClick click;
-
     public MainPlatesAdapter(OnPlateClick click) {
         this.click = click;
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void setItems(List<MainPlate> plates, Map<String, Integer> badges) {
         items.clear();
         if (plates != null) {
@@ -92,6 +89,10 @@ public class MainPlatesAdapter extends RecyclerView.Adapter<MainPlatesAdapter.VH
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    public interface OnPlateClick {
+        void onClick(MainPlate plate);
     }
 
     public static class VH extends RecyclerView.ViewHolder {

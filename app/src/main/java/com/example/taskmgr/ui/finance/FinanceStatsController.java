@@ -85,9 +85,9 @@ public class FinanceStatsController {
             int periodsWithSpending = 0;
             List<PeriodRow> periodRows = new ArrayList<>();
             for (FinancePeriod p : periods) {
-                List<FinanceExpense> exps = expenseDao.getByPeriod(p.id);
+                List<FinanceExpense> expense = expenseDao.getByPeriod(p.id);
                 double spent = 0;
-                for (FinanceExpense e : exps) spent += e.amount;
+                for (FinanceExpense e : expense) spent += e.amount;
                 if (spent > 0) periodsWithSpending++;
 
                 PeriodRow row = new PeriodRow();
@@ -219,15 +219,12 @@ public class FinanceStatsController {
         return (int) (v * activity.getResources().getDisplayMetrics().density);
     }
 
-    private static class StatsData {
-        final double total;
-        final Map<String, Double> byCategory;
-        final int periodsWithSpending;
-        final List<PeriodRow> periodRows;
-
-        StatsData(double t, Map<String, Double> bc, int pws, List<PeriodRow> pr) {
-            total = t; byCategory = bc; periodsWithSpending = pws; periodRows = pr;
-        }
+    private record StatsData(
+        double total,
+        Map<String, Double> byCategory,
+        int periodsWithSpending,
+        List<PeriodRow> periodRows
+    ) {
     }
 
     private static class PeriodRow {
